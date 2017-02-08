@@ -1,0 +1,37 @@
+.rmp-identify h3 {
+  font-size: 1.2em;
+}
+.rmp-identify h3, h5, p {
+  margin-top: 0;
+}
+/* add additional custom styles */
+/*.dojoxGridHeader { display:none; }*/
+.dojoxGridRow {
+  border: 1px solid white;
+  border-color: white;
+  border-left: none;
+  border-right: none;
+  background-color: white;
+  border-top: none;
+}
+.dojoxGridRowOdd {
+  background-color: white;
+}
+.dojoxGridRowOver {cursor: pointer;}
+.dojoxGrid {background-color: white;}
+.dojoxGrid .dojoxGridCell {
+  border: 1px solid;
+  border-color: white;
+  border-right-color: white;
+  padding: 3px 3px 3px 3px;
+  text-align: left;
+  overflow: hidden;
+  word-wrap: break-word;
+}
+.jimu-loading-shelter .loading-container {
+  width: 0;
+}
+
+table td.quantity {
+  text-align: right;
+}
