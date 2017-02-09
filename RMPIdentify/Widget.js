@@ -81,12 +81,15 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
             '<table><tbody id="tierii_facility">' +
             '<tr><td>Address: <br/>' + attributes.FacilityStr1 + '<br/>' + (attributes.FacilityStr2 ? attributes.FacilityStr2 + '<br/>' : '') +
             attributes.FacilityCity + ', ' + attributes.FacilityState + ' ' + attributes.FacilityZipCode + '</td></tr>' +
-            '<tr><td>Phone: ' + (attributes.FacilityPhoneNumber ? attributes.FacilityPhoneNumber : 'not reported')+ '</td></tr>' +
+            '<tr><td>Phone: ' + (attributes.FacilityPhoneNumber ? attributes.FacilityPhoneNumber : 'not reported') + '</td></tr>' +
             '<tr><td>Website: ' + attributes.FacilityURL + '</td></tr>' +
             '<tr><td>Email: ' + attributes.FacilityEmailAddress + '</td></tr>' +
             '<tr><td>Full Time Employees: ' + attributes.FTE + '</td></tr>' +
-            '<tr><td>RMP Completion Date: ' +  localeDate.format(new Date(feature.attributes.CompletionCheckDate), {selector: "date", datePattern:"MM-dd-yyyy"}) + '</td></tr>' +
-            '<tr><td>Parent Company(s): ' + attributes.ParentCompanyName + (attributes.Company2Name ? ', '+attributes.Company2Name : '') +'</td></tr>' +
+            '<tr><td>RMP Completion Date: ' + localeDate.format(new Date(feature.attributes.CompletionCheckDate), {
+              selector: "date",
+              datePattern: "MM-dd-yyyy"
+            }) + '</td></tr>' +
+            '<tr><td>Parent Company(s): ' + attributes.ParentCompanyName + (attributes.Company2Name ? ', ' + attributes.Company2Name : '') + '</td></tr>' +
             '<tr><td><h3 style="text-decoration: underline;">Contacts</h3></td></tr>' +
             '<tr><td><h5>Operator</h5></td></tr>' +
             '<tr><td>Name: ' + attributes.OperatorName + '</td></tr>' +
@@ -100,7 +103,9 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
             '</tbody></table>' +
             '<table><tbody id="tierii_contacts"></tbody></table>' +
             '<h3 style="text-decoration: underline;">Processes</h3>' +
-            '<div style="width:100%" id="processes"></div>';
+            '<div style="width:100%" id="processes"></div>'+
+            '<h3 style="text-decoration: underline;">Accidents</h3>' +
+            '<div style="width:100%" id="accidents"></div>';
           // }
 
           // HI specific data attributes/format
@@ -155,7 +160,8 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
               var row = domConstruct.toDom('' +
                 '<div style="padding-top:10px;"><b>Name: ' + (process.attributes.AltID ? process.attributes.AltID : 'not reported') + '</b></div>' +
                 '<div>Description(s): <span id="process_' + process.attributes.ProcessID + '_naics"></span></div>' +
-                '<table><tbody id="process_' + process.attributes.ProcessID + '"><tr><th>Chemical</th><th>Quantity (lbs)</th></tr></tbody></table>');
+                '<div>Program Level: ' + process.attributes.ProgramLevel + '</span></div>' +
+                '<table><tbody id="process_' + process.attributes.ProcessID + '"><tr><th colspan="2">Chemical</th><th>Quantity (lbs)</th></tr></tbody></table>');
               domConstruct.place(row, "processes");
 
               var naicsQuery = new RelationshipQuery();
@@ -200,8 +206,39 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
 
                   that.tblS1ProcessChemicals.queryRelatedFeatures(chemicalQuery, function (e) {
                     dojo.forEach(e[processChemical.attributes.OBJECTID].features, function (chemical) {
-                      var row = domConstruct.toDom('<tr><td>' + chemical.attributes.ChemicalName + '</td><td class="quantity">' + number.format(processChemical.attributes.Quantity) + '</td></tr>');
-                      domConstruct.place(row, "process_" + process.attributes.ProcessID);
+                      if (chemical.attributes.CASNumber === '00-11-11') {
+                        var flammableMixtureQuery = new RelationshipQuery();
+                        flammableMixtureQuery.outFields = ['*'];
+                        flammableMixtureQuery.relationshipId = that.tblS1FlammableMixtureChemicals.relationshipId;
+                        flammableMixtureQuery.objectIds = [processChemical.attributes.OBJECTID];
+
+                        that.tblS1ProcessChemicals.queryRelatedFeatures(flammableMixtureQuery, function (e) {
+                          var chemicalOBJECTIDS = [];
+                          dojo.forEach(e[processChemical.attributes.OBJECTID].features, function (item) {
+                            chemicalOBJECTIDS.push(item.attributes.OBJECTID)
+                          });
+
+                          var chemicalLookup = new RelationshipQuery();
+                          chemicalLookup.outFields = ['*'];
+                          chemicalLookup.relationshipId = that.FlammableChemicals.relationshipId;
+                          chemicalLookup.objectIds = chemicalOBJECTIDS;
+
+                          that.tblS1FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup, function (e) {
+                            var row_string = '<tr><td colspan="2">' + chemical.attributes.ChemicalName + '</td><td class="quantity">' + number.format(processChemical.attributes.Quantity) + '</td></tr>';
+                            dojo.forEach(chemicalOBJECTIDS, function (objectid) {
+                              dojo.forEach(e[objectid].features, function (mixtureChemical) {
+                                row_string += '<tr><td>&#187;</td><td>' + mixtureChemical.attributes.ChemicalName + '</td><td></td></tr>';
+
+                              })
+                            });
+                            var row = domConstruct.toDom(row_string);
+                            domConstruct.place(row, "process_" + process.attributes.ProcessID);
+                          })
+                        })
+                      } else {
+                        var row = domConstruct.toDom('<tr><td colspan="2">' + chemical.attributes.ChemicalName + '</td><td class="quantity">' + number.format(processChemical.attributes.Quantity) + '</td></tr>');
+                        domConstruct.place(row, "process_" + process.attributes.ProcessID);
+                      }
                       // var attrs = dojo.mixin({}, {'Name': chemical.attributes.ChemicalName, 'Quantity': processChemical.attributes.Quantity, 'ChemicalID': chemical.attributes.ChemicalID});
                       // data.items.push(attrs);
                       // console.log(attrs);
@@ -210,18 +247,108 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                 });
 
                 // var process_chemica_grid = new DataGrid({
-                //   id: 'grid_'+process.attributes.ProcessID,
+                //   id: 'grid_'+accident.attributes.ProcessID,
                 //   store: store,
                 //   structure: layout,
                 //   //rowSelector: '20px',
                 //   autoHeight: true
                 // });
-                // process_chemica_grid.placeAt('process_'+process.attributes.ProcessID+'_grid');
+                // process_chemica_grid.placeAt('process_'+accident.attributes.ProcessID+'_grid');
                 //
                 // process_chemica_grid.startup();
               });
             });
             that.loadingShelter.hide();
+
+          });
+
+          var accidentQuery = new RelationshipQuery();
+          accidentQuery.outFields = ['*'];
+          accidentQuery.relationshipId = that.tblS6AccidentHistory.relationshipId;
+          accidentQuery.objectIds = [attributes.OBJECTID];
+
+          that.facilities.queryRelatedFeatures(accidentQuery, function (featureSet) {
+            dojo.forEach(featureSet[attributes.OBJECTID].features, function (accident) {
+              var release_event = [accident.attributes.RE_Gas, accident.attributes.RE_Spill, accident.attributes.RE_Fire, accident.attributes.RE_Explosion, accident.attributes.RE_ReactiveIncident];
+              var release_source = [
+                accident.attributes.RS_StorageVessel, accident.attributes.RS_Piping, accident.attributes.RS_ProcessVessel,
+                accident.attributes.RS_TransferHose, accident.attributes.RS_Valve, accident.attributes.RS_Pump, accident.attributes.RS_Joint,
+                accident.attributes.OtherReleaseSource
+              ];
+              var row = domConstruct.toDom('' +
+                '<div style="padding-top:10px;"><b>Date: ' + new Date(accident.attributes.AccidentDate) + '</b></div>' +
+                '<div>Duration: '+ accident.attributes.AccidentReleaseDuration  +'</div>' +
+                '<div>Release Event(s): ' + release_event.join(',') + '</span></div>' +
+                '<div>Release Source(s): ' + release_source.join(',') + '</span></div>' +
+                '<table><tbody id="accident_' + accident.attributes.AccidentHistoryID  + '"><tr><th colspan="2">Chemical</th></tr></tbody></table>');
+              domConstruct.place(row, "accidents");
+
+              var accidentChemicalQuery = new RelationshipQuery();
+              accidentChemicalQuery.outFields = ['*'];
+              accidentChemicalQuery.relationshipId = that.AccidentChemicals.relationshipId;
+              accidentChemicalQuery.objectIds = [accident.attributes.OBJECTID];
+
+              that.tblS6AccidentHistory.queryRelatedFeatures(accidentChemicalQuery, function (e) {
+                dojo.forEach(e[accident.attributes.OBJECTID].features, function (accidentChemicals) {
+
+                  var chemicalQuery = new RelationshipQuery();
+                  chemicalQuery.outFields = ['*'];
+                  chemicalQuery.relationshipId = that.AccidentChemicalInfo.relationshipId;
+                  chemicalQuery.objectIds = [accidentChemicals.attributes.OBJECTID];
+
+                  that.tblS6AccidentChemicals.queryRelatedFeatures(chemicalQuery, function (e) {
+                    dojo.forEach(e[accidentChemicals.attributes.OBJECTID].features, function (chemical) {
+                      if (chemical.attributes.CASNumber === '00-11-11') {
+                        var flammableMixtureQuery = new RelationshipQuery();
+                        flammableMixtureQuery.outFields = ['*'];
+                        flammableMixtureQuery.relationshipId = that.tblS6FlammableMixtureChemicals.relationshipId;
+                        flammableMixtureQuery.objectIds = [accidentChemicals.attributes.OBJECTID];
+
+                        that.tblS6AccidentChemicals.queryRelatedFeatures(flammableMixtureQuery, function (e) {
+                          var chemicalOBJECTIDS = [];
+                          dojo.forEach(e[accidentChemicals.attributes.OBJECTID].features, function (item) {
+                            chemicalOBJECTIDS.push(item.attributes.OBJECTID)
+                          });
+
+                          var chemicalLookup = new RelationshipQuery();
+                          chemicalLookup.outFields = ['*'];
+                          chemicalLookup.relationshipId = that.AccidentFlamMixChem.relationshipId;
+                          chemicalLookup.objectIds = chemicalOBJECTIDS;
+
+                          that.tblS6FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup, function (e) {
+                            var row_string = '<tr><td colspan="2">' + chemical.attributes.ChemicalName + '</td><td></td></tr>';
+                            dojo.forEach(chemicalOBJECTIDS, function (objectid) {
+                              dojo.forEach(e[objectid].features, function (mixtureChemical) {
+                                row_string += '<tr><td>&#187;</td><td>' + mixtureChemical.attributes.ChemicalName + '</td><td></td></tr>';
+
+                              })
+                            });
+                            var row = domConstruct.toDom(row_string);
+                            domConstruct.place(row, "process_" + accident.attributes.ProcessID);
+                          })
+                        })
+                      } else {
+                        var row = domConstruct.toDom('<tr><td colspan="2">' + chemical.attributes.ChemicalName + '</td></tr>');
+                        domConstruct.place(row, "accident_" + accident.attributes.ProcessID);
+                      }
+                      // var attrs = dojo.mixin({}, {'Name': chemical.attributes.ChemicalName, 'Quantity': processChemical.attributes.Quantity, 'ChemicalID': chemical.attributes.ChemicalID});
+                      // data.items.push(attrs);
+                      // console.log(attrs);
+                    });
+                  });
+                });
+                // var process_chemica_grid = new DataGrid({
+                //   id: 'grid_'+accident.attributes.ProcessID,
+                //   store: store,
+                //   structure: layout,
+                //   //rowSelector: '20px',
+                //   autoHeight: true
+                // });
+                // process_chemica_grid.placeAt('process_'+accident.attributes.ProcessID+'_grid');
+                //
+                // process_chemica_grid.startup();
+              });
+            })
           });
           //   var contactQuery = new RelationshipQuery();
           //   // GET CONTACTS
@@ -470,7 +597,10 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                 items: []
               };
               dojo.forEach(featureSet.features, function (feature) {
-                feature.attributes.CompletionCheckDate = localeDate.format(new Date(feature.attributes.CompletionCheckDate), {selector: "date", datePattern:"MM-dd-yyyy"});
+                feature.attributes.CompletionCheckDate = localeDate.format(new Date(feature.attributes.CompletionCheckDate), {
+                  selector: "date",
+                  datePattern: "MM-dd-yyyy"
+                });
                 var attrs = dojo.mixin({}, feature.attributes);
                 data.items.push(attrs);
               });
