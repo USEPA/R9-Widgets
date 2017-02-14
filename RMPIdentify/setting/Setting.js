@@ -28,6 +28,8 @@ define([
     setConfig: function(config){
       var that = this;
       this.config = config;
+      this.statusLayerInput.value = config.statusLayer;
+
       // this.statusLayerInput.value = config.statusLayer;
       // dojo.forEach(this.config.layers, function (config) {
       //   config.baseurl = that.config.baseurl;
@@ -40,8 +42,8 @@ define([
 
       var config = {
         layerId: {},
-        layerName: ''
-        // statusLayer: this.statusLayerInput.value
+        layerName: '',
+        statusLayer: this.statusLayerInput.value
       };
       var nodes = query('.rmp-dijit');
       dojo.forEach(nodes, function (node) {

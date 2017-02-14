@@ -2,12 +2,13 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
     'esri/tasks/query', 'esri/symbols/PictureMarkerSymbol', 'esri/symbols/SimpleLineSymbol',
     'esri/Color', 'esri/dijit/util/busyIndicator', 'esri/geometry/Extent', 'dojox/grid/DataGrid',
     'dojo/data/ItemFileWriteStore', 'dijit/tree/ForestStoreModel', 'dijit/Tree', 'dojo/on', 'jimu/dijit/LoadingShelter',
-    'dojo/_base/declare', 'dojo/_base/array', 'jimu/LayerInfos/LayerInfos', 'jimu/BaseWidget', 'dojo/number', 'dojo/date/stamp', 'dijit/Dialog'],
+    'dojo/_base/declare', 'dojo/_base/array', 'jimu/LayerInfos/LayerInfos', 'jimu/BaseWidget', 'dojo/number', 'dojo/date/stamp',
+    'dijit/Dialog', 'dojo/Deferred'],
   function (Graphic, FeatureLayer, GraphicsLayer, RelationshipQuery, domConstruct,
             Query, PictureMarkerSymbol, SimpleLineSymbol,
             Color, busyIndicator, Extent, DataGrid,
             ItemFileWriteStore, ForestStoreModel, Tree, on, LoadingShelter,
-            declare, array, LayerInfos, BaseWidget, number, stamp, Dialog) {
+            declare, array, LayerInfos, BaseWidget, number, stamp, Dialog, Deferred) {
 
     //To create a widget, you need to derive from BaseWidget.
     return declare([BaseWidget], {
@@ -36,6 +37,8 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
           11,
           20
           );
+
+        that.loadDeferred = new Deferred();
 
         this.loadingShelter = new LoadingShelter({hidden: true});
         this.loadingShelter.placeAt(that.domNode);
@@ -520,6 +523,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
           that.facilities.on('load', function (e) {
             that.baseurl = that.facilities.url.substring(0, that.facilities.url.lastIndexOf('/'));
             loadRelated(that.facilities);
+            that.loadDeferred.resolve();
           });
         });
 
@@ -598,9 +602,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         console.log('startup');
       }
 
-      ,
-
-      onOpen: function () {
+      ,onOpen: function () {
         this.loadingShelter.show();
         console.log('RMPIdentify::onOpen');
         this.map.setInfoWindowOnClick(false);
@@ -610,11 +612,35 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         }
 
         this.mapIdNode.innerHTML = '<h1>RMP Indentify</h1><br/>' +
-          '<table><tbody id="rmp_status"></tbody></table>' +
+          '<h5 id="refresh_date"></h5>' +
           '<br/>Click Facility to view information.';
 
+        if (that.baseurl === undefined) {
+          that.loadDeferred.then(function () {
+            var statusLayer = new FeatureLayer(that.baseurl + '/' + that.config.statusLayer,
+              {outFields: ['*']}),
+            statusQuery = new Query();
+            statusQuery.outFields = ['*'];
+            statusQuery.where = "OBJECTID Like '%'";
 
-        that.loadingShelter.hide();
+            statusLayer.queryFeatures(statusQuery, function (featureSet) {
+              that.refresh_date = stamp.toISOString(new Date(featureSet.features[0].attributes.DateRefreshed), {
+                selector: "date",
+                zulu: true
+              });
+              domConstruct.place(domConstruct.toDom('RMP Refresh Date: ' + that.refresh_date), 'refresh_date');
+              that.loadingShelter.hide();
+            });
+          });
+        } else {
+          domConstruct.place(domConstruct.toDom('RMP Refresh Date: ' + that.refresh_date), 'refresh_date');
+          that.loadingShelter.hide();
+        }
+
+
+
+
+
       }
       ,
 
