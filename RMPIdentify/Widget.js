@@ -46,7 +46,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         });
         currentFacility = null;
         var multipleRMPs;
-        loadRMPs = function(feature) {
+        loadRMPs = function (feature) {
           currentFacility = feature;
           that.loadingShelter.show();
           var attributes = feature.attributes;
@@ -60,80 +60,137 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
           rmpQuery.objectIds = [attributes.OBJECTID];
           rmpQuery.relationshipId = that.AllFacilities.relationshipId;
           that.facilities.queryRelatedFeatures(rmpQuery, function (e) {
-            var features = e[attributes.OBJECTID].features;
-            if (features.length === 1) {
-              multipleRMPs = false;
-              loadFeature(features[0])
-            } else {
-              multipleRMPs = true;
-              mapIdNode.innerHTML = '<h3>Multiple RMPs Found for '+attributes.FacilityName+'</h3><br/><h5>Select one to continue</h5>' +
-                '<div id="rmpGridDiv" style="width:100%;"></div>';
-              var data = {
-                identifier: 'OBJECTID',
-                items: []
-              };
-              dojo.forEach(features, function (feature) {
-                feature.attributes.CompletionCheckDate = stamp.toISOString(new Date(feature.attributes.CompletionCheckDate), {
-                  selector: "date",
-                  zulu: true
+              var features = e[attributes.OBJECTID].features;
+              if (features.length === 1) {
+                multipleRMPs = false;
+                loadFeature(features[0])
+              } else {
+                multipleRMPs = true;
+                mapIdNode.innerHTML = '<h3>Multiple RMPs Found for ' + attributes.FacilityName + '</h3>' +
+                  '<h4 id="facilityStatus"></h4><br/>' +
+                  '<h5>Select one to continue</h5>' +
+                  '<div id="rmpGridDiv" style="width:100%;"></div><br/><br/>' +
+                  '<h3 style="text-decoration: underline;">Location Metadata</h3>' +
+                  '<div style="width:100%" id="location_metadata"></div><br/><br/>';
+                var data = {
+                  identifier: 'OBJECTID',
+                  items: []
+                };
+                dojo.forEach(features, function (feature) {
+                  feature.attributes.CompletionCheckDate = stamp.toISOString(new Date(feature.attributes.CompletionCheckDate), {
+                    selector: "date",
+                    zulu: true
+                  });
+
+                  var attrs = dojo.mixin({}, feature.attributes);
+                  data.items.push(attrs);
                 });
 
-                var attrs = dojo.mixin({}, feature.attributes);
-                data.items.push(attrs);
-              });
+                var store = new ItemFileWriteStore({data: data});
+                store.data = data;
 
-              var store = new ItemFileWriteStore({data: data});
-              store.data = data;
+                var grid = dijit.byId("rmpGrid");
 
-              var grid = dijit.byId("rmpGrid");
+                if (grid !== undefined) {
+                  grid.destroy();
+                }
 
-              if (grid !== undefined) {
-                grid.destroy();
+                // these attributes could be different for each state
+                // the that.config.state object helps you identify which state you are working with
+                // if (service.config.state.abbr === 'NV') {
+                //   var layout = [
+                //     {'name': '', 'field': 'Facility_Name', 'width': '100%'}
+                //   ];
+                // } else if (service.config.state.abbr === 'AZ') {
+                //   var layout = [
+                //     {'name': '', 'field': 'NAME', 'width': '100%'}
+                //   ];
+                // } else {
+                //   var layout = [
+                //     {'name': '', 'field': 'FacilityName', 'width': '100%'}
+                //   ];
+                // }
+                var layout = [
+                  {'name': 'Name', 'field': 'FacilityName', 'width': '75%'},
+                  {'name': 'Completion Date', 'field': 'CompletionCheckDate', 'width': '25%'}
+                ];
+                grid = new DataGrid({
+                  id: 'rmpGrid',
+                  store: store,
+                  structure: layout,
+                  //rowSelector: '20px',
+                  autoHeight: true,
+                  sortInfo: '-2'
+                });
+
+                grid.placeAt("rmpGridDiv");
+
+                grid.on('RowClick', function (e) {
+                  var rowItem = grid.getItem(e.rowIndex);
+                  var facility = array.filter(features, function (feature) {
+                    return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
+                  });
+                  loadFeature(facility[0]);
+                });
+
+                grid.startup();
+
+                //get most recent record to display deregistration status
+                var mostRecentRMP = features[0].attributes;
+                dojo.forEach(features, function (feature) {
+                  if (feature.attributes.CompletionCheckDate > mostRecentRMP.CompletionCheckDate) {
+                    mostRecentRMP = feature.attributes;
+                  }
+                });
+                var status;
+                if (mostRecentRMP.DeRegistrationEffectiveDate) {
+                  status = 'De-registered';
+                  var reason = (mostRecentRMP.DeregistrationReasonCode !== '04' ?
+                    that.AllFacilities.getDomain('DeregistrationReasonCode').getName(mostRecentRMP.DeregistrationReasonCode) :
+                    mostRecentRMP.DeregistrationReasonOtherText);
+                  var date = mostRecentRMP.DeRegistrationEffectiveDate;
+                } else {
+                  status = 'Active';
+                }
+
+
+                var row = domConstruct.toDom('Facility Status: ' + status +
+                  (reason ? '<br/>De-registration Reason: ' + reason : '') +
+                  (date ? '<br/>De-registration Effective Date: ' + stamp.toISOString(new Date(date), {
+                      selector: "date",
+                      zulu: true
+                    }) : '')
+                );
+                domConstruct.place(row, 'facilityStatus');
+
+                if (mostRecentRMP.ValidLatLongFlag) {
+                  var location_string = 'RMP Validated Location Used' +
+                    '<br/>Description: ' + that.AllFacilities.getDomain('LatLongDescription').getName(mostRecentRMP.LatLongDescription) +
+                    '<br/>Method: ' + that.AllFacilities.getDomain('LatLongMethod').getName(mostRecentRMP.LatLongMethod);
+                } else if (!mostRecentRMP.ValidLatLongFlag && mostRecentRMP.FRS_Lat !== undefined && mostRecentRMP.FRS_long !== undefined) {
+                  var location_string = 'FRS Location Used' +
+                    '<br/>Description: ' + that.AllFacilities.getDomain('FRS_Description').getName(mostRecentRMP.FRS_Description) +
+                    '<br/>Method: ' + that.AllFacilities.getDomain('FRS_Method').getName(mostRecentRMP.FRS_Method);
+                } else {
+                  var location_string = 'Location Not Validated' +
+                    '<br/>Description: ' + that.AllFacilities.getDomain('LatLongDescription').getName(mostRecentRMP.LatLongDescription) +
+                    '<br/>Method: ' + that.AllFacilities.getDomain('LatLongMethod').getName(mostRecentRMP.LatLongMethod);
+                }
+
+                if (mostRecentRMP.HorizontalAccMeasure) {
+                  location_string += '<br/>Horizontal Accuracy (m): ' + mostRecentRMP.HorizontalAccMeasure +
+                    '<br/>Horizontal Datum: ' + that.AllFacilities.getDomain('HorizontalRefDatumCode').getName(mostRecentRMP.HorizontalRefDatumCode) +
+                    (mostRecentRMP.SourceMapScaleNumber ? '<br/>Source Map Scale: ' + mostRecentRMP.SourceMapScaleNumber : '')
+                }
+
+                var row = domConstruct.toDom(location_string);
+                domConstruct.place(row, 'location_metadata');
+
+                that.loadingShelter.hide();
               }
-
-              // these attributes could be different for each state
-              // the that.config.state object helps you identify which state you are working with
-              // if (service.config.state.abbr === 'NV') {
-              //   var layout = [
-              //     {'name': '', 'field': 'Facility_Name', 'width': '100%'}
-              //   ];
-              // } else if (service.config.state.abbr === 'AZ') {
-              //   var layout = [
-              //     {'name': '', 'field': 'NAME', 'width': '100%'}
-              //   ];
-              // } else {
-              //   var layout = [
-              //     {'name': '', 'field': 'FacilityName', 'width': '100%'}
-              //   ];
-              // }
-              var layout = [
-                {'name': 'Name', 'field': 'FacilityName', 'width': '75%'},
-                {'name': 'Completion Date', 'field': 'CompletionCheckDate', 'width': '25%'}
-              ];
-              grid = new DataGrid({
-                id: 'rmpGrid',
-                store: store,
-                structure: layout,
-                //rowSelector: '20px',
-                autoHeight: true,
-                sortInfo: '-2'
-              });
-
-              grid.placeAt("rmpGridDiv");
-
-              grid.on('RowClick', function (e) {
-                var rowItem = grid.getItem(e.rowIndex);
-                var facility = array.filter(features, function (feature) {
-                  return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
-                });
-                loadFeature(facility[0]);
-              });
-
-              grid.startup();
-              that.loadingShelter.hide();
             }
-          })
-        }
+          )
+        };
 
         function loadFeature(feature) {
           that.loadingShelter.show();
@@ -143,8 +200,26 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
 
           that.graphicLayer.add(selectedGraphic);
 
+          var status;
+          if (attributes.DeRegistrationEffectiveDate) {
+            status = 'De-registered';
+            var reason = (attributes.DeregistrationReasonCode !== '04' ?
+              that.AllFacilities.getDomain('DeregistrationReasonCode').getName(attributes.DeregistrationReasonCode) :
+              attributes.DeregistrationReasonOtherText);
+            var date = attributes.DeRegistrationEffectiveDate;
+            var status_string = status +
+              (reason ? '<br/>De-registration Reason: ' + reason : '') +
+              (date ? '<br/>De-registration Effective Date: ' + stamp.toISOString(new Date(date), {
+                  selector: "date",
+                  zulu: true
+                }) : '') + '<br/><br/>';
+          } else {
+            status_string = 'Active<br/><br/>';
+          }
+
           mapIdNode.innerHTML = (multipleRMPs ? '<a onclick="loadRMPs(currentFacility)" style="text-decoration:underline; cursor: pointer;">< Back</a>' : '' ) +
-            '<h1>' + attributes.FacilityName + '</h1><br/>' +
+            '<h1>' + attributes.FacilityName + '</h1>' +
+            '<h4 id="registration_status">Status: ' + status_string + '</h4>' +
             '<table><tbody id="tierii_facility">' +
             '<tr><td>Address: <br/>' + attributes.FacilityStr1 + '<br/>' + (attributes.FacilityStr2 ? attributes.FacilityStr2 + '<br/>' : '') +
             attributes.FacilityCity + ', ' + attributes.FacilityState + ' ' + attributes.FacilityZipCode + '</td></tr>' +
@@ -157,36 +232,37 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
               zulu: true
             }) + '</td></tr>' +
             '<tr><td>Parent Company(s): ' + (attributes.ParentCompanyName ? attributes.ParentCompanyName : 'Not Reported') + (attributes.Company2Name ? ', ' + attributes.Company2Name : '') + '</td></tr>' +
-            '<tr><td><a onclick="executiveSummaryDialog.show();" style="text-decoration: underline; cursor: pointer;">View Executive Summary</a></td></tr>' +
-            '<tr><td><h3 style="text-decoration: underline;">Contacts</h3></td></tr>' +
-            '<tr><td></td><td></td></tr>' +
-            '<tr><td><h5>Operator</h5></td></tr>' +
+            '<tr><td><a onclick="executiveSummaryDialog.show();" style="text-decoration: underline; cursor: pointer;">View Executive Summary</a></td></tr></tbody></table>' +
+            '<br/><h3 style="text-decoration: underline;">Contacts</h3>' +
+            '<table><tbody><tr><td><b>Operator</b></td></tr>' +
             '<tr><td>Name: ' + attributes.OperatorName + '</td></tr>' +
             '<tr><td>Phone: ' + attributes.OperatorPhone + '</td></tr>' +
-            '<tr><td><h5>Emergency Contact</h5></td></tr>' +
+            '<tr><td><b>Emergency Contact</b></td></tr>' +
             '<tr><td>Name: ' + attributes.EmergencyContactName + '</td></tr>' +
             '<tr><td>Title: ' + attributes.EmergencyContactTitle + '</td></tr>' +
             '<tr><td>Phone: ' + attributes.EmergencyContactPhone + (attributes.EmergencyContactExt_PIN ? ' x' + attributes.EmergencyContactExt_PIN : '') + '</td></tr>' +
             '<tr><td>24 HR Phone: ' + attributes.Phone24 + '</td></tr>' +
             '<tr><td></td></tr>' +
             '</tbody></table>' +
-            '<table><tbody id="tierii_contacts"></tbody></table>' +
+            '<table><tbody id="tierii_contacts"></tbody></table><br/>' +
             '<h3 style="text-decoration: underline;">Processes</h3>' +
-            '<div style="width:100%" id="processes"></div></br>'+
+            '<div style="width:100%" id="processes"></div><br/>' +
             '<h3 style="text-decoration: underline;">Accidents</h3>' +
-            '<div style="width:100%" id="accidents"></div></br>'+
+            '<div style="width:100%" id="accidents"></div><br/>' +
             '<h3 style="text-decoration: underline;">Emergency Reponse Plan</h3>' +
-            '<div style="width:100%" id="emergency_plan"></div>';
+            '<div style="width:100%" id="emergency_plan"></div><br/>';
 
           // get executive summary for dialog box
           var executiveSummaryQuery = new RelationshipQuery();
           executiveSummaryQuery.outFields = ['*'];
-          executiveSummaryQuery.relationshipId = that.ExecutiveSummaries .relationshipId;
+          executiveSummaryQuery.relationshipId = that.ExecutiveSummaries.relationshipId;
           executiveSummaryQuery.objectIds = [attributes.OBJECTID];
 
           that.AllFacilities.queryRelatedFeatures(executiveSummaryQuery, function (e) {
             var summary = '';
-            var summary_parts = e[attributes.OBJECTID].features.sort(function (obj1, obj2) { return obj1.attributes.ESSeqNum - obj2.attributes.ESSeqNum});
+            var summary_parts = e[attributes.OBJECTID].features.sort(function (obj1, obj2) {
+              return obj1.attributes.ESSeqNum - obj2.attributes.ESSeqNum
+            });
             dojo.forEach(summary_parts, function (summary_part) {
               summary += summary_part.attributes.SummaryText.replace(/(?:\r\n|\r|\n)/g, '<br />');
             });
@@ -201,7 +277,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
           that.AllFacilities.queryRelatedFeatures(processQuery, function (featureSet) {
             dojo.forEach(featureSet[attributes.OBJECTID].features, function (process) {
               var row = domConstruct.toDom('' +
-                '<div style="padding-top:10px;"><b>Name: ' + (process.attributes.AltID ? process.attributes.AltID : 'not reported') + '</b></div>' +
+                '<div><b>Name: ' + (process.attributes.AltID ? process.attributes.AltID : 'not reported') + '</b></div>' +
                 '<div>Description(s): <span id="process_' + process.attributes.ProcessID + '_naics"></span></div>' +
                 '<div>Program Level: ' + process.attributes.ProgramLevel + '</span></div>' +
                 '<table><tbody id="process_' + process.attributes.ProcessID + '"><tr><th colspan="2">Chemical</th><th>Quantity (lbs)</th></tr></tbody></table>');
@@ -383,36 +459,36 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
             var er_plans = e[attributes.OBJECTID].features[0];
             var row_string =
               '<table><tbody id="er_plan_table">' +
-              '<tr><td>Is facility included in written community ER plan?</td><td>'+ (er_plans.attributes.ER_CommunityPlan ? 'Yes':'No') +'</td></tr>' +
-              '<tr><td>Does facility have its own written ER plan?</td><td>'+ (er_plans.attributes.ER_FacilityPlan ? 'Yes':'No') +'</td></tr>' +
+              '<tr><td>Is facility included in written community ER plan?</td><td>' + (er_plans.attributes.ER_CommunityPlan ? 'Yes' : 'No') + '</td></tr>' +
+              '<tr><td>Does facility have its own written ER plan?</td><td>' + (er_plans.attributes.ER_FacilityPlan ? 'Yes' : 'No') + '</td></tr>' +
               '<tr><td colspan="2"></td></tr>' +
               '<tr><td colspan="2"><b>Does facility\'s ER plan include ...</b></td></tr>' +
-              '<tr><td class="nested">specific actions to be take in response to accidental release of regulated substance(s)?</td><td>'+(er_plans.attributes.ER_ResponseActions ? 'Yes': 'No')+'</td></tr>' +
-              '<tr><td class="nested">procedures for informing the public and local agencies responding to accident releases?</td><td>'+(er_plans.attributes.ER_PublicInfoProcedures ? 'Yes': 'No')+'</td></tr>' +
-              '<tr><td class="nested">information on emergency health care?</td><td>'+(er_plans.attributes.ER_EmergencyHealthCare ? 'Yes': 'No')+'</td></tr>' +
+              '<tr><td class="nested">specific actions to be take in response to accidental release of regulated substance(s)?</td><td>' + (er_plans.attributes.ER_ResponseActions ? 'Yes' : 'No') + '</td></tr>' +
+              '<tr><td class="nested">procedures for informing the public and local agencies responding to accident releases?</td><td>' + (er_plans.attributes.ER_PublicInfoProcedures ? 'Yes' : 'No') + '</td></tr>' +
+              '<tr><td class="nested">information on emergency health care?</td><td>' + (er_plans.attributes.ER_EmergencyHealthCare ? 'Yes' : 'No') + '</td></tr>' +
               '<tr><td></td></tr>' +
               '<tr><td colspan="2"><b>Date of most recent ...</b></td></tr>' +
-              '<tr><td class="nested">review or update of facility\'s ER plan?</td><td>'+(er_plans.attributes.ER_ReviewDate ? stamp.toISOString(new Date(er_plans.attributes.ER_ReviewDate), {
+              '<tr><td colspan="2" class="nested">review or update of facility\'s ER plan?  ' + (er_plans.attributes.ER_ReviewDate ? stamp.toISOString(new Date(er_plans.attributes.ER_ReviewDate), {
                   selector: "date",
                   zulu: true
-                }) : 'Not Reported')+'</td></tr>' +
-              '<tr><td class="nested">ER training for facility\'s ER employees?</td><td>'+(er_plans.attributes.ERTrainingDate ? stamp.toISOString(new Date(er_plans.attributes.ERTrainingDate), {
+                }) : 'Not Reported') + '</td></tr>' +
+              '<tr><td colspan="2" class="nested">ER training for facility\'s ER employees?  ' + (er_plans.attributes.ERTrainingDate ? stamp.toISOString(new Date(er_plans.attributes.ERTrainingDate), {
                   selector: "date",
                   zulu: true
-                }) : 'Not Reported')+'</td></tr>' +
+                }) : 'Not Reported') + '</td></tr>' +
               '<tr><td></td></tr>' +
               '<tr><td colspan="2"><b>Local agency with which facility\'s ER plan ore response activities are coordinated</b></td></tr>' +
-              '<tr><td colspan="2">Name: '+(er_plans.attributes.CoordinatingAgencyName ? er_plans.attributes.CoordinatingAgencyName : 'Not Reported')+
-              ', Number:'+(er_plans.attributes.CoordinatingAgencyPhone ? er_plans.attributes.CoordinatingAgencyPhone : 'Not Reported')+'</td></tr>' +
+              '<tr><td colspan="2" class="nested">Name: ' + (er_plans.attributes.CoordinatingAgencyName ? er_plans.attributes.CoordinatingAgencyName : 'Not Reported') +
+              '<br/>Number:' + (er_plans.attributes.CoordinatingAgencyPhone ? er_plans.attributes.CoordinatingAgencyPhone : 'Not Reported') + '</td></tr>' +
               '<tr><td colspan="2"></td></tr>' +
               '<tr><td colspan="2"><b>Subject to ...</b></td></tr>' +
-              '<tr><td class="nested">OSHA Regulations at 29 CFR 1910.38?</td><td>'+(er_plans.attributes.FR_OSHA1910_38 ? 'Yes': 'No')+'</td></tr>' +
-              '<tr><td class="nested">OSHA Regulations at 29 CFR 1910.120?</td><td>'+(er_plans.attributes.FR_OSHA1910_120 ? 'Yes': 'No')+'</td></tr>' +
-              '<tr><td class="nested">Clean Water Act Regulations at 40 CFR 112?</td><td>'+(er_plans.attributes.FR_SPCC ? 'Yes': 'No')+'</td></tr>' +
-              '<tr><td class="nested">RCRA Regulations at 40 CFR 264, 265, and 279.52?</td><td>'+(er_plans.attributes.FR_RCRA ? 'Yes': 'No')+'</td></tr>' +
-              '<tr><td class="nested">OPA 90 Regulations at 40 CFR 112, 33 CFR 154, 49 CFR 194, or 30 CFR 254?</td><td>'+(er_plans.attributes.FR_OPA90 ? 'Yes': 'No')+'</td></tr>' +
-              '<tr><td class="nested">State EPCRA Rules or Laws?</td><td>'+(er_plans.attributes.FR_EPCRA ? 'Yes': 'No')+'</td></tr>' +
-              '<tr><td colspan="2" style="padding-left:10px;">Other: '+ er_plans.attributes.FR_OtherRegulation +'</td></tr>' +
+              '<tr><td class="nested">OSHA Regulations at 29 CFR 1910.38?</td><td>' + (er_plans.attributes.FR_OSHA1910_38 ? 'Yes' : 'No') + '</td></tr>' +
+              '<tr><td class="nested">OSHA Regulations at 29 CFR 1910.120?</td><td>' + (er_plans.attributes.FR_OSHA1910_120 ? 'Yes' : 'No') + '</td></tr>' +
+              '<tr><td class="nested">Clean Water Act Regulations at 40 CFR 112?</td><td>' + (er_plans.attributes.FR_SPCC ? 'Yes' : 'No') + '</td></tr>' +
+              '<tr><td class="nested">RCRA Regulations at 40 CFR 264, 265, and 279.52?</td><td>' + (er_plans.attributes.FR_RCRA ? 'Yes' : 'No') + '</td></tr>' +
+              '<tr><td class="nested">OPA 90 Regulations at 40 CFR 112, 33 CFR 154, 49 CFR 194, or 30 CFR 254?</td><td>' + (er_plans.attributes.FR_OPA90 ? 'Yes' : 'No') + '</td></tr>' +
+              '<tr><td class="nested">State EPCRA Rules or Laws?</td><td>' + (er_plans.attributes.FR_EPCRA ? 'Yes' : 'No') + '</td></tr>' +
+              '<tr><td colspan="2" style="padding-left:10px;">Other: ' + er_plans.attributes.FR_OtherRegulation + '</td></tr>' +
               '</tbody></table>';
             var row = domConstruct.toDom(row_string);
             domConstruct.place(row, 'emergency_plan');
@@ -520,7 +596,9 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         });
 
         console.log('startup');
-      },
+      }
+
+      ,
 
       onOpen: function () {
         this.loadingShelter.show();
@@ -537,7 +615,8 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
 
 
         that.loadingShelter.hide();
-      },
+      }
+      ,
 
       onClose: function () {
         console.log('RMPIdentify::onClose');
@@ -548,6 +627,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         this.map.setInfoWindowOnClick(true);
       }
 
-    });
+    })
+      ;
 
   });
