@@ -8,7 +8,6 @@
 /*.dojoxGridHeader { display:none; }*/
 .dojoxGridRow {
   border: 1px solid white;
-  border-color: white;
   border-left: none;
   border-right: none;
   background-color: white;
@@ -20,9 +19,7 @@
 .dojoxGridRowOver {cursor: pointer;}
 .dojoxGrid {background-color: white;}
 .dojoxGrid .dojoxGridCell {
-  border: 1px solid;
-  border-color: white;
-  border-right-color: white;
+  border: 1px solid white;
   padding: 3px 3px 3px 3px;
   text-align: left;
   overflow: hidden;
@@ -34,4 +31,8 @@
 
 table td.quantity {
   text-align: right;
+}
+
+table td.nested {
+  padding-left: 10px;
 }

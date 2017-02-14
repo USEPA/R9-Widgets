@@ -2,12 +2,12 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
     'esri/tasks/query', 'esri/symbols/PictureMarkerSymbol', 'esri/symbols/SimpleLineSymbol',
     'esri/Color', 'esri/dijit/util/busyIndicator', 'esri/geometry/Extent', 'dojox/grid/DataGrid',
     'dojo/data/ItemFileWriteStore', 'dijit/tree/ForestStoreModel', 'dijit/Tree', 'dojo/on', 'jimu/dijit/LoadingShelter',
-    'dojo/_base/declare', 'dojo/_base/array', 'jimu/LayerInfos/LayerInfos', 'jimu/BaseWidget', 'dojo/number', 'dojo/date/locale'],
+    'dojo/_base/declare', 'dojo/_base/array', 'jimu/LayerInfos/LayerInfos', 'jimu/BaseWidget', 'dojo/number', 'dojo/date/stamp', 'dijit/Dialog'],
   function (Graphic, FeatureLayer, GraphicsLayer, RelationshipQuery, domConstruct,
             Query, PictureMarkerSymbol, SimpleLineSymbol,
             Color, busyIndicator, Extent, DataGrid,
             ItemFileWriteStore, ForestStoreModel, Tree, on, LoadingShelter,
-            declare, array, LayerInfos, BaseWidget, number, localeDate) {
+            declare, array, LayerInfos, BaseWidget, number, stamp, Dialog) {
 
     //To create a widget, you need to derive from BaseWidget.
     return declare([BaseWidget], {
@@ -41,6 +41,99 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         this.loadingShelter.placeAt(that.domNode);
 
         this.loadingShelter.show();
+        executiveSummaryDialog = new Dialog({
+          title: "Executive Summary"
+        });
+        currentFacility = null;
+        var multipleRMPs;
+        loadRMPs = function(feature) {
+          currentFacility = feature;
+          that.loadingShelter.show();
+          var attributes = feature.attributes;
+
+          var selectedGraphic = new Graphic(feature.geometry, symbol);
+
+          that.graphicLayer.add(selectedGraphic);
+
+          var rmpQuery = new RelationshipQuery();
+          rmpQuery.outFields = ['*'];
+          rmpQuery.objectIds = [attributes.OBJECTID];
+          rmpQuery.relationshipId = that.AllFacilities.relationshipId;
+          that.facilities.queryRelatedFeatures(rmpQuery, function (e) {
+            var features = e[attributes.OBJECTID].features;
+            if (features.length === 1) {
+              multipleRMPs = false;
+              loadFeature(features[0])
+            } else {
+              multipleRMPs = true;
+              mapIdNode.innerHTML = '<h3>Multiple RMPs Found for '+attributes.FacilityName+'</h3><br/><h5>Select one to continue</h5>' +
+                '<div id="rmpGridDiv" style="width:100%;"></div>';
+              var data = {
+                identifier: 'OBJECTID',
+                items: []
+              };
+              dojo.forEach(features, function (feature) {
+                feature.attributes.CompletionCheckDate = stamp.toISOString(new Date(feature.attributes.CompletionCheckDate), {
+                  selector: "date",
+                  zulu: true
+                });
+
+                var attrs = dojo.mixin({}, feature.attributes);
+                data.items.push(attrs);
+              });
+
+              var store = new ItemFileWriteStore({data: data});
+              store.data = data;
+
+              var grid = dijit.byId("rmpGrid");
+
+              if (grid !== undefined) {
+                grid.destroy();
+              }
+
+              // these attributes could be different for each state
+              // the that.config.state object helps you identify which state you are working with
+              // if (service.config.state.abbr === 'NV') {
+              //   var layout = [
+              //     {'name': '', 'field': 'Facility_Name', 'width': '100%'}
+              //   ];
+              // } else if (service.config.state.abbr === 'AZ') {
+              //   var layout = [
+              //     {'name': '', 'field': 'NAME', 'width': '100%'}
+              //   ];
+              // } else {
+              //   var layout = [
+              //     {'name': '', 'field': 'FacilityName', 'width': '100%'}
+              //   ];
+              // }
+              var layout = [
+                {'name': 'Name', 'field': 'FacilityName', 'width': '75%'},
+                {'name': 'Completion Date', 'field': 'CompletionCheckDate', 'width': '25%'}
+              ];
+              grid = new DataGrid({
+                id: 'rmpGrid',
+                store: store,
+                structure: layout,
+                //rowSelector: '20px',
+                autoHeight: true,
+                sortInfo: '-2'
+              });
+
+              grid.placeAt("rmpGridDiv");
+
+              grid.on('RowClick', function (e) {
+                var rowItem = grid.getItem(e.rowIndex);
+                var facility = array.filter(features, function (feature) {
+                  return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
+                });
+                loadFeature(facility[0]);
+              });
+
+              grid.startup();
+              that.loadingShelter.hide();
+            }
+          })
+        }
 
         function loadFeature(feature) {
           that.loadingShelter.show();
@@ -50,47 +143,23 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
 
           that.graphicLayer.add(selectedGraphic);
 
-          // need to customize this for state specific attributes
-          // if (service.config.state.abbr === 'NV') {
-          //   mapIdNode.innerHTML = '<h1>' + attributes.Facility_Name + '</h1><br/>' +
-          //     '<table><tbody id="tierii_facility">' +
-          //     '<tr><td>Physical Address: ' + attributes.Street_Address_1 + ', ' + attributes.City + '</td></tr>' +
-          //     '<tr><td>Status: ' + attributes.Facility_Status + '</td></tr>' +
-          //     '<tr><td>Type: ' + attributes.Facility_Type + '</td></tr>' +
-          //     '<tr><td>Nature of Business: ' + attributes.Nature_of_Business + '</td></tr>' +
-          //     '<tr><td>Company Name: ' + attributes.Company_Name + '</td></tr>' +
-          //     '</tbody></table>' +
-          //     '<h3 style="text-decoration: underline;">Contact(s)</h3>' +
-          //     '<table><tbody id="tierii_contacts">' +
-          //     '<tr><td>Owner/Operator: ' + attributes.Owner_Operator_Name + '</td></tr>' +
-          //     '<tr><td>Phone: ' + (attributes.Owner_Operator_Phone ? attributes.Owner_Operator_Phone : 'Not Reported') + '</td></tr>' +
-          //     '<tr><td>Email: ' + (attributes.Owner_Operator_Email ? attributes.Owner_Operator_Email : 'Not Reported') + '</td></tr>' +
-          //     '</tbody></table>' +
-          //     '<h3 style="text-decoration: underline;">Chemical(s)</h3>' +
-          //     '<table><tbody id="tierii_chemicals"></tbody></table>';
-          // } else if (service.config.state.abbr === 'AZ') {
-          //   mapIdNode.innerHTML = '<h1>' + attributes.NAME + '</h1><br/>' +
-          //     '<table><tbody id="tierii_facility">' +
-          //     '<tr><td>Physical Address: ' + attributes.ADDRESS + ', ' + attributes.CITY + '</td></tr>' +
-          //     '<tr><td>Fire District: ' + (attributes.FD ? attributes.FD : 'Not Reported') + '</td></tr>' +
-          //     '<tr><td>Email: ' + (attributes.EMAIL ? attributes.EMAIL : 'Not Reported') + '</td></tr>' +
-          //     '<tr><td>Phone: ' + (attributes.PHONE ? attributes.PHONE : 'Not Reported') + '</td></tr>' +
-          //     '</tbody></table>';
-          // } else {
-          mapIdNode.innerHTML = '<h1>' + attributes.FacilityName + '</h1><br/>' +
+          mapIdNode.innerHTML = (multipleRMPs ? '<a onclick="loadRMPs(currentFacility)" style="text-decoration:underline; cursor: pointer;">< Back</a>' : '' ) +
+            '<h1>' + attributes.FacilityName + '</h1><br/>' +
             '<table><tbody id="tierii_facility">' +
             '<tr><td>Address: <br/>' + attributes.FacilityStr1 + '<br/>' + (attributes.FacilityStr2 ? attributes.FacilityStr2 + '<br/>' : '') +
             attributes.FacilityCity + ', ' + attributes.FacilityState + ' ' + attributes.FacilityZipCode + '</td></tr>' +
-            '<tr><td>Phone: ' + (attributes.FacilityPhoneNumber ? attributes.FacilityPhoneNumber : 'not reported') + '</td></tr>' +
-            '<tr><td>Website: ' + attributes.FacilityURL + '</td></tr>' +
-            '<tr><td>Email: ' + attributes.FacilityEmailAddress + '</td></tr>' +
+            '<tr><td>Phone: ' + (attributes.FacilityPhoneNumber ? attributes.FacilityPhoneNumber : 'Not Reported') + '</td></tr>' +
+            '<tr><td>Website: ' + (attributes.FacilityURL ? attributes.FacilityURL : 'Not Reported') + '</td></tr>' +
+            '<tr><td>Email: ' + (attributes.FacilityEmailAddress ? attributes.FacilityEmailAddress : 'Not Reported') + '</td></tr>' +
             '<tr><td>Full Time Employees: ' + attributes.FTE + '</td></tr>' +
-            '<tr><td>RMP Completion Date: ' + localeDate.format(new Date(feature.attributes.CompletionCheckDate), {
+            '<tr><td>RMP Completion Date: ' + stamp.toISOString(new Date(feature.attributes.CompletionCheckDate), {
               selector: "date",
-              datePattern: "MM-dd-yyyy"
+              zulu: true
             }) + '</td></tr>' +
-            '<tr><td>Parent Company(s): ' + attributes.ParentCompanyName + (attributes.Company2Name ? ', ' + attributes.Company2Name : '') + '</td></tr>' +
+            '<tr><td>Parent Company(s): ' + (attributes.ParentCompanyName ? attributes.ParentCompanyName : 'Not Reported') + (attributes.Company2Name ? ', ' + attributes.Company2Name : '') + '</td></tr>' +
+            '<tr><td><a onclick="executiveSummaryDialog.show();" style="text-decoration: underline; cursor: pointer;">View Executive Summary</a></td></tr>' +
             '<tr><td><h3 style="text-decoration: underline;">Contacts</h3></td></tr>' +
+            '<tr><td></td><td></td></tr>' +
             '<tr><td><h5>Operator</h5></td></tr>' +
             '<tr><td>Name: ' + attributes.OperatorName + '</td></tr>' +
             '<tr><td>Phone: ' + attributes.OperatorPhone + '</td></tr>' +
@@ -103,59 +172,33 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
             '</tbody></table>' +
             '<table><tbody id="tierii_contacts"></tbody></table>' +
             '<h3 style="text-decoration: underline;">Processes</h3>' +
-            '<div style="width:100%" id="processes"></div>'+
+            '<div style="width:100%" id="processes"></div></br>'+
             '<h3 style="text-decoration: underline;">Accidents</h3>' +
-            '<div style="width:100%" id="accidents"></div>';
-          // }
+            '<div style="width:100%" id="accidents"></div></br>'+
+            '<h3 style="text-decoration: underline;">Emergency Reponse Plan</h3>' +
+            '<div style="width:100%" id="emergency_plan"></div>';
 
-          // HI specific data attributes/format
-          // if (service.config.state.abbr === 'HI') {
-          //   // deal with boolean tables
-          //   if (attributes.SubjectToChemAccidentPreventi_1 === 'T') {
-          //     var row = '<tr><td>Subject to Chemical Accident Prevention: No</td></tr>';
-          //   }
-          //   else if (attributes.SubjectToChemAccidentPrevention === 'T') {
-          //     var row = '<tr><td>Subject to Chemical Accident Prevention: Yes</td></tr>';
-          //   }
-          //   else {
-          //     var row = '<tr><td>Subject to Chemical Accident Prevention: Unknown</td></tr>';
-          //   }
-          //   domConstruct.place(row, "rmp_facility");
-          //
-          //   if (attributes.SubjectToEmergencyPlanning_Y === 'T') {
-          //     var row = '<tr><td>Subject to Emergency Planning: Yes</td></tr>';
-          //   }
-          //   else if (attributes.SubjectToEmergencyPlanning_N === 'T') {
-          //     var row = '<tr><td>Subject to Emergency Planning: No</td></tr>';
-          //   }
-          //   else {
-          //     var row = '<tr><td>Subject to Emergency Planning: Unknown</td></tr>';
-          //   }
-          //   domConstruct.place(row, "rmp_facility");
-          //
-          //   if (attributes.Manned_Y === 'T') {
-          //     var row = '<tr><td>Manned: Yes</td></tr>' +
-          //       '<tr><td>Max Occupants: ' + (attributes.MaxNumOccupants ? attributes.MaxNumOccupants : 'Unknown') + '</td></tr>';
-          //   }
-          //   else if (attributes.Manned_N === 'T') {
-          //     var row = '<tr><td>Manned: No</td></tr>';
-          //   }
-          //   else {
-          //     var row = '<tr><td>Manned: No</td></tr>';
-          //   }
-          //   domConstruct.place(row, "rmp_facility");
-          // }
-          //
-          // // if contacts are available get them
-          // if (service.config.contacts.relationshipId !== 'none' && service.config.contacts.relationshipId !== undefined && service.config.contacts !== undefined) {
+          // get executive summary for dialog box
+          var executiveSummaryQuery = new RelationshipQuery();
+          executiveSummaryQuery.outFields = ['*'];
+          executiveSummaryQuery.relationshipId = that.ExecutiveSummaries .relationshipId;
+          executiveSummaryQuery.objectIds = [attributes.OBJECTID];
 
+          that.AllFacilities.queryRelatedFeatures(executiveSummaryQuery, function (e) {
+            var summary = '';
+            var summary_parts = e[attributes.OBJECTID].features.sort(function (obj1, obj2) { return obj1.attributes.ESSeqNum - obj2.attributes.ESSeqNum});
+            dojo.forEach(summary_parts, function (summary_part) {
+              summary += summary_part.attributes.SummaryText.replace(/(?:\r\n|\r|\n)/g, '<br />');
+            });
+            executiveSummaryDialog.set("content", summary);
+          });
 
           var processQuery = new RelationshipQuery();
           processQuery.outFields = ['*'];
           processQuery.relationshipId = that.tblS1Processes.relationshipId;
           processQuery.objectIds = [attributes.OBJECTID];
 
-          that.facilities.queryRelatedFeatures(processQuery, function (featureSet) {
+          that.AllFacilities.queryRelatedFeatures(processQuery, function (featureSet) {
             dojo.forEach(featureSet[attributes.OBJECTID].features, function (process) {
               var row = domConstruct.toDom('' +
                 '<div style="padding-top:10px;"><b>Name: ' + (process.attributes.AltID ? process.attributes.AltID : 'not reported') + '</b></div>' +
@@ -184,17 +227,6 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
               processChemicalsQuery.outFields = ['*'];
               processChemicalsQuery.relationshipId = that.tblS1ProcessChemicals.relationshipId;
               processChemicalsQuery.objectIds = [process.attributes.OBJECTID];
-
-              // var layout = [
-              //   {'name': 'Name', 'field': 'Name', 'width': '75%'},
-              //   {'name': 'Quantity (lbs)', 'field': 'Quantity'}
-              // ];
-              // var data = {
-              //   identifier: 'ChemicalID',
-              //   items: []
-              // };
-              // var store = new ItemFileWriteStore({data: data});
-              // store.data = data;
 
               that.tblS1Processes.queryRelatedFeatures(processChemicalsQuery, function (e) {
                 dojo.forEach(e[process.attributes.OBJECTID].features, function (processChemical) {
@@ -239,23 +271,9 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                         var row = domConstruct.toDom('<tr><td colspan="2">' + chemical.attributes.ChemicalName + '</td><td class="quantity">' + number.format(processChemical.attributes.Quantity) + '</td></tr>');
                         domConstruct.place(row, "process_" + process.attributes.ProcessID);
                       }
-                      // var attrs = dojo.mixin({}, {'Name': chemical.attributes.ChemicalName, 'Quantity': processChemical.attributes.Quantity, 'ChemicalID': chemical.attributes.ChemicalID});
-                      // data.items.push(attrs);
-                      // console.log(attrs);
                     });
                   });
                 });
-
-                // var process_chemica_grid = new DataGrid({
-                //   id: 'grid_'+accident.attributes.ProcessID,
-                //   store: store,
-                //   structure: layout,
-                //   //rowSelector: '20px',
-                //   autoHeight: true
-                // });
-                // process_chemica_grid.placeAt('process_'+accident.attributes.ProcessID+'_grid');
-                //
-                // process_chemica_grid.startup();
               });
             });
             that.loadingShelter.hide();
@@ -267,259 +285,138 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
           accidentQuery.relationshipId = that.tblS6AccidentHistory.relationshipId;
           accidentQuery.objectIds = [attributes.OBJECTID];
 
-          that.facilities.queryRelatedFeatures(accidentQuery, function (featureSet) {
-            dojo.forEach(featureSet[attributes.OBJECTID].features, function (accident) {
-              var release_event = [accident.attributes.RE_Gas, accident.attributes.RE_Spill, accident.attributes.RE_Fire, accident.attributes.RE_Explosion, accident.attributes.RE_ReactiveIncident];
-              var release_source = [
-                accident.attributes.RS_StorageVessel, accident.attributes.RS_Piping, accident.attributes.RS_ProcessVessel,
-                accident.attributes.RS_TransferHose, accident.attributes.RS_Valve, accident.attributes.RS_Pump, accident.attributes.RS_Joint,
-                accident.attributes.OtherReleaseSource
-              ];
-              var row = domConstruct.toDom('' +
-                '<div style="padding-top:10px;"><b>Date: ' + new Date(accident.attributes.AccidentDate) + '</b></div>' +
-                '<div>Duration: '+ accident.attributes.AccidentReleaseDuration  +'</div>' +
-                '<div>Release Event(s): ' + release_event.join(',') + '</span></div>' +
-                '<div>Release Source(s): ' + release_source.join(',') + '</span></div>' +
-                '<table><tbody id="accident_' + accident.attributes.AccidentHistoryID  + '"><tr><th colspan="2">Chemical</th></tr></tbody></table>');
-              domConstruct.place(row, "accidents");
+          that.AllFacilities.queryRelatedFeatures(accidentQuery, function (featureSet) {
+            if (featureSet.hasOwnProperty('features')) {
+              dojo.forEach(featureSet[attributes.OBJECTID].features, function (accident) {
+                var release_event = [];
+                accident.attributes.RE_Gas ? release_event.push('Gas') : null;
+                accident.attributes.RE_Spill ? release_event.push('Spill') : null;
+                accident.attributes.RE_Fire ? release_event.push('Fire') : null;
+                accident.attributes.RE_Explosion ? release_event.push('Explosion') : null;
+                accident.attributes.RE_ReactiveIncident ? release_event.push('Reactive Incident') : null;
 
-              var accidentChemicalQuery = new RelationshipQuery();
-              accidentChemicalQuery.outFields = ['*'];
-              accidentChemicalQuery.relationshipId = that.AccidentChemicals.relationshipId;
-              accidentChemicalQuery.objectIds = [accident.attributes.OBJECTID];
+                var release_source = [];
+                accident.attributes.RS_StorageVessel ? release_source.push('Storage Vessel') : null;
+                accident.attributes.RS_Piping ? release_source.push('Piping') : null;
+                accident.attributes.RS_ProcessVessel ? release_source.push('Process Vessel') : null;
+                accident.attributes.RS_TransferHose ? release_source.push('Transfer Hose') : null;
+                accident.attributes.RS_Valve ? release_source.push('Valve') : null;
+                accident.attributes.RS_Pump ? release_source.push('Pump') : null;
+                accident.attributes.RS_Joint ? release_source.push('Joint') : null;
+                accident.attributes.OtherReleaseSource ? release_source.push('Other') : null;
 
-              that.tblS6AccidentHistory.queryRelatedFeatures(accidentChemicalQuery, function (e) {
-                dojo.forEach(e[accident.attributes.OBJECTID].features, function (accidentChemicals) {
+                var row = domConstruct.toDom('' +
+                  '<div style="padding-top:10px;"><b>Date: ' + stamp.toISOString(new Date(accident.attributes.AccidentDate), {
+                    selector: "date",
+                    zulu: true
+                  }) + '</b></div>' +
+                  '<div>Duration (HHH:MM): ' + accident.attributes.AccidentReleaseDuration.substring(0, 3) + ':' + accident.attributes.AccidentReleaseDuration.substring(3, 5) + '</div>' +
+                  '<div>Release Event(s): ' + release_event.join(',') + '</span></div>' +
+                  '<div>Release Source(s): ' + release_source.join(',') + '</span></div>' +
+                  '<table><tbody id="accident_' + accident.attributes.AccidentHistoryID + '"><tr><th colspan="2">Chemical(s)</th><th>Quantity (lbs)</th></tr></tbody></table>');
+                domConstruct.place(row, "accidents");
 
-                  var chemicalQuery = new RelationshipQuery();
-                  chemicalQuery.outFields = ['*'];
-                  chemicalQuery.relationshipId = that.AccidentChemicalInfo.relationshipId;
-                  chemicalQuery.objectIds = [accidentChemicals.attributes.OBJECTID];
+                var accidentChemicalQuery = new RelationshipQuery();
+                accidentChemicalQuery.outFields = ['*'];
+                accidentChemicalQuery.relationshipId = that.AccidentChemicals.relationshipId;
+                accidentChemicalQuery.objectIds = [accident.attributes.OBJECTID];
 
-                  that.tblS6AccidentChemicals.queryRelatedFeatures(chemicalQuery, function (e) {
-                    dojo.forEach(e[accidentChemicals.attributes.OBJECTID].features, function (chemical) {
-                      if (chemical.attributes.CASNumber === '00-11-11') {
-                        var flammableMixtureQuery = new RelationshipQuery();
-                        flammableMixtureQuery.outFields = ['*'];
-                        flammableMixtureQuery.relationshipId = that.tblS6FlammableMixtureChemicals.relationshipId;
-                        flammableMixtureQuery.objectIds = [accidentChemicals.attributes.OBJECTID];
+                that.tblS6AccidentHistory.queryRelatedFeatures(accidentChemicalQuery, function (e) {
+                  dojo.forEach(e[accident.attributes.OBJECTID].features, function (accidentChemical) {
 
-                        that.tblS6AccidentChemicals.queryRelatedFeatures(flammableMixtureQuery, function (e) {
-                          var chemicalOBJECTIDS = [];
-                          dojo.forEach(e[accidentChemicals.attributes.OBJECTID].features, function (item) {
-                            chemicalOBJECTIDS.push(item.attributes.OBJECTID)
-                          });
+                    var chemicalQuery = new RelationshipQuery();
+                    chemicalQuery.outFields = ['*'];
+                    chemicalQuery.relationshipId = that.tblS6AccidentChemicals.relationshipId;
+                    chemicalQuery.objectIds = [accidentChemical.attributes.OBJECTID];
 
-                          var chemicalLookup = new RelationshipQuery();
-                          chemicalLookup.outFields = ['*'];
-                          chemicalLookup.relationshipId = that.AccidentFlamMixChem.relationshipId;
-                          chemicalLookup.objectIds = chemicalOBJECTIDS;
+                    that.tblS6AccidentChemicals.queryRelatedFeatures(chemicalQuery, function (e) {
+                      dojo.forEach(e[accidentChemical.attributes.OBJECTID].features, function (chemical) {
+                        if (chemical.attributes.CASNumber === '00-11-11') {
+                          var flammableMixtureQuery = new RelationshipQuery();
+                          flammableMixtureQuery.outFields = ['*'];
+                          flammableMixtureQuery.relationshipId = that.tblS6FlammableMixtureChemicals.relationshipId;
+                          flammableMixtureQuery.objectIds = [accidentChemical.attributes.OBJECTID];
 
-                          that.tblS6FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup, function (e) {
-                            var row_string = '<tr><td colspan="2">' + chemical.attributes.ChemicalName + '</td><td></td></tr>';
-                            dojo.forEach(chemicalOBJECTIDS, function (objectid) {
-                              dojo.forEach(e[objectid].features, function (mixtureChemical) {
-                                row_string += '<tr><td>&#187;</td><td>' + mixtureChemical.attributes.ChemicalName + '</td><td></td></tr>';
-
-                              })
+                          that.tblS6AccidentChemicals.queryRelatedFeatures(flammableMixtureQuery, function (e) {
+                            var chemicalOBJECTIDS = [];
+                            dojo.forEach(e[accidentChemical.attributes.OBJECTID].features, function (item) {
+                              chemicalOBJECTIDS.push(item.attributes.OBJECTID)
                             });
-                            var row = domConstruct.toDom(row_string);
-                            domConstruct.place(row, "process_" + accident.attributes.ProcessID);
-                          })
-                        })
-                      } else {
-                        var row = domConstruct.toDom('<tr><td colspan="2">' + chemical.attributes.ChemicalName + '</td></tr>');
-                        domConstruct.place(row, "accident_" + accident.attributes.ProcessID);
-                      }
-                      // var attrs = dojo.mixin({}, {'Name': chemical.attributes.ChemicalName, 'Quantity': processChemical.attributes.Quantity, 'ChemicalID': chemical.attributes.ChemicalID});
-                      // data.items.push(attrs);
-                      // console.log(attrs);
+
+                            var chemicalLookup = new RelationshipQuery();
+                            chemicalLookup.outFields = ['*'];
+                            chemicalLookup.relationshipId = that.AccidentFlamMixChem.relationshipId;
+                            chemicalLookup.objectIds = chemicalOBJECTIDS;
+
+                            that.tblS6FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup, function (e) {
+                              var row_string = '<tr><td colspan="2">' + chemical.attributes.ChemicalName + '</td><td class="quantity">' + number.format(accidentChemical.attributes.QuantityReleased) + '</td></tr>';
+                              dojo.forEach(chemicalOBJECTIDS, function (objectid) {
+                                dojo.forEach(e[objectid].features, function (mixtureChemical) {
+                                  row_string += '<tr><td>&#187;</td><td>' + mixtureChemical.attributes.ChemicalName + '</td><td></td></tr>';
+
+                                })
+                              });
+                              var row = domConstruct.toDom(row_string);
+                              domConstruct.place(row, "accident_" + accident.attributes.AccidentHistoryID);
+                            });
+                          });
+                        } else {
+                          var row = domConstruct.toDom('<tr><td colspan="2">' + chemical.attributes.ChemicalName + '</td><td class="quantity">' + number.format(accidentChemical.attributes.QuantityReleased) + '</td></tr>');
+                          domConstruct.place(row, "accident_" + accident.attributes.AccidentHistoryID);
+                        }
+                      });
                     });
                   });
                 });
-                // var process_chemica_grid = new DataGrid({
-                //   id: 'grid_'+accident.attributes.ProcessID,
-                //   store: store,
-                //   structure: layout,
-                //   //rowSelector: '20px',
-                //   autoHeight: true
-                // });
-                // process_chemica_grid.placeAt('process_'+accident.attributes.ProcessID+'_grid');
-                //
-                // process_chemica_grid.startup();
-              });
-            })
+              })
+            } else {
+              domConstruct.place(domConstruct.toDom('<b>Not Accidents Reported</b>'), "accidents");
+            }
           });
-          //   var contactQuery = new RelationshipQuery();
-          //   // GET CONTACTS
-          //   contactQuery.outFields = ['*'];
-          //   //dojo.forEach(that.facilities.relationships, function (relationship, i) {
-          //   // Facilities to Contacts relationship ID
-          //   contactQuery.relationshipId = service.config.contacts.relationshipId;
-          //   contactQuery.objectIds = [attributes.OBJECTID];
-          //   that.facilities.queryRelatedFeatures(contactQuery, function (e) {
-          //     dojo.forEach(e[attributes.OBJECTID].features, function (contact, i) {
-          //
-          //       var contactPhonesQuery = new RelationshipQuery();
-          //
-          //       contactPhonesQuery.outFields = ['*'];
-          //       // contacts to phone relationship id
-          //       contactPhonesQuery.relationshipId = service.config.contacts.phones.relationshipId;
-          //       contactPhonesQuery.objectIds = [contact.attributes.OBJECTID];
-          //
-          //       service.contacts.queryRelatedFeatures(contactPhonesQuery, function (e) {
-          //         // these attributes could be different for each state
-          //         // the service.config.state object helps you identify which state you are working with
-          //         var row = domConstruct.toDom('<tr><td style="padding-top: 10px;"><b>' + (contact.attributes.Title ? contact.attributes.Title + ': ' : '') +
-          //           (contact.attributes.FirstName ? contact.attributes.FirstName : '') +
-          //           ' ' + (contact.attributes.LastName ? contact.attributes.LastName : '') + '</b></td></tr>');
-          //         domConstruct.place(row, "rmp_contacts");
-          //
-          //         var row = domConstruct.toDom('<tr><td>Email: ' + (contact.attributes.CoEmail ? contact.attributes.CoEmail : 'Not Reported') + '</td></tr>');
-          //         domConstruct.place(row, "rmp_contacts");
-          //
-          //         dojo.forEach(e[contact.attributes.OBJECTID].features, function (contact_phone_feature, j) {
-          //           var row = domConstruct.toDom('<tr><td>' + (contact_phone_feature.attributes.Type ? contact_phone_feature.attributes.Type + ': ' : '')
-          //             + (contact_phone_feature.attributes.Phone ? contact_phone_feature.attributes.Phone : '') + '</td></tr>');
-          //           domConstruct.place(row, "rmp_contacts");
-          //         });
-          //         that.loadingShelter.hide();
-          //       }, function (e) {
-          //         console.log("Error: " + e);
-          //       });
-          //     });
-          //   }, function (e) {
-          //     console.log("Error: " + e);
-          //   });
-          //
-          //
-          // if (service.config.chemicals.relationshipId !== 'none' && service.config.chemicals.relationshipId !== undefined && service.config.chemicals !== undefined) {
-          //   // GET CHEMICALS
-          //   var processChemicalsQuery = new RelationshipQuery();
-          //   processChemicalsQuery.outFields = ['*'];
-          //   // facilities to chemicals relationship ID
-          //   processChemicalsQuery.relationshipId = service.config.chemicals.relationshipId;
-          //   processChemicalsQuery.objectIds = [attributes.OBJECTID];
-          //
-          //   that.facilities.queryRelatedFeatures(processChemicalsQuery, function (e) {
-          //     dojo.forEach(e[attributes.OBJECTID].features, function (chemical, i) {
-          //       // these attributes could be different for each state
-          //       // the service.config.state object helps you identify which state you are working with
-          //       if (service.config.state.abbr === 'NV') {
-          //         var row = domConstruct.toDom(
-          //           '<tr><td style="padding-top: 10px;"><b>' + chemical.attributes.Chemical_Name
-          //           + (chemical.attributes.CAS_Number ? ' (' + chemical.attributes.CAS_Number + ')' : '') + '</b></td></tr>' +
-          //           '<tr><td>Mixture: ' + (chemical.attributes.Mixture_Chemical_Name ? chemical.attributes.Mixture_Chemical_Name : 'Not Reported') +
-          //           (chemical.attributes.Mixture_CAS_Number ? ' (' + chemical.attributes.Mixture_CAS_Number + ')' : '') + '</td></tr>' +
-          //           '<tr><td>Location: ' + (chemical.attributes.Storage_Location ? chemical.attributes.Storage_Location : 'Not Reported') + '</td></tr>' +
-          //           '<tr><td>Max Dailly Amount: ' + (chemical.attributes.Maximum_Daily_Amount ? chemical.attributes.Maximum_Daily_Amount : 'Not Reported') + '</td></tr>' +
-          //           '<tr><td>Largest Container: ' + (chemical.attributes.Maximum_Amt___Largest_Container ? chemical.attributes.Maximum_Amt___Largest_Container : 'Not Reported') + '</td></tr>' +
-          //           '<tr><td>Avg Dailly Amount: ' + (chemical.attributes.Average_Daily_Amount ? chemical.attributes.Average_Daily_Amount : 'Not Reported') + '</td></tr>'
-          //         );
-          //         domConstruct.place(row, "rmp_chemicals");
-          //       }
-          //       if (service.config.chemicals.locations.relationshipId !== 'none' && service.config.chemicals.locations !== undefined) {
-          //
-          //         var chemicalLocationQuery = new RelationshipQuery();
-          //
-          //         chemicalLocationQuery.outFields = ['*'];
-          //         // chemicals to chemical locations relationship id
-          //         chemicalLocationQuery.relationshipId = service.config.chemicals.locations.relationshipId;
-          //         chemicalLocationQuery.objectIds = [chemical.attributes.OBJECTID];
-          //
-          //         service.chemicals.queryRelatedFeatures(chemicalLocationQuery, function (e) {
-          //           // these attributes could be different for each state
-          //           // the service.config.state object helps you identify which state you are working with
-          //           if (service.config.state.abbr === 'HI') {
-          //             var row = domConstruct.toDom(
-          //               '<tr><td style="padding-top: 10px;"><b>' + chemical.attributes.EnteredChemName
-          //               + (chemical.attributes.CiCAS ? ' (' + chemical.attributes.CiCAS + ')' : '') + '</b></td></tr>' +
-          //               '<tr><td>Days: ' + chemical.attributes.DaysOnSite + '</td></tr>'
-          //             );
-          //             domConstruct.place(row, "rmp_chemicals");
-          //           } else if (service.config.state.abbr === 'CA') {
-          //             var row = domConstruct.toDom(
-          //               '<tr><td style="padding-top: 10px;"><b>' + chemical.attributes.chemical_name
-          //               + (chemical.attributes.cas_code ? ' (' + chemical.attributes.cas_code + ')' : '') + '</b></td></tr>' +
-          //               '<tr><td>Days: ' + chemical.attributes.DaysOnSite + '</td></tr>'
-          //             );
-          //             domConstruct.place(row, "rmp_chemicals");
-          //           }
-          //
-          //           var row = domConstruct.toDom(
-          //             '<tr><td>Max Amount: ' + (chemical.attributes.MaxAmount ? chemical.attributes.MaxAmount + ' lbs' : "Not Reported") + '</td></tr>' +
-          //             '<tr><td>Max Amount Range: ' + (chemical.attributes.MaxAmountCode ? service.chemicals.getDomain("MaxAmountCode").getName(chemical.attributes.MaxAmountCode) : 'Not Reported') + '</td></tr>' +
-          //             '<tr><td>Max Amount Container: ' + (chemical.attributes.MaxAmountContainer ? chemical.attributes.MaxAmountContainer : "Not Reported") + '</td></tr>' +
-          //             '<tr><td>Average Amount: ' + (chemical.attributes.AveAmount ? chemical.attributes.AveAmount + ' lbs' : "Not Reported") + '</td></tr>' +
-          //             '<tr><td>Average Amount Range: ' + (chemical.attributes.AveAmountCode ? service.chemicals.getDomain("AveAmountCode").getName(chemical.attributes.AveAmountCode) : 'Not Reported') + '</td></tr>'
-          //           );
-          //
-          //           domConstruct.place(row, "rmp_chemicals");
-          //
-          //           var states = null;
-          //           if (chemical.attributes.Gas === 'T') {
-          //             states = 'Gas';
-          //           }
-          //           if (chemical.attributes.Solid === 'T') {
-          //             states ? states += ', Solid' : states = 'Solid';
-          //           }
-          //           if (chemical.attributes.Liquid === 'T') {
-          //             states ? states += ', Liquid' : states = 'Liquid';
-          //           }
-          //           if (states === null) {
-          //             states = 'Not Reported';
-          //           }
-          //           var row = domConstruct.toDom('<tr><td>State(s): ' + states + '</td></tr>');
-          //           domConstruct.place(row, 'rmp_chemicals');
-          //
-          //           var hazards = null;
-          //           if (chemical.attributes.Fire === 'T') {
-          //             hazards = 'Fire';
-          //           }
-          //           if (chemical.attributes.Pressure === 'T') {
-          //             hazards = (hazards ? hazards += ', Sudden Release of Pressure' : 'Sudden Release of Pressure');
-          //           }
-          //           if (chemical.attributes.Reactive === 'T') {
-          //             hazards = (hazards ? hazards += ', Reactive' : 'Reactive');
-          //           }
-          //           if (chemical.attributes.Acute === 'T') {
-          //             hazards = (hazards ? hazards += ', Acute' : 'Acute');
-          //           }
-          //           if (chemical.attributes.Chronic === 'T') {
-          //             hazards = (hazards ? hazards += ', Chronic' : 'Chronic');
-          //           }
-          //           if (hazards === null) {
-          //             hazards = 'Not Reported';
-          //           }
-          //           var row = domConstruct.toDom('<tr><td>Hazard(s): ' + hazards + '</td></tr>');
-          //           domConstruct.place(row, 'rmp_chemicals');
-          //
-          //
-          //           dojo.forEach(e[chemical.attributes.OBJECTID].features, function (chemical_location, j) {
-          //             var location_number = j + 1;
-          //             var row = domConstruct.toDom(
-          //               '<tr><td>-------------------</td></tr>' +
-          //               '<tr><td>Location #' + location_number + ': ' + (chemical_location.attributes.Location ? chemical_location.attributes.Location : 'Not Reported') + '</td></tr>' +
-          //               '<tr><td>Location #' + location_number + ' Type: ' + (chemical_location.attributes.LocationType ? chemical_location.attributes.LocationType : 'Not Reported') + '</td></tr>' +
-          //               '<tr><td>Location #' + location_number + ' Pressure: ' + (chemical_location.attributes.LocationPressure ? chemical_location.attributes.LocationPressure : 'Not Reported') + '</td></tr>' +
-          //               '<tr><td>Location #' + location_number + ' Temp: ' + (chemical_location.attributes.LocationTemperature ? chemical_location.attributes.LocationTemperature : 'Not Reported') + '</td></tr>' +
-          //               '<tr><td>Location #' + location_number + ' Amount: ' + (chemical_location.attributes.Amount ? chemical_location.attributes.Amount + ' ' + chemical_location.attributes.AmountUnit : 'Not Reported') + '</td></tr>'
-          //             );
-          //             domConstruct.place(row, "rmp_chemicals");
-          //
-          //           });
-          //           that.loadingShelter.hide();
-          //         }, function (e) {
-          //           console.log("Error: " + e);
-          //         });
-          //       }
-          //     });
-          //   }, function (e) {
-          //     console.log("Error: " + e);
-          //   });
-          // } else {
-          //   that.loadingShelter.hide();
-          // }
+
+          var ERQuery = new RelationshipQuery();
+          ERQuery.outFields = ['*'];
+          ERQuery.relationshipId = that.tblS9EmergencyResponses.relationshipId;
+          ERQuery.objectIds = [attributes.OBJECTID];
+
+          that.AllFacilities.queryRelatedFeatures(ERQuery, function (e) {
+            var er_plans = e[attributes.OBJECTID].features[0];
+            var row_string =
+              '<table><tbody id="er_plan_table">' +
+              '<tr><td>Is facility included in written community ER plan?</td><td>'+ (er_plans.attributes.ER_CommunityPlan ? 'Yes':'No') +'</td></tr>' +
+              '<tr><td>Does facility have its own written ER plan?</td><td>'+ (er_plans.attributes.ER_FacilityPlan ? 'Yes':'No') +'</td></tr>' +
+              '<tr><td colspan="2"></td></tr>' +
+              '<tr><td colspan="2"><b>Does facility\'s ER plan include ...</b></td></tr>' +
+              '<tr><td class="nested">specific actions to be take in response to accidental release of regulated substance(s)?</td><td>'+(er_plans.attributes.ER_ResponseActions ? 'Yes': 'No')+'</td></tr>' +
+              '<tr><td class="nested">procedures for informing the public and local agencies responding to accident releases?</td><td>'+(er_plans.attributes.ER_PublicInfoProcedures ? 'Yes': 'No')+'</td></tr>' +
+              '<tr><td class="nested">information on emergency health care?</td><td>'+(er_plans.attributes.ER_EmergencyHealthCare ? 'Yes': 'No')+'</td></tr>' +
+              '<tr><td></td></tr>' +
+              '<tr><td colspan="2"><b>Date of most recent ...</b></td></tr>' +
+              '<tr><td class="nested">review or update of facility\'s ER plan?</td><td>'+(er_plans.attributes.ER_ReviewDate ? stamp.toISOString(new Date(er_plans.attributes.ER_ReviewDate), {
+                  selector: "date",
+                  zulu: true
+                }) : 'Not Reported')+'</td></tr>' +
+              '<tr><td class="nested">ER training for facility\'s ER employees?</td><td>'+(er_plans.attributes.ERTrainingDate ? stamp.toISOString(new Date(er_plans.attributes.ERTrainingDate), {
+                  selector: "date",
+                  zulu: true
+                }) : 'Not Reported')+'</td></tr>' +
+              '<tr><td></td></tr>' +
+              '<tr><td colspan="2"><b>Local agency with which facility\'s ER plan ore response activities are coordinated</b></td></tr>' +
+              '<tr><td colspan="2">Name: '+(er_plans.attributes.CoordinatingAgencyName ? er_plans.attributes.CoordinatingAgencyName : 'Not Reported')+
+              ', Number:'+(er_plans.attributes.CoordinatingAgencyPhone ? er_plans.attributes.CoordinatingAgencyPhone : 'Not Reported')+'</td></tr>' +
+              '<tr><td colspan="2"></td></tr>' +
+              '<tr><td colspan="2"><b>Subject to ...</b></td></tr>' +
+              '<tr><td class="nested">OSHA Regulations at 29 CFR 1910.38?</td><td>'+(er_plans.attributes.FR_OSHA1910_38 ? 'Yes': 'No')+'</td></tr>' +
+              '<tr><td class="nested">OSHA Regulations at 29 CFR 1910.120?</td><td>'+(er_plans.attributes.FR_OSHA1910_120 ? 'Yes': 'No')+'</td></tr>' +
+              '<tr><td class="nested">Clean Water Act Regulations at 40 CFR 112?</td><td>'+(er_plans.attributes.FR_SPCC ? 'Yes': 'No')+'</td></tr>' +
+              '<tr><td class="nested">RCRA Regulations at 40 CFR 264, 265, and 279.52?</td><td>'+(er_plans.attributes.FR_RCRA ? 'Yes': 'No')+'</td></tr>' +
+              '<tr><td class="nested">OPA 90 Regulations at 40 CFR 112, 33 CFR 154, 49 CFR 194, or 30 CFR 254?</td><td>'+(er_plans.attributes.FR_OPA90 ? 'Yes': 'No')+'</td></tr>' +
+              '<tr><td class="nested">State EPCRA Rules or Laws?</td><td>'+(er_plans.attributes.FR_EPCRA ? 'Yes': 'No')+'</td></tr>' +
+              '<tr><td colspan="2" style="padding-left:10px;">Other: '+ er_plans.attributes.FR_OtherRegulation +'</td></tr>' +
+              '</tbody></table>';
+            var row = domConstruct.toDom(row_string);
+            domConstruct.place(row, 'emergency_plan');
+          });
         }
 
         this.graphicLayer = new GraphicsLayer();
@@ -540,8 +437,6 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
             }
           });
         };
-        // dojo.forEach(configs, function (config, i) {
-        //   config.baseurl = that.config.baseurl;
 
         LayerInfos.getInstance(that.map, that.map.itemInfo).then(function (layerInfosObject) {
           var facilities = layerInfosObject.getLayerInfoById(that.config.layerId);
@@ -551,21 +446,6 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
             loadRelated(that.facilities);
           });
         });
-
-
-        // if (config.contacts !== undefined && config.contacts.relationshipId !== 'none') {
-        //   that.facilitiess[i].contacts = new FeatureLayer(config.baseurl + config.contacts.layerId, {
-        //     outFields: ["*"]
-        //   });
-        // }
-        //
-        // if (config.chemicals !== undefined && config.chemicals.relationshipId !== 'none') {
-        //   that.facilitiess[i].chemicals = new FeatureLayer(config.baseurl + config.chemicals.layerId, {
-        //     outFields: ["*"]
-        //   });
-        // }
-        // that.facilitiess[i].config = config;
-        // });
 
         that.clickHandler = on.pausable(this.map, "click", function (e) {
           that.loadingShelter.show();
@@ -578,16 +458,13 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
             e.mapPoint.y + toleraceInMapCoords,
             that.map.spatialReference);
 
-          // var noneFound = [];
-          // dojo.forEach(that.facilitiess, function (service, i) {
-
           var featureQuery = new Query();
           featureQuery.outFields = ['*'];
           featureQuery.geometry = clickExtent;
 
           that.facilities.queryFeatures(featureQuery, function (featureSet) {
             if (featureSet.features.length === 1) {
-              loadFeature(featureSet.features[0]);
+              loadRMPs(featureSet.features[0]);
               // noneFound.push(false);
             } else if (featureSet.features.length > 1) {
               mapIdNode.innerHTML = '<h3>Multiple Facilities at that location</h3><br/><h5>Select one to continue</h5>' +
@@ -597,10 +474,6 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                 items: []
               };
               dojo.forEach(featureSet.features, function (feature) {
-                feature.attributes.CompletionCheckDate = localeDate.format(new Date(feature.attributes.CompletionCheckDate), {
-                  selector: "date",
-                  datePattern: "MM-dd-yyyy"
-                });
                 var attrs = dojo.mixin({}, feature.attributes);
                 data.items.push(attrs);
               });
@@ -614,24 +487,8 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                 grid.destroy();
               }
 
-              // these attributes could be different for each state
-              // the that.config.state object helps you identify which state you are working with
-              // if (service.config.state.abbr === 'NV') {
-              //   var layout = [
-              //     {'name': '', 'field': 'Facility_Name', 'width': '100%'}
-              //   ];
-              // } else if (service.config.state.abbr === 'AZ') {
-              //   var layout = [
-              //     {'name': '', 'field': 'NAME', 'width': '100%'}
-              //   ];
-              // } else {
-              //   var layout = [
-              //     {'name': '', 'field': 'FacilityName', 'width': '100%'}
-              //   ];
-              // }
               var layout = [
-                {'name': 'Name', 'field': 'FacilityName', 'width': '75%'},
-                {'name': 'Completion Date', 'field': 'CompletionCheckDate', 'width': '25%'}
+                {'name': 'Name', 'field': 'FacilityName', 'width': '100%'}
               ];
               grid = new DataGrid({
                 id: 'grid',
@@ -648,7 +505,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                 var facility = array.filter(featureSet.features, function (feature) {
                   return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
                 });
-                loadFeature(facility[0]);
+                loadRMPs(facility[0]);
               });
 
               grid.startup();
@@ -658,15 +515,6 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
               mapIdNode.innerHTML = '<h3>No facilities found at this location</h3><br/>';
               that.loadingShelter.hide();
             }
-            // if (noneFound.length === that.facilitiess.length) {
-            //   var wasfound = array.filter(noneFound, function (found) {
-            //     return found === false;
-            //   });
-            //   if (wasfound.length === 0) {
-            //     mapIdNode.innerHTML = '<h3>No facilities found at this location</h3><br/>';
-            //     that.loadingShelter.hide();
-            //   }
-            // }
           });
 
         });
@@ -683,32 +531,12 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
           that.clickHandler.resume();
         }
 
-        // var statusLayer = new FeatureLayer(this.config.baseurl + this.config.statusLayer,
-        //   {outFields: ['*']}),
-        //   statusQuery = new Query();
-        //
-        // statusQuery.outFields = ['*'];
-        // statusQuery.where = "1=1";
-
         this.mapIdNode.innerHTML = '<h1>RMP Indentify</h1><br/>' +
           '<table><tbody id="rmp_status"></tbody></table>' +
           '<br/>Click Facility to view information.';
 
-        // could pull this once and check if the values are set instead of pulling data each time
-        // statusLayer.queryFeatures(statusQuery, function (records) {
-        //   dojo.forEach(records.features, function (record) {
-        //     var lastUpdate = dojo.date.locale.format(new Date(record.attributes.LastUpdate), {datePattern: "yyyy-MM-dd", selector: "date"});
-        //     that.status = "<tr><td>State: "+ record.attributes.State +"</td></tr>" +
-        //       "<tr><td>Status Year: "+ record.attributes.CurrentReportingYear +"</td></tr>" +
-        //       "<tr><td>Last Updated: "+ lastUpdate +"</td></tr>" +
-        //       "<tr><td>Contact: "+ record.attributes.ContactName +"</td></tr>" +
-        //       "<tr><td>Contact Phone: "+ record.attributes.ContactPhone +"</td></tr>" +
-        //       "<tr><td>Contact Email: "+ record.attributes.ContactEmail +"</td></tr>" +
-        //       "<tr><td> <br/></td></tr>";
-        //     domConstruct.place(that.status, "rmp_status");
-        //   });
+
         that.loadingShelter.hide();
-        // });
       },
 
       onClose: function () {
