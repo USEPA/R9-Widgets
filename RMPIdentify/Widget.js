@@ -3,12 +3,12 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
     'esri/Color', 'esri/dijit/util/busyIndicator', 'esri/geometry/Extent', 'dojox/grid/DataGrid',
     'dojo/data/ItemFileWriteStore', 'dijit/tree/ForestStoreModel', 'dijit/Tree', 'dojo/on', 'jimu/dijit/LoadingShelter',
     'dojo/_base/declare', 'dojo/_base/array', 'jimu/LayerInfos/LayerInfos', 'jimu/BaseWidget', 'dojo/number', 'dojo/date/stamp',
-    'dijit/Dialog', 'dojo/Deferred'],
+    'dijit/Dialog', 'dojo/Deferred', 'dojo/promise/all'],
   function (Graphic, FeatureLayer, GraphicsLayer, RelationshipQuery, domConstruct,
             Query, PictureMarkerSymbol, SimpleLineSymbol,
             Color, busyIndicator, Extent, DataGrid,
             ItemFileWriteStore, ForestStoreModel, Tree, on, LoadingShelter,
-            declare, array, LayerInfos, BaseWidget, number, stamp, Dialog, Deferred) {
+            declare, array, LayerInfos, BaseWidget, number, stamp, Dialog, Deferred, all) {
 
     //To create a widget, you need to derive from BaseWidget.
     return declare([BaseWidget], {
@@ -197,7 +197,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
 
         function loadFeature(feature) {
           that.loadingShelter.show();
-          var attributes = feature.attributes;
+          var attributes = feature.attributes, processDeferred = new Deferred(), accidentDeferred = new Deferred;
 
           var selectedGraphic = new Graphic(feature.geometry, symbol);
 
@@ -313,6 +313,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                 dojo.forEach(e[process.attributes.OBJECTID].features, function (processChemical) {
 
                   var chemicalQuery = new RelationshipQuery();
+
                   chemicalQuery.outFields = ['*'];
                   chemicalQuery.relationshipId = that.tlkpChemicals.relationshipId;
                   chemicalQuery.objectIds = [processChemical.attributes.OBJECTID];
@@ -353,12 +354,11 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                         domConstruct.place(row, "process_" + process.attributes.ProcessID);
                       }
                     });
+                    processDeferred.resolve();
                   });
                 });
               });
             });
-            that.loadingShelter.hide();
-
           });
 
           var accidentQuery = new RelationshipQuery();
@@ -367,7 +367,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
           accidentQuery.objectIds = [attributes.OBJECTID];
 
           that.AllFacilities.queryRelatedFeatures(accidentQuery, function (featureSet) {
-            if (featureSet.hasOwnProperty('features')) {
+            if (featureSet.hasOwnProperty(attributes.OBJECTID)) {
               dojo.forEach(featureSet[attributes.OBJECTID].features, function (accident) {
                 var release_event = [];
                 accident.attributes.RE_Gas ? release_event.push('Gas') : null;
@@ -453,6 +453,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
             } else {
               domConstruct.place(domConstruct.toDom('<b>Not Accidents Reported</b>'), "accidents");
             }
+            accidentDeferred.resolve();
           });
 
           var ERQuery = new RelationshipQuery();
@@ -523,6 +524,10 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
             var row = domConstruct.toDom(location_string);
             domConstruct.place(row, 'location_metadata');
           }
+
+          all([processDeferred.promise, accidentDeferred.promise]).then(function () {
+            that.loadingShelter.hide();
+          });
         }
 
         this.graphicLayer = new GraphicsLayer();
