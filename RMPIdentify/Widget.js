@@ -253,7 +253,9 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
             '<h3 style="text-decoration: underline;">Accidents</h3>' +
             '<div style="width:100%" id="accidents"></div><br/>' +
             '<h3 style="text-decoration: underline;">Emergency Reponse Plan</h3>' +
-            '<div style="width:100%" id="emergency_plan"></div><br/>';
+            '<div style="width:100%" id="emergency_plan"></div><br/>' +
+            (multipleRMPs ? '' : '<h3 style="text-decoration: underline;">Location Metadata</h3>' +
+              '<div style="width:100%" id="location_metadata"></div><br/><br/>');
 
           // get executive summary for dialog box
           var executiveSummaryQuery = new RelationshipQuery();
@@ -496,6 +498,31 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
             var row = domConstruct.toDom(row_string);
             domConstruct.place(row, 'emergency_plan');
           });
+
+          if (!multipleRMPs) {
+            if (attributes.ValidLatLongFlag) {
+              var location_string = 'RMP Validated Location Used' +
+                '<br/>Description: ' + that.AllFacilities.getDomain('LatLongDescription').getName(attributes.LatLongDescription) +
+                '<br/>Method: ' + that.AllFacilities.getDomain('LatLongMethod').getName(attributes.LatLongMethod);
+            } else if (!attributes.ValidLatLongFlag && attributes.FRS_Lat !== undefined && attributes.FRS_long !== undefined) {
+              var location_string = 'FRS Location Used' +
+                '<br/>Description: ' + that.AllFacilities.getDomain('FRS_Description').getName(attributes.FRS_Description) +
+                '<br/>Method: ' + that.AllFacilities.getDomain('FRS_Method').getName(attributes.FRS_Method);
+            } else {
+              var location_string = 'Location Not Validated' +
+                '<br/>Description: ' + that.AllFacilities.getDomain('LatLongDescription').getName(attributes.LatLongDescription) +
+                '<br/>Method: ' + that.AllFacilities.getDomain('LatLongMethod').getName(attributes.LatLongMethod);
+            }
+
+            if (attributes.HorizontalAccMeasure) {
+              location_string += '<br/>Horizontal Accuracy (m): ' + attributes.HorizontalAccMeasure +
+                '<br/>Horizontal Datum: ' + that.AllFacilities.getDomain('HorizontalRefDatumCode').getName(attributes.HorizontalRefDatumCode) +
+                (attributes.SourceMapScaleNumber ? '<br/>Source Map Scale: ' + attributes.SourceMapScaleNumber : '')
+            }
+
+            var row = domConstruct.toDom(location_string);
+            domConstruct.place(row, 'location_metadata');
+          }
         }
 
         this.graphicLayer = new GraphicsLayer();
@@ -602,7 +629,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         console.log('startup');
       }
 
-      ,onOpen: function () {
+      , onOpen: function () {
         this.loadingShelter.show();
         console.log('RMPIdentify::onOpen');
         this.map.setInfoWindowOnClick(false);
@@ -613,13 +640,19 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
 
         this.mapIdNode.innerHTML = '<h1>RMP Indentify</h1><br/>' +
           '<h5 id="refresh_date"></h5>' +
-          '<br/>Click Facility to view information.';
+          '<br/>Click Facility to view information.' +
+          '<br/><br/><h5 style="text-decoration: underline;">Dataset Notes</h5>' +
+          'This dataset was created directly from the RMP Access databases obtained from CDX RMP*Info data flow.  This widget only display parts of the RMP dataset.' +
+          'For the full dataset please see the RMP*Review Applicaiton.  In processing this dataset we used validated RMP locations<sup>1</sup> first, FRS locations<sup>2</sup> second and unvalidated RMP locations last. ' +
+          'Any available metadata about these locations are displayed (method, descrtion, accuracy, etc).  Only locations from the most recently submitted RMP were used.' +
+          '<br/><br/><sup>1</sup>RMP validates locations by verifying they are inside bounding box coordinates corresponding to the county in which the facility exists.' +
+          '<br/><br/><sup>2</sup>For information on FRS locations see the <a href="https://edg.epa.gov/metadata/catalog/search/resource/details.page?uuid=%7BB158161D-F639-4A93-BF7C-D454C80F7C92%7D">metadata in the EDG.';
 
         if (that.baseurl === undefined) {
           that.loadDeferred.then(function () {
             var statusLayer = new FeatureLayer(that.baseurl + '/' + that.config.statusLayer,
               {outFields: ['*']}),
-            statusQuery = new Query();
+              statusQuery = new Query();
             statusQuery.outFields = ['*'];
             statusQuery.where = "OBJECTID Like '%'";
 
@@ -636,9 +669,6 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
           domConstruct.place(domConstruct.toDom('RMP Refresh Date: ' + that.refresh_date), 'refresh_date');
           that.loadingShelter.hide();
         }
-
-
-
 
 
       }
