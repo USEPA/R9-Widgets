@@ -7,56 +7,50 @@ define([
     'dijit/registry',
     'dijit/form/TextBox',
     'dojo/query',
-    'jimu/dijit/FeaturelayerServiceBrowser',
-    'jimu/LayerInfos/LayerInfos',
-    './RMPSourceSetting',
-    './RMPSettingsDijit',
-    'dojo/on',
-    'dojo/_base/lang'
+    './LayerSelectPopup'
   ],
-  function(declare, BaseWidgetSetting, Select, ObjectStore, Memory, registry, TextBox,
-           query, FeaturelayerServiceBrowser,
-           LayerInfos, QuerySourceSetting, RMPSettingsDijit, on, lang) {
-  return declare([BaseWidgetSetting], {
-    baseClass: 'rmp-identify-setting',
+  function (declare, BaseWidgetSetting, Select, ObjectStore, Memory, registry, TextBox,
+            query, LayerSelectPopup) {
+    return declare([BaseWidgetSetting], {
+      baseClass: 'rmp-identify-setting',
 
-    postCreate: function(){
-      //the config object is passed in
-      this.setConfig(this.config);
-    },
+      postCreate: function () {
+        //the config object is passed in
+        this.setConfig(this.config);
+      },
 
-    setConfig: function(config){
-      var that = this;
-      this.config = config;
-      this.statusLayerInput.value = config.statusLayer;
+      setConfig: function (config) {
+        var that = this;
+        this.config = config;
+        this.status.innerHTML = this.config.statusLayerName;
+        this.source.innerHTML = this.config.layerName;
 
-      // this.statusLayerInput.value = config.statusLayer;
-      // dojo.forEach(this.config.layers, function (config) {
-      //   config.baseurl = that.config.baseurl;
-        var widget = RMPSettingsDijit({nls: that.nls, map: that.map, appConfig: that.appConfig}, config);
-        widget.placeAt(that.serviceNode);
-      // });
-    },
-    getConfig: function() {
-      //WAB will get config object through this method
+        // this.statusLayerInput.value = config.statusLayer;
+        // this.layerChooser = new LayerChooserFromMap({createMapResponse: this.map.webMapResponse, multiple: true}, that.rmpNode);
+      },
+      getConfig: function () {
+        //WAB will get config object through this method
+        return this.config;
+      },
+      _setSource: function () {
+        var layerSelect = new LayerSelectPopup({map: this.map}),
+          that = this;
 
-      var config = {
-        layerId: {},
-        layerName: '',
-        statusLayer: this.statusLayerInput.value
-      };
-      var nodes = query('.rmp-dijit');
-      dojo.forEach(nodes, function (node) {
-        config.layerId = registry.byNode(node).config.layerId;
-        config.layerName = registry.byNode(node).config.layerName;
-        // delete registry.byNode(node).config.baseurl;
-        // config.layers.push(registry.byNode(node).config);
-      });
-      return config;
-    },
-    _setService: function () {
-      var newWidget = RMPSettingsDijit({nls: this.nls, map: this.map, appConfig: this.appConfig});
-      newWidget.placeAt(this.serviceNode);
-    }
+        layerSelect.on('ok', function (item) {
+          that.config.layerId = item[0].layerInfo.id;
+          that.config.layerName = item[0].name;
+          that.source.innerHTML = item[0].name;
+        })
+      },
+      _setStatus: function () {
+        var layerSelect = new LayerSelectPopup({map: this.map}),
+          that = this;
+
+        layerSelect.on('ok', function (item) {
+          that.config.statusLayer = item[0].layerInfo.layerObject.layerId;
+          that.config.statusLayerName = item[0].name;
+          that.status.innerHTML = item[0].name;
+        })
+      }
+    });
   });
-});
