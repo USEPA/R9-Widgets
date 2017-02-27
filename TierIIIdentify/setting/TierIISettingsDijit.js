@@ -135,7 +135,8 @@ define([
                 {name: "California", abbr: "CA"},
                 {name: "Hawaii", abbr: "HI"},
                 {name: "Nevada", abbr: "NV"},
-                {name: "Arizona", abbr: "AZ"}
+                {name: "Arizona", abbr: "AZ"},
+                {name: "Guam", abbr: "GU"}
               ],
               idProperty: "abbr"
             });
