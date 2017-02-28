@@ -427,6 +427,10 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                   var layout = [
                     {'name': '', 'field': 'NAME', 'width': '100%'}
                   ];
+                } else if (service.config.state.abbr === 'GU') {
+                  var layout = [
+                    {'name': '', 'field': 'Name', 'width': '100%'}
+                  ];
                 } else {
                   var layout = [
                     {'name': '', 'field': 'FacilityName', 'width': '100%'}
