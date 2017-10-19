@@ -166,6 +166,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           dojo.empty('generalSiteTab');
           dojo.empty('resourceTab');
           dojo.empty('logisticsTab');
+          dojo.empty('siteContactsTab');
+          dojo.empty('siteAttachmentsTab');
+          dojo.empty('strategiesTab');
 
           addToTab(['Name', 'Other_Name', 'Site_ID', 'USGS_Quad_Num', 'USGS_Quad_Name', 'GRP_Map_No',
             'Access_Agreement', 'General_Location', 'Access_Crossing', 'River_Miles', 'RR_Mile_Marker', 'Highway_Milepost',
@@ -227,6 +230,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
             });
           });
           that.loadingShelter.hide();
+          that.tabContainer.resize()
         }
 
         var layerInfosDeferred = new Deferred(), portalItemsDeferred = new Deferred();
