@@ -158,9 +158,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           })
         }
 
-        function displayCoastal(item) {
-
-        }
+        function displayCoastal(item) {}
 
         function displayInland(grpItem, feature) {
           dojo.empty('generalSiteTab');
@@ -240,7 +238,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
             dojo.forEach(results.portalItems, function (item) {
               item.grpLayers = [];
               var filteredResults = dojo.filter(results.layerInfos.getLayerInfoArray(), function (layerInfo) {
-                return item.id === layerInfo.originOperLayer.itemId
+                return item.id === layerInfo.originOperLayer.itemId;
               });
               if (filteredResults.length > 0) {
                 item.spatialExtent = new Extent(item.extent[0][0], item.extent[0][1], item.extent[1][0], item.extent[1][1],
