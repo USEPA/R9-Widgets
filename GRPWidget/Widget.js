@@ -96,13 +96,13 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           })
         }
 
-        function getContacts(grpItem, feature) {
+        function getContacts(grpItem, feature, queryContacts) {
           var relationshipQuery = new Query(),
           deferred = new Deferred();
           relationshipQuery.where = "Site_FK = '"+feature.attributes.GlobalID+"'";
           relationshipQuery.outFields = ['*'];
 
-          grpItem.GRP.inland_contacts.queryFeatures(relationshipQuery, function(response) {
+          queryContacts.queryFeatures(relationshipQuery, function(response) {
             var contactsQuery = new Query(),
               where = response.features.map(function (feature) {
               return "GlobalID='"+feature.attributes.Contact_FK+"'";
@@ -142,7 +142,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           else {
             item.GRP.coastal_sites.queryFeatures(featureQuery, function (featureSet) {
               if (featureSet.features.length === 1) {
-                displayCoastal(featureSet.features[0]);
+                convertFields(featureSet.features[0], featureSet.fields);
+                displayCoastal(item, featureSet.features[0]);
                 deferred.resolve(true);
               } else deferred.resolve(false);
             });
@@ -158,15 +159,47 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           })
         }
 
-        function displayCoastal(item) {}
+        function displayCoastal(grpItem, feature) {
+          clearAllTabs();
+          //General Tabl
+          addToTab(['Name', 'Other_Name', 'Site_ID', 'USGS_Quad', 'QUAD_Name', 'GRP_Map_No',
+            'Access_Comments', 'General_Location',
+            'Physical_Description', 'Managed_Area'], feature, 'generalSiteTab');
+          //Resource Tab
+          addToTab(['Threatened_Species', 'Resources_Comments', 'Habitat', 'Wildlife',
+            'Cultural_Priority', 'Historic_Priority', 'Socioeconomic_Priority', 'Archaeological_Priority',
+             'Cultural_Comments', 'Hazards', 'Restrictions', 'Hazards_Comments'], feature, 'resourceTab');
+          //logistics Tab
+          addToTab(['Directions', 'Access_Comments', 'Staging', 'Communications_Comments',
+            'Limitations', 'Launching', 'Water_Comments', ''], feature, 'logisticsTab');
+          //Contacts Tab
+          //may need to add something if there is no contacts
+          getContacts(grpItem, feature, grpItem.GRP.coastal_contacts).then(function (contacts) {
+            dojo.forEach(contacts, function (contact) {
+              addToTab(['Name', 'Title', 'Organization', 'Organization_Type', 'Phone', 'EmergencyPhone', 'Email', ''],
+                contact, 'siteContactsTab');
+            });
+          });
+          //Attachments Tab
+          //May need to add functionality when there are no attachments
+          displayAttachments(grpItem.GRP.coastal_sites, feature, 'siteAttachmentsTab');
+          //Strategies Tab
+          addToTab(['Site_Strategy_Comments'], feature, 'strategiesTab');
 
-        function displayInland(grpItem, feature) {
+
+        }
+
+        function clearAllTabs(){
           dojo.empty('generalSiteTab');
           dojo.empty('resourceTab');
           dojo.empty('logisticsTab');
           dojo.empty('siteContactsTab');
           dojo.empty('siteAttachmentsTab');
           dojo.empty('strategiesTab');
+        }
+
+        function displayInland(grpItem, feature) {
+          clearAllTabs();
 
           addToTab(['Name', 'Other_Name', 'Site_ID', 'USGS_Quad_Num', 'USGS_Quad_Name', 'GRP_Map_No',
             'Access_Agreement', 'General_Location', 'Access_Crossing', 'River_Miles', 'RR_Mile_Marker', 'Highway_Milepost',
@@ -180,7 +213,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           addToTab(['Directions', 'Land_Access', 'Facilities_StagingAreas_FieldPo', 'Communication_Issues',
             'Water_Logistics_Limitation', 'Water_Logistics_Launching_Loadi'], feature, 'logisticsTab');
 
-          getContacts(grpItem, feature).then(function (contacts) {
+          getContacts(grpItem, feature, grpItem.GRP.inland_contacts).then(function (contacts) {
             dojo.forEach(contacts, function (contact) {
               addToTab(['Name', 'Title', 'Organization', 'Organization_Type', 'Phone', 'EmergencyPhone', 'Email', ''],
                 contact, 'siteContactsTab');
