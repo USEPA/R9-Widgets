@@ -159,6 +159,47 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           })
         }
 
+        function getStrategiesAndBooms(strategyItem, boomItem, featureGlobalID){
+          var query = new Query();
+          query.where = "Site_FK='"+featureGlobalID+"'";
+          query.outFields = ['*'];
+          strategyItem.queryFeatures(query, function (response) {
+            var fields = {};
+            dojo.forEach(response.fields, function (field) {
+              fields[field.name] = field;
+            });
+            dojo.forEach(response.features, function (strategy) {
+              strategy.fields = fields;
+              var boomQuery = new Query();
+              boomQuery.where = "Strategy_FK='"+strategy.attributes.GlobalID+"'";
+              boomQuery.outFields = ['*'];
+              boomItem.queryFeatures(boomQuery, function (boomResponse) {
+                var boomFields = {};
+                dojo.forEach(boomResponse.fields, function (field) {
+                  boomFields[field.name] = field;
+                });
+                addToTab(['', 'Name', 'Objective', 'Implementation'], strategy, 'strategiesTab');
+                var row = domConstruct.toDom('<tr><td colspan="2" id="strategy_'+strategy.attributes.OBJECTID+'_booms"></td></tr>');
+                domConstruct.place(row, 'strategiesTab');
+                var boomPane = new TitlePane({title:'Booms', open: false,
+                  content:'<table><tbody id="booms_'+strategy.attributes.OBJECTID+'"></tbody></table>'});
+                dom.byId('strategy_'+strategy.attributes.OBJECTID+'_booms').appendChild(boomPane.domNode);
+                boomPane.startup();
+
+                dojo.forEach(boomResponse.features, function (boom) {
+
+                  boom.fields = boomFields;
+
+                  addToTab(['Boom_Type', 'Boom_Length', 'Boom_Method', 'Boom_Boat', 'Skiffs_Punts', 'Skimmers_No',
+                    'Skimmers_Type', 'Anchor_No', 'Staff', ''], boom, 'booms_'+strategy.attributes.OBJECTID);
+                })
+              });
+            });
+          });
+          that.loadingShelter.hide();
+          that.tabContainer.resize();
+        }
+
         function displayCoastal(grpItem, feature) {
           clearAllTabs();
           //General Tabl
@@ -186,6 +227,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           //Strategies Tab
           addToTab(['Site_Strategy_Comments'], feature, 'strategiesTab');
 
+          getStrategiesAndBooms(grpItem.GRP.coastal_strategies, grpItem.GRP.coastal_booms, feature.attributes.GlobalID);
 
         }
 
@@ -224,44 +266,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
 
           addToTab(['Strategies_Comments'], feature, 'strategiesTab');
 
-          var query = new Query();
-          query.where = "Site_FK='"+feature.attributes.GlobalID+"'";
-          query.outFields = ['*'];
-          grpItem.GRP.inland_strategies.queryFeatures(query, function (response) {
-            var fields = {};
-            dojo.forEach(response.fields, function (field) {
-              fields[field.name] = field;
-            });
-            dojo.forEach(response.features, function (strategy) {
-              strategy.fields = fields;
-              var boomQuery = new Query();
-              boomQuery.where = "Strategy_FK='"+strategy.attributes.GlobalID+"'";
-              boomQuery.outFields = ['*'];
-              grpItem.GRP.inland_booms.queryFeatures(boomQuery, function (boomResponse) {
-                var boomFields = {};
-                dojo.forEach(boomResponse.fields, function (field) {
-                  boomFields[field.name] = field;
-                });
-                addToTab(['', 'Name', 'Objective', 'Implementation'], strategy, 'strategiesTab');
-                var row = domConstruct.toDom('<tr><td colspan="2" id="strategy_'+strategy.attributes.OBJECTID+'_booms"></td></tr>');
-                domConstruct.place(row, 'strategiesTab');
-                var boomPane = new TitlePane({title:'Booms', open: false,
-                  content:'<table><tbody id="booms_'+strategy.attributes.OBJECTID+'"></tbody></table>'});
-                dom.byId('strategy_'+strategy.attributes.OBJECTID+'_booms').appendChild(boomPane.domNode);
-                boomPane.startup();
+          getStrategiesAndBooms(grpItem.GRP.inland_strategies, grpItem.GRP.inland_booms, feature.attributes.GlobalID);
 
-                dojo.forEach(boomResponse.features, function (boom) {
-
-                  boom.fields = boomFields;
-
-                  addToTab(['Boom_Type', 'Boom_Length', 'Boom_Method', 'Boom_Boat', 'Skiffs_Punts', 'Skimmers_No',
-                    'Skimmers_Type', 'Anchor_No', 'Staff', ''], boom, 'booms_'+strategy.attributes.OBJECTID);
-                })
-              });
-            });
-          });
-          that.loadingShelter.hide();
-          that.tabContainer.resize()
         }
 
         var layerInfosDeferred = new Deferred(), portalItemsDeferred = new Deferred();
