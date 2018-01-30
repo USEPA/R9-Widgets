@@ -1,11 +1,13 @@
 define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin', 'dojo/Deferred', 'jimu/dijit/LoadingShelter',
     'jimu/LayerInfos/LayerInfos', 'esri/arcgis/Portal', "dojo/_base/array", 'dojox/grid/DataGrid',
     'dojo/data/ItemFileWriteStore', 'esri/layers/FeatureLayer', 'esri/tasks/query', 'dojo/on',
+    'jimu/SelectionManager', 'esri/symbols/SimpleFillSymbol', 'esri/symbols/SimpleLineSymbol', 'esri/Color',
     'esri/geometry/Extent', 'esri/SpatialReference', 'dojo/promise/all', 'dojo/parser', 'dijit/layout/TabContainer',
-    'dijit/layout/ContentPane', 'dijit/TitlePane', 'dojo/dom-construct', 'dojo/dom', "dojo/domReady!"],
+    'dijit/layout/ContentPane', 'dijit/TitlePane', 'dojo/dom-construct', 'dojo/dom', 'dojo/_base/lang', "dojo/domReady!"],
   function (declare, BaseWidget, _WidgetsInTemplateMixin, Deferred, LoadingShelter, LayerInfos, arcgisPortal, array,
-            DataGrid, ItemFileWriteStore, FeatureLayer, Query, on, Extent, SpatialReference,
-            all, parser, TabContainer, ContentPane, TitlePane, domConstruct, dom) {
+            DataGrid, ItemFileWriteStore, FeatureLayer, Query, on, SelectionManager, SimpleFillSymbol, SimpleLineSymbol, Color,
+            Extent, SpatialReference,
+            all, parser, TabContainer, ContentPane, TitlePane, domConstruct, dom, lang) {
     //To create a widget, you need to derive from BaseWidget.
     return declare([BaseWidget, _WidgetsInTemplateMixin], {
 
@@ -20,6 +22,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
       postCreate: function () {
         this.inherited(arguments);
         console.log('GRPWidget::postCreate');
+
+        selectionManager = SelectionManager.getInstance();
+
       },
 
       startup: function () {
@@ -67,16 +72,27 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           });
         }
 
-        function addToTab(display_fields, item, tab) {
+        function addToTab(display_fields, item, tab, button) {
           dojo.forEach(display_fields, function (field) {
             if (field !== '') {
               var row = domConstruct.toDom(
                 '<tr><td><b>' + item.fields[field].alias + '</b>:</td><td>' +
                 (item.attributes[field] ? item.attributes[field] : '') + '</td></tr>'
               );
-            } else var row = domConstruct.toDom('<tr><td><br/><br/></td><td></td></tr>');
+            } else{
+              if(button){
+                var btn = domConstruct.toDom('<label class="switch"><input id="' + button + '" type="checkbox"><span class="slider round"></span></label>');
+
+                domConstruct.place(btn,tab);
+              }
+              var row = domConstruct.toDom('<tr><td><br/><br/></td><td></td></tr>');
+            }
             domConstruct.place(row, tab);
           });
+        }
+
+        function displayBoom(){
+          console.log("Display Boom");
         }
 
         function displayAttachments(layer, item, tab) {
@@ -160,11 +176,15 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
         }
 
         function getStrategiesAndBooms(strategyItem, boomItem, featureGlobalID){
+          //Clear the boom selection if user click on different point
+          selectionManager.clearSelection(boomItem);
+
           var query = new Query();
           query.where = "Site_FK='"+featureGlobalID+"'";
           query.outFields = ['*'];
           strategyItem.queryFeatures(query, function (response) {
             var fields = {};
+            var selectedFeats = [];
             dojo.forEach(response.fields, function (field) {
               fields[field.name] = field;
             });
@@ -173,7 +193,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
               var boomQuery = new Query();
               boomQuery.where = "Strategy_FK='"+strategy.attributes.GlobalID+"'";
               boomQuery.outFields = ['*'];
+
               boomItem.queryFeatures(boomQuery, function (boomResponse) {
+              // boomItem.selectFeatures(boomQuery, FeatureLayer.SELECTION_NEW, function (boomResponse) {
+                selectedFeats = boomResponse;
                 var boomFields = {};
                 dojo.forEach(boomResponse.fields, function (field) {
                   boomFields[field.name] = field;
@@ -191,13 +214,28 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                   boom.fields = boomFields;
 
                   addToTab(['Boom_Type', 'Boom_Length', 'Boom_Method', 'Boom_Boat', 'Skiffs_Punts', 'Skimmers_No',
-                    'Skimmers_Type', 'Anchor_No', 'Staff', ''], boom, 'booms_'+strategy.attributes.OBJECTID);
+                    'Skimmers_Type', 'Anchor_No', 'Staff', ''], boom, 'booms_'+strategy.attributes.OBJECTID, 'boom_' + boom.attributes.OBJECTID);
+
+                    var boomBtn = dom.byId('boom_' + boom.attributes.OBJECTID);
+                    on(boomBtn, "click", lang.hitch(boom, showboom));
+
                 })
               });
             });
           });
           that.loadingShelter.hide();
           that.tabContainer.resize();
+        }
+
+        function showboom(s){
+          var booms = [];
+          booms.push(this);
+          if(s.currentTarget.checked){
+            selectionManager.addFeaturesToSelection(this._layer, booms);
+          }else{
+            selectionManager.removeFeaturesFromSelection(this._layer, booms)
+          }
+
         }
 
         function displayCoastal(grpItem, feature) {
@@ -339,8 +377,14 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
       },
 
       onClose: function(){
-        console.log('GRPWidget::onClose')
+        console.log('GRPWidget::onClose');
         this.map.setInfoWindowOnClick(true);
+
+        //selectionManager.clearSelection(this.grpItems[0].GRP.coastal_booms);
+      },
+
+      displayBoom: function(){
+        console.log("finally made that");
       }
         // onMinimize: function(){
       //   console.log('GRPWidget::onMinimize');
