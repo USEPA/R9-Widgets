@@ -20,6 +20,10 @@
   overflow-y: auto;
 }
 
+.tableTab{
+  width: 100%;
+}
+
 /* The switch - the box around the slider */
 .switch {
   position: relative;

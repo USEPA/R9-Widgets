@@ -1,13 +1,13 @@
 define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin', 'dojo/Deferred', 'jimu/dijit/LoadingShelter',
-    'jimu/LayerInfos/LayerInfos', 'esri/arcgis/Portal', "dojo/_base/array", 'dojox/grid/DataGrid',
-    'dojo/data/ItemFileWriteStore', 'esri/layers/FeatureLayer', 'esri/tasks/query', 'dojo/on',
+    'jimu/LayerInfos/LayerInfos', 'esri/arcgis/Portal', "dojo/_base/array", 'dojox/grid/DataGrid', 'dijit/registry',
+    'dojo/data/ItemFileWriteStore', 'esri/layers/FeatureLayer', 'esri/tasks/query', 'dojo/on', 'dojo/dom-style',
     'jimu/SelectionManager', 'esri/symbols/SimpleFillSymbol', 'esri/symbols/SimpleLineSymbol', 'esri/Color',
-    'esri/geometry/Extent', 'esri/SpatialReference', 'dojo/promise/all', 'dojo/parser', 'dijit/layout/TabContainer',
+    'esri/geometry/Extent', 'esri/SpatialReference', 'dojo/promise/all', 'dojo/parser', 'dijit/layout/TabContainer', 'dijit/Tooltip',
     'dijit/layout/ContentPane', 'dijit/TitlePane', 'dojo/dom-construct', 'dojo/dom', 'dojo/_base/lang', "dojo/domReady!"],
   function (declare, BaseWidget, _WidgetsInTemplateMixin, Deferred, LoadingShelter, LayerInfos, arcgisPortal, array,
-            DataGrid, ItemFileWriteStore, FeatureLayer, Query, on, SelectionManager, SimpleFillSymbol, SimpleLineSymbol, Color,
+            DataGrid, registry, ItemFileWriteStore, FeatureLayer, Query, on, domStyle, SelectionManager, SimpleFillSymbol, SimpleLineSymbol, Color,
             Extent, SpatialReference,
-            all, parser, TabContainer, ContentPane, TitlePane, domConstruct, dom, lang) {
+            all, parser, TabContainer, Tooltip, ContentPane, TitlePane, domConstruct, dom, lang) {
     //To create a widget, you need to derive from BaseWidget.
     return declare([BaseWidget, _WidgetsInTemplateMixin], {
 
@@ -80,15 +80,16 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                 (item.attributes[field] ? item.attributes[field] : '') + '</td></tr>'
               );
             } else{
-              if(button){
-                var btn = domConstruct.toDom('<label class="switch"><input id="' + button + '" type="checkbox"><span class="slider round"></span></label>');
-
-                domConstruct.place(btn,tab);
-              }
               var row = domConstruct.toDom('<tr><td><br/><br/></td><td></td></tr>');
             }
             domConstruct.place(row, tab);
           });
+          if(button){
+            var btn = domConstruct.toDom('<label id="ts_'+ button + '" class="switch"><input id="' + button + '" type="checkbox"><span class="slider round"></span></label>');
+
+            domConstruct.place(btn,tab);
+
+          }
         }
 
         function displayBoom(){
@@ -112,10 +113,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           })
         }
 
-        function getContacts(grpItem, feature, queryContacts) {
+        function getContacts(grpItem, feature, queryContacts, queryWherefield) {
           var relationshipQuery = new Query(),
           deferred = new Deferred();
-          relationshipQuery.where = "Site_FK = '"+feature.attributes.GlobalID+"'";
+          relationshipQuery.where = queryWherefield +" = '"+feature.attributes.GlobalID+"'";
           relationshipQuery.outFields = ['*'];
 
           queryContacts.queryFeatures(relationshipQuery, function(response) {
@@ -170,6 +171,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
         function searchIAP(item, featureQuery) {
           item.GRP.iaps.queryFeatures(featureQuery, function (featureSet) {
             if (featureSet.features.length === 1) {
+              convertFields(featureSet.features[0], featureSet.fields);
+              displayIAP(item,featureSet.features[0]);
               console.log(featureSet.features[0]);
             }
           })
@@ -201,7 +204,17 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                 dojo.forEach(boomResponse.fields, function (field) {
                   boomFields[field.name] = field;
                 });
-                addToTab(['', 'Name', 'Objective', 'Implementation'], strategy, 'strategiesTab');
+                addToTab(['', 'Name', 'Objective', 'Implementation'], strategy, 'strategiesTab', 'boomsVis_' + strategy.attributes.OBJECTID);
+
+                //Hover tip for toggle all booms in strategy
+                new Tooltip({
+                  connectId: ['ts_' + 'boomsVis_' + strategy.attributes.OBJECTID],
+                  label: "Display Booms"
+                });
+                //click event for toggle to turn on/off all booms in strategy
+                var boomBtn = dom.byId('boomsVis_' + strategy.attributes.OBJECTID);
+                on(boomBtn, "click", lang.hitch(selectedFeats.features, showboom));
+
                 var row = domConstruct.toDom('<tr><td colspan="2" id="strategy_'+strategy.attributes.OBJECTID+'_booms"></td></tr>');
                 domConstruct.place(row, 'strategiesTab');
                 var boomPane = new TitlePane({title:'Booms', open: false,
@@ -214,8 +227,14 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                   boom.fields = boomFields;
 
                   addToTab(['Boom_Type', 'Boom_Length', 'Boom_Method', 'Boom_Boat', 'Skiffs_Punts', 'Skimmers_No',
-                    'Skimmers_Type', 'Anchor_No', 'Staff', ''], boom, 'booms_'+strategy.attributes.OBJECTID, 'boom_' + boom.attributes.OBJECTID);
+                    'Skimmers_Type', 'Anchor_No', 'Staff'], boom, 'booms_'+strategy.attributes.OBJECTID, 'boom_' + boom.attributes.OBJECTID);
 
+                    //add hover tip to toggle button for booms
+                    new Tooltip({
+                      connectId: ['ts_' + 'boom_' + boom.attributes.OBJECTID],
+                      label: "Display Boom"
+                    });
+                    //click event for making an individual boom visible
                     var boomBtn = dom.byId('boom_' + boom.attributes.OBJECTID);
                     on(boomBtn, "click", lang.hitch(boom, showboom));
 
@@ -227,19 +246,171 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           that.tabContainer.resize();
         }
 
-        function showboom(s){
-          var booms = [];
-          booms.push(this);
-          if(s.currentTarget.checked){
-            selectionManager.addFeaturesToSelection(this._layer, booms);
-          }else{
-            selectionManager.removeFeaturesFromSelection(this._layer, booms)
-          }
+        function getObjectives(CategoryItem, ObjectiveItem , featureGlobalID){
 
+          var query = new Query();
+          query.where = "ActionPlan_FK='"+featureGlobalID+"'";
+          query.outFields = ['*'];
+          CategoryItem.queryFeatures(query, function (response) {
+            var fields = {};
+            var selectedFeats = [];
+            dojo.forEach(response.fields, function (field) {
+              fields[field.name] = field;
+            });
+            dojo.forEach(response.features, function (cat) {
+              cat.fields = fields;
+              //addToTab(['Category'], cat, 'objectivesIAPTab', null);
+
+              //title pane
+              var row = domConstruct.toDom('<tr><td colspan="2" id="objective_'+cat.attributes.OBJECTID+ '"></td></tr>');
+              domConstruct.place(row, 'objectivesIAPTab');
+              var boomPane = new TitlePane({title:cat.attributes.Category, open: false,
+                content:'<table><tbody id="obj_'+cat.attributes.OBJECTID+'"></tbody></table>'});
+              dom.byId('objective_'+cat.attributes.OBJECTID).appendChild(boomPane.domNode);
+              boomPane.startup();
+
+              var catQuery = new Query();
+              catQuery.where = "Category_FK='"+cat.attributes.GlobalID+"'";
+              catQuery.outFields = ['*'];
+
+              ObjectiveItem.queryFeatures(catQuery, function (objResponse) {
+                console.log("this is objectives");
+
+                var Objfields = {};
+
+                dojo.forEach(objResponse.fields, function (field) {
+                  Objfields[field.name] = field;
+                });
+                dojo.forEach(objResponse.features, function (obj) {
+                  obj.fields = Objfields;
+                  addToTab(['Objective',''], obj, 'obj_'+cat.attributes.OBJECTID, null);
+                });
+              });
+            });
+            that.loadingShelter.hide();
+            that.tabContainer.resize();
+          });
+        }
+
+        function getWorkAnalysisMatrix(CategoryItem, featureGlobalID){
+          var query = new Query();
+          query.where = "ActionPlan_FK='"+featureGlobalID+"'";
+          query.orderByFields = ['SortOrder'];
+          query.outFields = ['*'];
+          CategoryItem.queryFeatures(query, function (response) {
+            var fields = {};
+            var selectedFeats = [];
+            dojo.forEach(response.fields, function (field) {
+              fields[field.name] = field;
+            });
+            dojo.forEach(response.features, function (wamObjective) {
+              wamObjective.fields = fields;
+              // addToTab(['Text'], cat, 'matrixIAPTab', null);
+
+              //title pane
+              var row = domConstruct.toDom('<tr><td colspan="2" id="wamObj_'+wamObjective.attributes.OBJECTID+ '"></td></tr>');
+              domConstruct.place(row, 'matrixIAPTab');
+              var boomPane = new TitlePane({title:'Objective', open: false,
+                content:'<table><tbody id="WAM_'+wamObjective.attributes.OBJECTID+'"></tbody></table>'});
+              dom.byId('wamObj_'+wamObjective.attributes.OBJECTID).appendChild(boomPane.domNode);
+              boomPane.startup();
+
+              addToTab(['Text'], wamObjective, 'WAM_'+wamObjective.attributes.OBJECTID, null);
+
+            });
+            that.loadingShelter.hide();
+            that.tabContainer.resize();
+          });
+        }
+
+        function getAssignments(assignmentItem, resourceItem, featureGlobalID){
+
+          var query = new Query();
+          query.where = "ActionPlan_FK='"+featureGlobalID+"'";
+          query.outFields = ['*'];
+          strategyItem.queryFeatures(query, function (response) {
+            var fields = {};
+            var selectedFeats = [];
+            dojo.forEach(response.fields, function (field) {
+              fields[field.name] = field;
+            });
+            // dojo.forEach(response.features, function (strategy) {
+            //   strategy.fields = fields;
+            //   var boomQuery = new Query();
+            //   boomQuery.where = "Strategy_FK='"+strategy.attributes.GlobalID+"'";
+            //   boomQuery.outFields = ['*'];
+            //
+            //   boomItem.queryFeatures(boomQuery, function (boomResponse) {
+            //     // boomItem.selectFeatures(boomQuery, FeatureLayer.SELECTION_NEW, function (boomResponse) {
+            //     selectedFeats = boomResponse;
+            //     var boomFields = {};
+            //     dojo.forEach(boomResponse.fields, function (field) {
+            //       boomFields[field.name] = field;
+            //     });
+            //     addToTab(['', 'Name', 'Objective', 'Implementation'], strategy, 'strategiesTab', 'boomsVis_' + strategy.attributes.OBJECTID);
+            //
+            //     var row = domConstruct.toDom('<tr><td colspan="2" id="strategy_'+strategy.attributes.OBJECTID+'_booms"></td></tr>');
+            //     domConstruct.place(row, 'strategiesTab');
+            //     var boomPane = new TitlePane({title:'Booms', open: false,
+            //       content:'<table><tbody id="booms_'+strategy.attributes.OBJECTID+'"></tbody></table>'});
+            //     dom.byId('strategy_'+strategy.attributes.OBJECTID+'_booms').appendChild(boomPane.domNode);
+            //     boomPane.startup();
+            //
+            //     dojo.forEach(boomResponse.features, function (boom) {
+            //
+            //       boom.fields = boomFields;
+            //
+            //       // addToTab(['Boom_Type', 'Boom_Length', 'Boom_Method', 'Boom_Boat', 'Skiffs_Punts', 'Skimmers_No',
+            //       //   'Skimmers_Type', 'Anchor_No', 'Staff'], boom, 'booms_'+strategy.attributes.OBJECTID, 'boom_' + boom.attributes.OBJECTID);
+            //
+            //     })
+            //   });
+            // });
+          });
+          that.loadingShelter.hide();
+          that.tabContainer.resize();
+        }
+
+        function showAllBoomsInStrategy(e){
+          console.log("big booms");
+          //showboom(e);
+        }
+
+        function showboom(s){
+          if(this.length){
+            if(s.target.checked){
+              selectionManager.addFeaturesToSelection(this[0]._layer, this);
+              this.forEach(function(b){
+                var boomBtn = dom.byId('boom_' + b.attributes.OBJECTID);
+                boomBtn.checked = true;
+              })
+            }else{
+              selectionManager.removeFeaturesFromSelection(this[0]._layer, this)
+              this.forEach(function(b){
+                var boomBtn = dom.byId('boom_' + b.attributes.OBJECTID);
+                boomBtn.checked = false;
+              })
+            }
+
+          }else{
+            var booms = [];
+            booms.push(this);
+            if(s.currentTarget.checked){
+              selectionManager.addFeaturesToSelection(this._layer, booms);
+            }else{
+              selectionManager.removeFeaturesFromSelection(this._layer, booms)
+            }
+          }
         }
 
         function displayCoastal(grpItem, feature) {
           clearAllTabs();
+          var siteTabContainer = dom.byId('siteTabs');
+          domStyle.set(siteTabContainer, 'display', 'block');
+
+          var iapTabContainer = dom.byId('iapTabs');
+          domStyle.set(iapTabContainer, 'display', 'none');
+
           //General Tabl
           addToTab(['Name', 'Other_Name', 'Site_ID', 'USGS_Quad', 'QUAD_Name', 'GRP_Map_No',
             'Access_Comments', 'General_Location',
@@ -253,7 +424,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
             'Limitations', 'Launching', 'Water_Comments', ''], feature, 'logisticsTab');
           //Contacts Tab
           //may need to add something if there is no contacts
-          getContacts(grpItem, feature, grpItem.GRP.coastal_contacts).then(function (contacts) {
+          getContacts(grpItem, feature, grpItem.GRP.coastal_contacts, 'Site_FK').then(function (contacts) {
             dojo.forEach(contacts, function (contact) {
               addToTab(['Name', 'Title', 'Organization', 'Organization_Type', 'Phone', 'EmergencyPhone', 'Email', ''],
                 contact, 'siteContactsTab');
@@ -276,10 +447,24 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           dojo.empty('siteContactsTab');
           dojo.empty('siteAttachmentsTab');
           dojo.empty('strategiesTab');
+
+          dojo.empty('generalIAPTab');
+          dojo.empty('objectivesIAPTab');
+          dojo.empty('matrixIAPTab');
+          dojo.empty('listsIAPTab');
+          dojo.empty('contactIAPTab');
+          dojo.empty('icpIAPTab');
+          dojo.empty('medicalIAPTab');
+          dojo.empty('attachmentsIAPTab');
         }
 
         function displayInland(grpItem, feature) {
           clearAllTabs();
+          var siteTabContainer = dom.byId('siteTabs');
+          domStyle.set(siteTabContainer, 'display', 'block');
+
+          var iapTabContainer = dom.byId('iapTabs');
+          domStyle.set(iapTabContainer, 'display', 'none');
 
           addToTab(['Name', 'Other_Name', 'Site_ID', 'USGS_Quad_Num', 'USGS_Quad_Name', 'GRP_Map_No',
             'Access_Agreement', 'General_Location', 'Access_Crossing', 'River_Miles', 'RR_Mile_Marker', 'Highway_Milepost',
@@ -293,7 +478,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           addToTab(['Directions', 'Land_Access', 'Facilities_StagingAreas_FieldPo', 'Communication_Issues',
             'Water_Logistics_Limitation', 'Water_Logistics_Launching_Loadi'], feature, 'logisticsTab');
 
-          getContacts(grpItem, feature, grpItem.GRP.inland_contacts).then(function (contacts) {
+          getContacts(grpItem, feature, grpItem.GRP.inland_contacts, 'Site_FK').then(function (contacts) {
             dojo.forEach(contacts, function (contact) {
               addToTab(['Name', 'Title', 'Organization', 'Organization_Type', 'Phone', 'EmergencyPhone', 'Email', ''],
                 contact, 'siteContactsTab');
@@ -306,6 +491,45 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
 
           getStrategiesAndBooms(grpItem.GRP.inland_strategies, grpItem.GRP.inland_booms, feature.attributes.GlobalID);
 
+        }
+
+        function displayIAP(grpItem, feature) {
+          //need to add function to clear tabs
+
+          console.log(grpItem);
+          var siteTabContainer = dom.byId('siteTabs');
+          domStyle.set(siteTabContainer, 'display', 'none');
+
+          var iapTabContainer = dom.byId('iapTabs');
+          domStyle.set(iapTabContainer, 'display', 'block');
+
+          that.tabContainerB.resize();
+          //General Tab
+          addToTab(['Name', 'ShortName', 'ExecutiveSummary'], feature, 'generalIAPTab');
+          //Objectives Tab
+          getObjectives(grpItem.GRP.ics202_categories, grpItem.GRP.ics202_objectives, feature.attributes.GlobalID);
+          //Work Analysis Matrix
+          getWorkAnalysisMatrix(grpItem.GRP.ics_234_objectives, feature.attributes.GlobalID);
+          //Contacts
+          getContacts(grpItem, feature, grpItem.GRP.iap_contacts, 'ActionPlan_FK').then(function (contacts) {
+            dojo.forEach(contacts, function (contact) {
+              addToTab(['Name', 'Title', 'Organization', 'Organization_Type', 'Phone', 'EmergencyPhone', 'Email', ''],
+                contact, 'contactIAPTab');
+            });
+          });
+          //Assignment List
+          //getAssignments(grpItem.GRP.ics204_assignments, grpItem.GRP.inland_booms, feature.attributes.GlobalID);
+
+
+
+
+
+          //add tab
+          // new ContentPane({
+          //   content:"<p>Optionally set new content now</p>",
+          //   title:"New Tab",
+          // }, tabCont).startup();
+          //tabCont.addChild()
         }
 
         var layerInfosDeferred = new Deferred(), portalItemsDeferred = new Deferred();
