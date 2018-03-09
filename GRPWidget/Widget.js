@@ -24,27 +24,28 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
         this.inherited(arguments);
         console.log('GRPWidget::postCreate');
 
-        selectionManager = SelectionManager.getInstance();
+        this.selectionManager = SelectionManager.getInstance();
 
       },
 
       startup: function () {
-        this.inherited(arguments);
+        var vm = this;
+        vm.inherited(arguments);
         console.log('GRPWidget::startup');
 
-        var grpWidgetNode = this.grpWidgetNode,
-          that = this;
+        // var grpWidgetNode = vm.grpWidgetNode;
 
-        that.loadDeferred = new Deferred();
+        vm.loadDeferred = new Deferred();
 
-        this.loadingShelter = new LoadingShelter({hidden: true});
-        this.loadingShelter.placeAt(this.domNode);
+        vm.loadingShelter = new LoadingShelter({hidden: true});
+        vm.loadingShelter.placeAt(vm.domNode);
 
-        this.loadingShelter.show();
+        vm.loadingShelter.show();
 
-        var selected_point = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, 14,
-          new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([0, 0, 0]), 1.25),
-          new Color([0, 255, 255]));
+        // Not needed if using selection manager
+        // var selected_point = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, 14,
+        //   new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([0, 0, 0]), 1.25),
+        //   new Color([0, 255, 255]));
 
         function configGRPObject(item, callback) {
           if (item.GRP) {
@@ -65,30 +66,15 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           var promises = [];
           config_layer.queryFeatures(config_query, function (response) {
             item.GRP = {};
-            dojo.forEach(response.features, function (layer) {
-              if (layer.attributes.layer_index !== null) {
-                item.layers.forEach(function (layer) {
-                  layer.getRelatedNodes().then(function (related_layers) {
-                    console.log(related_layers);
-                  });
-                  layer.getLayerObject().then(function (layer_object) {
-                    console.log(layer_object);
-                  });
+            LayerStructure.getInstance().traversal(function (layerNode) {
+              promises.push(layerNode.getLayerObject().then(function (map_layer_object) {
+                response.features.forEach(function (config_layer) {
+                  if (map_layer_object.url === item.item.url + '/' + config_layer.attributes.layer_index) {
+                    item.GRP[config_layer.attributes.layer] = {layer: map_layer_object};
+                    convertFields(item.GRP[config_layer.attributes.layer], map_layer_object.fields);
+                  }
                 });
-                var deferred = new Deferred();
-                promises.push(deferred.promise);
-                item.GRP[layer.attributes.layer] = {layer: new FeatureLayer(item.url + '/' + layer.attributes.layer_index,
-                    {
-                      outFields: ['*'],
-                      mode: FeatureLayer.MODE_SELECTION
-                    })};
-                item.GRP[layer.attributes.layer].layer.on('load', function (e) {
-                  convertFields(item.GRP[layer.attributes.layer], e.layer.fields);
-                  // manually setting selection symbol... not needed with selection manager
-                  // if (e.layer.geometryType === 'esriGeometryPoint') item.GRP[layer.attributes.layer].layer.setSelectionSymbol(selected_point);
-                  deferred.resolve();
-                });
-              }
+              }));
             });
             all(promises).then(function () {
               callback(item);
@@ -104,44 +90,56 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
         }
 
         function addToTab(display_fields, item, fields_meta, tab, button) {
-          dojo.forEach(display_fields, function (field) {
+          var row;
+          dojo.forEach(display_fields, function (field, index) {
             if (field !== '') {
-              var row = domConstruct.toDom(
-                '<tr><td><b>' + fields_meta[field].alias + '</b>:</td><td>' +
-                (item.attributes[field] ? item.attributes[field] : '') + '</td></tr>'
-              );
+              if (button) {
+                if (index === 0) {
+                  row = domConstruct.toDom('<tr><td><b>' + fields_meta[field].alias + '</b>:</td>' +
+                    '<td>' + (item.attributes[field] ? item.attributes[field] : '') + '</td>' +
+                    '<td style="text-align: right;"><label id="ts_' + button + '" class="switch">' +
+                    '<input id="' + button + '" type="checkbox">' +
+                    '<span class="slider round"></span>' +
+                    '</label></td></tr>');
+                } else {
+                  row = domConstruct.toDom(
+                    '<tr><td><b>' + fields_meta[field].alias + '</b>:</td><td colspan="2">' +
+                    (item.attributes[field] ? item.attributes[field] : '') + '</td></tr>'
+                  );
+                }
+              } else {
+                row = domConstruct.toDom(
+                  '<tr><td><b>' + fields_meta[field].alias + '</b>:</td><td>' +
+                  (item.attributes[field] ? item.attributes[field] : '') + '</td></tr>'
+                );
+              }
             } else {
-              var row = domConstruct.toDom('<tr><td><br/><br/></td><td></td></tr>');
+              row = domConstruct.toDom('<tr><td><br/><br/></td><td></td></tr>');
             }
             domConstruct.place(row, tab);
           });
-          if (button) {
-            var btn = domConstruct.toDom('<label id="ts_' + button + '" class="switch"><input id="' + button + '" type="checkbox"><span class="slider round"></span></label>');
-
-            domConstruct.place(btn, tab);
-
-          }
         }
 
-        function displayBoom() {
-          console.log("Display Boom");
-        }
+        // function displayBoom() {
+        //   console.log("Display Boom");
+        // }
 
         function displayAttachments(layer, item, tab) {
+          var row;
           layer.queryAttachmentInfos(item.attributes.OBJECTID, function (attachments) {
             dojo.forEach(attachments, function (attachment) {
               if (attachment.contentType.indexOf('image/') > -1) {
-                var row = domConstruct.toDom('<tr><td><a target="_blank" href="' + attachment.url + '">' +
+                row = domConstruct.toDom('<tr><td><a target="_blank" href="' + attachment.url + '">' +
                   '<img style="max-width:100%;" src="' + attachment.url + '"/></a></td></tr>' +
                   '<tr><td><a target="_blank" href="' + attachment.url + '">' + attachment.name + '</a></td></tr>' +
                   '<tr><td><br/><br/></td></tr>');
               } else {
-                var row = domConstruct.toDom('<tr><td><a target="_blank" href="' + attachment.url + '">' + attachment.name + '</a></td></tr>' +
+                row = domConstruct.toDom('<tr><td><a target="_blank" href="' + attachment.url + '">' + attachment.name + '</a></td></tr>' +
                   '<tr><td><br/><br/></td></tr>');
               }
               domConstruct.place(row, tab);
-            })
-          })
+            });
+          });
         }
 
         function getContacts(grpItem, feature, queryContacts, queryWherefield) {
@@ -175,9 +173,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           else {
             grpItem.GRP.inland_sites.layer.selectFeatures(featureQuery, FeatureLayer.SELECTION_ADD, function (features) {
               if (features.length === 1) {
-                grpItem.GRP.inland_sites.layer.clearSelection();
-                selectionManager.clearSelection(grpItem.GRP.inland_sites.layer);
-                selectionManager.addFeaturesToSelection(grpItem.GRP.inland_sites.layer, features);
+                // grpItem.GRP.inland_sites.layer.clearSelection();
+                vm.selectionManager.clearSelection(grpItem.GRP.inland_sites.layer);
+                vm.selectionManager.addFeaturesToSelection(grpItem.GRP.inland_sites.layer, features);
                 displayInland(grpItem, features[0]);
                 deferred.resolve(true);
               } else deferred.resolve(false);
@@ -192,9 +190,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           else {
             item.GRP.coastal_sites.layer.selectFeatures(featureQuery, FeatureLayer.SELECTION_ADD, function (features) {
               if (features.length === 1) {
-                item.GRP.coastal_sites.layer.clearSelection();
-                selectionManager.clearSelection(item.GRP.coastal_sites.layer);
-                selectionManager.addFeaturesToSelection(item.GRP.coastal_sites.layer, features);
+                // item.GRP.coastal_sites.layer.clearSelection();
+                vm.selectionManager.clearSelection(item.GRP.coastal_sites.layer);
+                vm.selectionManager.addFeaturesToSelection(item.GRP.coastal_sites.layer, features);
                 // convertFields(featureSet.features[0], featureSet.fields);
                 displayCoastal(item, features[0]);
                 deferred.resolve(true);
@@ -215,34 +213,20 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
         }
 
         function getStrategiesAndBooms(strategyItem, boomItem, featureGlobalID) {
-          //Clear the boom selection if user click on different point
-          // Travis: agreed... but this is clearing the selection of the site... which doesn't make sense but...
-          // maybe we have to use add remove instead?
-          // selectionManager.clearSelection(boomItem.layer);
-
           var query = new Query();
           query.where = "Site_FK='" + featureGlobalID + "'";
           query.outFields = ['*'];
           strategyItem.layer.queryFeatures(query, function (response) {
-            // var fields = {};
             var selectedFeats = [];
-            // dojo.forEach(response.fields, function (field) {
-            //   fields[field.name] = field;
-            // });
+
             dojo.forEach(response.features, function (strategy) {
-              // strategy.fields = fields;
               var boomQuery = new Query();
               boomQuery.where = "Strategy_FK='" + strategy.attributes.GlobalID + "'";
               boomQuery.outFields = ['*'];
 
               boomItem.layer.queryFeatures(boomQuery, function (boomResponse) {
-                // boomItem.selectFeatures(boomQuery, FeatureLayer.SELECTION_NEW, function (boomResponse) {
                 selectedFeats = boomResponse;
-                // var boomFields = {};
-                // dojo.forEach(boomResponse.fields, function (field) {
-                //   boomFields[field.name] = field;
-                // });
-                addToTab(['', 'Name', 'Objective', 'Implementation'], strategy, strategyItem.fields, 'strategiesTab', 'boomsVis_' + strategy.attributes.OBJECTID);
+                addToTab(['Name', 'Objective', 'Implementation'], strategy, strategyItem.fields, 'strategiesTab', 'boomsVis_' + strategy.attributes.OBJECTID);
 
                 //Hover tip for toggle all booms in strategy
                 new Tooltip({
@@ -250,21 +234,20 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                   label: "Display Booms"
                 });
                 //click event for toggle to turn on/off all booms in strategy
-                var boomBtn = dom.byId('boomsVis_' + strategy.attributes.OBJECTID);
-                on(boomBtn, "click", lang.hitch(selectedFeats.features, showboom));
+                var allBoomBtn = dom.byId('boomsVis_' + strategy.attributes.OBJECTID);
+                on(allBoomBtn, "click", lang.hitch(selectedFeats.features, showboom));
 
-                var row = domConstruct.toDom('<tr><td colspan="2" id="strategy_' + strategy.attributes.OBJECTID + '_booms"></td></tr>');
+
+                var row = domConstruct.toDom('<tr><td colspan="3" id="strategy_' + strategy.attributes.OBJECTID + '_booms"></td></tr>');
                 domConstruct.place(row, 'strategiesTab');
                 var boomPane = new TitlePane({
                   title: 'Booms', open: false,
-                  content: '<table><tbody id="booms_' + strategy.attributes.OBJECTID + '"></tbody></table>'
+                  content: '<table style="width: 100%"><tbody id="booms_' + strategy.attributes.OBJECTID + '"></tbody></table>'
                 });
                 dom.byId('strategy_' + strategy.attributes.OBJECTID + '_booms').appendChild(boomPane.domNode);
                 boomPane.startup();
 
                 dojo.forEach(boomResponse.features, function (boom) {
-
-                  // boom.fields = boomFields;
 
                   addToTab(['Boom_Type', 'Boom_Length', 'Boom_Method', 'Boom_Boat', 'Skiffs_Punts', 'Skimmers_No',
                     'Skimmers_Type', 'Anchor_No', 'Staff'], boom, boomItem.fields, 'booms_' + strategy.attributes.OBJECTID, 'boom_' + boom.attributes.OBJECTID);
@@ -279,11 +262,14 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                   on(boomBtn, "click", lang.hitch(boom, showboom));
 
                 });
+
+                // probably a better way but this will turn on all booms by default, Travis
+                allBoomBtn.click();
               });
             });
           });
-          that.loadingShelter.hide();
-          that.tabContainer.resize();
+          vm.loadingShelter.hide();
+          vm.tabContainer.resize();
         }
 
         function getObjectives(CategoryItem, ObjectiveItem, featureGlobalID) {
@@ -329,8 +315,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                 });
               });
             });
-            that.loadingShelter.hide();
-            that.tabContainer.resize();
+            vm.loadingShelter.hide();
+            vm.tabContainer.resize();
           });
         }
 
@@ -362,8 +348,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
               addToTab(['Text'], wamObjective, CategoryItem.fields, 'WAM_' + wamObjective.attributes.OBJECTID, null);
 
             });
-            that.loadingShelter.hide();
-            that.tabContainer.resize();
+            vm.loadingShelter.hide();
+            vm.tabContainer.resize();
           });
         }
 
@@ -411,8 +397,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
             //   });
             // });
           });
-          that.loadingShelter.hide();
-          that.tabContainer.resize();
+          vm.loadingShelter.hide();
+          vm.tabContainer.resize();
         }
 
         function showAllBoomsInStrategy(e) {
@@ -423,18 +409,18 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
         function showboom(s) {
           if (this.length) {
             if (s.target.checked) {
-              // selectionManager.addFeaturesToSelection(this[0]._layer, this);
+              vm.selectionManager.addFeaturesToSelection(this[0]._layer, this);
               this.forEach(function (b) {
                 var boomBtn = dom.byId('boom_' + b.attributes.OBJECTID);
                 boomBtn.checked = true;
-                b.visible = true;
+                // b.visible = true;
               });
             } else {
-              // selectionManager.removeFeaturesFromSelection(this[0]._layer, this)
+              vm.selectionManager.removeFeaturesFromSelection(this[0]._layer, this);
               this.forEach(function (b) {
                 var boomBtn = dom.byId('boom_' + b.attributes.OBJECTID);
                 boomBtn.checked = false;
-                b.visible = false;
+                // b.visible = false;
               });
             }
 
@@ -442,11 +428,11 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
             var booms = [];
             booms.push(this);
             if (s.currentTarget.checked) {
-              // selectionManager.addFeaturesToSelection(this._layer, booms);
-              this.visible = true;
+              vm.selectionManager.addFeaturesToSelection(this._layer, booms);
+              // this.visible = true;
             } else {
-              this.visible = false;
-              // selectionManager.removeFeaturesFromSelection(this._layer, booms)
+              // this.visible = false;
+              vm.selectionManager.removeFeaturesFromSelection(this._layer, booms)
             }
           }
         }
@@ -551,7 +537,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           var iapTabContainer = dom.byId('iapTabs');
           domStyle.set(iapTabContainer, 'display', 'block');
 
-          that.tabContainerB.resize();
+          vm.tabContainerB.resize();
           //General Tab
           addToTab(['Name', 'ShortName', 'ExecutiveSummary'], feature, 'generalIAPTab');
           //Objectives Tab
@@ -577,8 +563,19 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           //tabCont.addChild()
         }
 
-        var layerInfosDeferred = new Deferred(), portalItemsDeferred = new Deferred();
-        this.grpItems = [];
+        // this will loop through all GRP layers in the map and clear any selections (including booms)
+        function clearAllSelections(grp_configs) {
+          grp_configs.forEach(function (grp_config) {
+            grp_config.layers.forEach(function (layer) {
+              layer.getLayerObject().then(function (layer_object) {
+                vm.selectionManager.clearSelection(layer_object);
+              });
+            });
+          });
+        }
+
+        var portalItemsDeferred = new Deferred();
+        vm.grpItems = [];
         all({portalItems: portalItemsDeferred.promise}).then(
           function (results) {
             dojo.forEach(results.portalItems, function (item) {
@@ -590,28 +587,29 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
               if (filteredResults.length > 0) {
                 var spatialExtent = new Extent(item.extent[0][0], item.extent[0][1], item.extent[1][0], item.extent[1][1],
                   new SpatialReference({wkid: 4326}));
-                that.grpItems.push({item: item, spatialExtent: spatialExtent, layers: filteredResults});
+                vm.grpItems.push({item: item, spatialExtent: spatialExtent, layers: filteredResults});
               }
             });
 
-            that.clickHandler = on.pausable(that.map, "click", function (e) {
-              // that.loadingShelter.show();
-              // that.graphicLayer.clear();
-              // var pixelWidth = that.map.extent.getWidth() / that.map.width;
-              that.loadingShelter.show();
-              var pixelWidth = that.map.extent.getWidth() / that.map.width;
+            vm.clickHandler = on.pausable(vm.map, "click", function (e) {
+              // vm.loadingShelter.show();
+              // vm.graphicLayer.clear();
+              // var pixelWidth = vm.map.extent.getWidth() / vm.map.width;
+              vm.loadingShelter.show(vm.grpItems);
+              var pixelWidth = vm.map.extent.getWidth() / vm.map.width;
               var toleraceInMapCoords = 10 * pixelWidth;
               var clickExtent = new Extent(e.mapPoint.x - toleraceInMapCoords,
                 e.mapPoint.y - toleraceInMapCoords,
                 e.mapPoint.x + toleraceInMapCoords,
                 e.mapPoint.y + toleraceInMapCoords,
-                that.map.spatialReference);
+                vm.map.spatialReference);
 
               var featureQuery = new Query();
               featureQuery.outFields = ['*'];
               featureQuery.geometry = clickExtent;
 
-              dojo.forEach(that.grpItems, function (item) {
+              clearAllSelections(vm.grpItems);
+              dojo.forEach(vm.grpItems, function (item) {
                 if (item.spatialExtent.contains(e.mapPoint)) {
                   configGRPObject(item, function (item) {
                     var coastalPromise = searchCoastal(item, featureQuery);
@@ -621,18 +619,15 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                       .then(function (results) {
                         // todo: this feature query like doesn't work for IAP
                         if (!results.coastal && !results.inland) searchIAP(item, featureQuery);
-                        that.loadingShelter.hide();
+                        vm.loadingShelter.hide();
                       });
                   });
                 }
               });
             });
-            that.loadingShelter.hide();
+            vm.loadingShelter.hide();
           });
 
-        LayerInfos.getInstance(that.map, that.map.itemInfo).then(function (layerInfosObject) {
-          layerInfosDeferred.resolve(layerInfosObject);
-        });
 
         var epaPortal = new arcgisPortal.Portal("https://epa.maps.arcgis.com");
         epaPortal.signIn().then(function () {
@@ -650,11 +645,11 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
         console.log('GRPWidget::onClose');
         this.map.setInfoWindowOnClick(true);
 
-        //selectionManager.clearSelection(this.grpItems[0].GRP.coastal_booms);
+        //vm.selectionManager.clearSelection(this.grpItems[0].GRP.coastal_booms);
       },
 
       displayBoom: function () {
-        console.log("finally made that");
+        console.log("finally made vm");
       }
       // onMinimize: function(){
       //   console.log('GRPWidget::onMinimize');
