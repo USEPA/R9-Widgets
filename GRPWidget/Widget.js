@@ -437,6 +437,11 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           }
         }
 
+        function displaySCAT(grpItem, feature) {
+          var pane = new ContentPane({title: 'SCATs'});
+          vm.tabContainer.addChild(pane, 3);
+        }
+
         function displayCoastal(grpItem, feature) {
           clearAllTabs();
           var siteTabContainer = dom.byId('siteTabs');
@@ -445,6 +450,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           var iapTabContainer = dom.byId('iapTabs');
           domStyle.set(iapTabContainer, 'display', 'none');
 
+          displaySCAT();
           //General Tabl
           addToTab(['Name', 'Other_Name', 'Site_ID', 'USGS_Quad', 'QUAD_Name', 'GRP_Map_No',
             'Access_Comments', 'General_Location',
@@ -475,6 +481,15 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
         }
 
         function clearAllTabs() {
+          var scat_tab = vm.tabContainer.getChildren().filter(function (child) {
+            if (child.title === 'SCATs') {
+              return child;
+            }
+          });
+          scat_tab.forEach(function (tab) {
+            vm.tabContainer.removeChild(tab);
+          });
+
           dojo.empty('generalSiteTab');
           dojo.empty('resourceTab');
           dojo.empty('logisticsTab');
