@@ -359,44 +359,73 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           query.where = "ActionPlan_FK='" + featureGlobalID + "'";
           query.outFields = ['*'];
           assignmentItem.layer.queryFeatures(query, function (response) {
-            var fields = {};
-            var selectedFeats = [];
-            dojo.forEach(response.fields, function (field) {
-              fields[field.name] = field;
+
+            dojo.forEach(response.features, function (assignment) {
+
+              var row = domConstruct.toDom('<tr><td colspan="2" id="assign_' + assignment.attributes.OBJECTID + '"></td></tr>');
+              domConstruct.place(row, 'listsIAPTab');
+              var AssignPane = new TitlePane({
+                title: assignment.attributes.Agency, open: false,
+                content: '<table><tbody id="a_' + assignment.attributes.OBJECTID + '"></tbody></table>'
+              });
+              dom.byId('assign_' + assignment.attributes.OBJECTID).appendChild( AssignPane.domNode);
+              AssignPane.startup();
+              //Will need to add contacts and
+              addToTab(['Agency','', 'GeneralResponsibilities','', 'IncidentAssignments','','SpecialInstructions','','AdditionalInfo'], assignment, assignmentItem.fields, 'a_' + assignment.attributes.OBJECTID, null);
+
             });
-            // dojo.forEach(response.features, function (strategy) {
-            //   strategy.fields = fields;
-            //   var boomQuery = new Query();
-            //   boomQuery.where = "Strategy_FK='"+strategy.attributes.GlobalID+"'";
-            //   boomQuery.outFields = ['*'];
-            //
-            //   boomItem.queryFeatures(boomQuery, function (boomResponse) {
-            //     // boomItem.selectFeatures(boomQuery, FeatureLayer.SELECTION_NEW, function (boomResponse) {
-            //     selectedFeats = boomResponse;
-            //     var boomFields = {};
-            //     dojo.forEach(boomResponse.fields, function (field) {
-            //       boomFields[field.name] = field;
-            //     });
-            //     addToTab(['', 'Name', 'Objective', 'Implementation'], strategy, 'strategiesTab', 'boomsVis_' + strategy.attributes.OBJECTID);
-            //
-            //     var row = domConstruct.toDom('<tr><td colspan="2" id="strategy_'+strategy.attributes.OBJECTID+'_booms"></td></tr>');
-            //     domConstruct.place(row, 'strategiesTab');
-            //     var boomPane = new TitlePane({title:'Booms', open: false,
-            //       content:'<table><tbody id="booms_'+strategy.attributes.OBJECTID+'"></tbody></table>'});
-            //     dom.byId('strategy_'+strategy.attributes.OBJECTID+'_booms').appendChild(boomPane.domNode);
-            //     boomPane.startup();
-            //
-            //     dojo.forEach(boomResponse.features, function (boom) {
-            //
-            //       boom.fields = boomFields;
-            //
-            //       // addToTab(['Boom_Type', 'Boom_Length', 'Boom_Method', 'Boom_Boat', 'Skiffs_Punts', 'Skimmers_No',
-            //       //   'Skimmers_Type', 'Anchor_No', 'Staff'], boom, 'booms_'+strategy.attributes.OBJECTID, 'boom_' + boom.attributes.OBJECTID);
-            //
-            //     })
-            //   });
-            // });
           });
+          vm.loadingShelter.hide();
+          vm.tabContainer.resize();
+        }
+
+        function getIncidentCommPlan(icpItem, contactsItem, featureGlobalID){
+          var types = ['Command','Staff', 'Chief'];
+
+          dojo.forEach(types, function (type) {
+            var title = '';
+            if(type =='Command'){
+              title = 'Incident Command/Unified Command';
+            }else if(type == 'Staff'){
+              title = 'Command Staff';
+            }else if(type =='Chief'){
+              title = 'Section Chiefs';
+            }
+
+            var row = domConstruct.toDom('<tr><td colspan="2" id="commType_' + type + '"></td></tr>');
+            domConstruct.place(row, 'icpIAPTab');
+            var commPane = new TitlePane({
+              title: title, open: false,
+              content: '<table><tbody id="a_' + type + '"></tbody></table>'
+            });
+            dom.byId('commType_' + type).appendChild( commPane.domNode);
+            commPane.startup();
+
+          });
+
+          var query = new Query();
+          query.where = "ActionPlan_FK='" + featureGlobalID + "'";
+          query.outFields = ['*'];
+
+          icpItem.layer.queryFeatures(query, function (response) {
+
+            dojo.forEach(response.features, function (assignment) {
+              addToTab(['Position','Team'], assignment, icpItem.fields, 'a_' + assignment.attributes.Team, null);
+
+              var contactsQuery = new Query();
+              contactsQuery.where = "GlobalID='" + assignment.attributes.Contact_FK + "'";
+              contactsQuery.outFields = ['*'];
+              contactsItem.layer.queryFeatures(contactsQuery, function (response) {
+                dojo.forEach(response.features, function (contact) {
+                  addToTab(['Name','Title','Organization','Organization_Type','Phone','EmergencyPhone','Email'], contact, contactsItem.fields, 'a_' + assignment.attributes.Team, null);
+                });
+
+
+
+              });
+            });
+          });
+
           vm.loadingShelter.hide();
           vm.tabContainer.resize();
         }
@@ -554,21 +583,22 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
 
           vm.tabContainerB.resize();
           //General Tab
-          addToTab(['Name', 'ShortName', 'ExecutiveSummary'], feature, 'generalIAPTab');
+          addToTab(['Name', 'ShortName', 'ExecutiveSummary'], feature, grpItem.GRP.iaps.fields, 'generalIAPTab');
           //Objectives Tab
-          getObjectives(grpItem.GRP.ics202_categories.layer, grpItem.GRP.ics202_objectives.layer, grpItem.GRP.ics202_categories.fields, feature.attributes.GlobalID);
+          getObjectives(grpItem.GRP.ics202_categories, grpItem.GRP.ics202_objectives, feature.attributes.GlobalID);
           //Work Analysis Matrix
-          getWorkAnalysisMatrix(grpItem.GRP.ics_234_objectives.layer, feature.attributes.GlobalID);
+          getWorkAnalysisMatrix(grpItem.GRP.ics_234_objectives, feature.attributes.GlobalID);
           //Contacts
           getContacts(grpItem, feature, grpItem.GRP.iap_contacts.layer, 'ActionPlan_FK').then(function (contacts) {
             dojo.forEach(contacts, function (contact) {
               addToTab(['Name', 'Title', 'Organization', 'Organization_Type', 'Phone', 'EmergencyPhone', 'Email', ''],
-                contact, grpItem.GRP.iap_contacts.fields, 'contactIAPTab');
+                contact, grpItem.GRP.contacts.fields, 'contactIAPTab');
             });
           });
           //Assignment List
-          //getAssignments(grpItem.GRP.ics204_assignments.layer, grpItem.GRP.inland_booms.layer, feature.attributes.GlobalID);
-
+          getAssignments(grpItem.GRP.ics204_assignments, grpItem.GRP.inland_booms.layer, feature.attributes.GlobalID);
+          //Incident Communications Plan
+          getIncidentCommPlan(grpItem.GRP.ics_205, grpItem.GRP.contacts, feature.attributes.GlobalID);
 
           //add tab
           // new ContentPane({
