@@ -174,7 +174,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
             grpItem.GRP.inland_sites.layer.selectFeatures(featureQuery, FeatureLayer.SELECTION_ADD, function (features) {
               if (features.length === 1) {
                 // grpItem.GRP.inland_sites.layer.clearSelection();
-                vm.selectionManager.clearSelection(grpItem.GRP.inland_sites.layer);
+                // vm.selectionManager.clearSelection(grpItem.GRP.inland_sites.layer);
                 vm.selectionManager.addFeaturesToSelection(grpItem.GRP.inland_sites.layer, features);
                 displayInland(grpItem, features[0]);
                 deferred.resolve(true);
@@ -191,7 +191,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
             item.GRP.coastal_sites.layer.selectFeatures(featureQuery, FeatureLayer.SELECTION_ADD, function (features) {
               if (features.length === 1) {
                 // item.GRP.coastal_sites.layer.clearSelection();
-                vm.selectionManager.clearSelection(item.GRP.coastal_sites.layer);
+                // vm.selectionManager.clearSelection(item.GRP.coastal_sites.layer);
                 vm.selectionManager.addFeaturesToSelection(item.GRP.coastal_sites.layer, features);
                 // convertFields(featureSet.features[0], featureSet.fields);
                 displayCoastal(item, features[0]);
@@ -205,7 +205,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
         function searchIAP(item, featureQuery) {
           item.GRP.iaps.layer.queryFeatures(featureQuery, function (featureSet) {
             if (featureSet.features.length === 1) {
-              convertFields(featureSet.features[0], featureSet.fields);
+              // convertFields(featureSet.features[0], featureSet.fields);
               displayIAP(item, featureSet.features[0]);
               console.log(featureSet.features[0]);
             }
@@ -556,14 +556,14 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           //General Tab
           addToTab(['Name', 'ShortName', 'ExecutiveSummary'], feature, 'generalIAPTab');
           //Objectives Tab
-          getObjectives(grpItem.GRP.ics202_categories.layer, grpItem.GRP.ics202_objectives.layer, feature.attributes.GlobalID);
+          getObjectives(grpItem.GRP.ics202_categories.layer, grpItem.GRP.ics202_objectives.layer, grpItem.GRP.ics202_categories.fields, feature.attributes.GlobalID);
           //Work Analysis Matrix
           getWorkAnalysisMatrix(grpItem.GRP.ics_234_objectives.layer, feature.attributes.GlobalID);
           //Contacts
           getContacts(grpItem, feature, grpItem.GRP.iap_contacts.layer, 'ActionPlan_FK').then(function (contacts) {
             dojo.forEach(contacts, function (contact) {
               addToTab(['Name', 'Title', 'Organization', 'Organization_Type', 'Phone', 'EmergencyPhone', 'Email', ''],
-                contact, 'contactIAPTab');
+                contact, grpItem.GRP.iap_contacts.fields, 'contactIAPTab');
             });
           });
           //Assignment List
