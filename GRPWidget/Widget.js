@@ -661,7 +661,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
 
         function displayIAP(grpItem, feature) {
           //need to add function to clear tabs
-
+          clearAllTabs();
           console.log(grpItem);
           var siteTabContainer = dom.byId('siteTabs');
           domStyle.set(siteTabContainer, 'display', 'none');
