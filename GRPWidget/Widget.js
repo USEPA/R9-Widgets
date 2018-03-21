@@ -108,10 +108,23 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                   );
                 }
               } else {
-                row = domConstruct.toDom(
-                  '<tr><td><b>' + fields_meta[field].alias + '</b>:</td><td>' +
-                  (item.attributes[field] ? item.attributes[field] : '') + '</td></tr>'
-                );
+                if(field == 'EMT' || field == 'BurnCenter' || field == 'Helipad'){
+                  var val = item.attributes[field] ? item.attributes[field] : '';
+                  var reVal;
+                  if(val =='1'){reVal = 'Yes'}else{reVal = 'No'}
+
+                  row = domConstruct.toDom(
+                    '<tr><td><b>' + fields_meta[field].alias + '</b>:</td><td>' +
+                     reVal + '</td></tr>'
+                  );
+
+                }else{
+                  row = domConstruct.toDom(
+                    '<tr><td><b>' + fields_meta[field].alias + '</b>:</td><td>' +
+                    (item.attributes[field] ? item.attributes[field] : '') + '</td></tr>'
+                  );
+                }
+
               }
             } else {
               row = domConstruct.toDom('<tr><td><br/><br/></td><td></td></tr>');
@@ -430,6 +443,52 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           vm.tabContainer.resize();
         }
 
+        function getMedicalActionPlan(medItem, featureGlobalID) {
+          var types = ['firstaid','transportation', 'hospital'];
+
+          dojo.forEach(types, function (type) {
+            var title = '';
+            if(type =='firstaid'){
+              title = 'First Aid Stations';
+            }else if(type == 'transportation'){
+              title = 'Transportation (Ground and/or Ambulance Services)';
+            }else if(type =='hospital'){
+              title = 'Hospitals';
+            }
+
+            var row = domConstruct.toDom('<tr><td colspan="2" id="medPlan_' + type + '"></td></tr>');
+            domConstruct.place(row, 'medicalIAPTab');
+            var commPane = new TitlePane({
+              title: title, open: false,
+              content: '<table><tbody id="a_' + type + '"></tbody></table>'
+            });
+            dom.byId('medPlan_' + type).appendChild( commPane.domNode);
+            commPane.startup();
+
+          });
+
+          var query = new Query();
+          query.where = "ActionPlan_FK='" + featureGlobalID + "'";
+          query.outFields = ['*'];
+
+          medItem.layer.queryFeatures(query, function (response) {
+            console.log("here");
+            dojo.forEach(response.features, function (medicalPlan) {
+              if(medicalPlan.attributes.Type == "firstaid" || medicalPlan.attributes.Type == "transportation"){
+                addToTab(['Name','Location','EMT','Phone','Radio'], medicalPlan, medItem.fields, 'a_' + medicalPlan.attributes.Type, null);
+
+                console.log("What is this");
+              }else{
+                addToTab(['Name','Location','EMT','Helipad','Phone','Radio'], medicalPlan, medItem.fields, 'a_' + medicalPlan.attributes.Type, null);
+              }
+
+
+            });
+          });
+          vm.loadingShelter.hide();
+          vm.tabContainer.resize();
+        }
+
         function showAllBoomsInStrategy(e) {
           console.log("big booms");
           //showboom(e);
@@ -599,6 +658,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           getAssignments(grpItem.GRP.ics204_assignments, grpItem.GRP.inland_booms.layer, feature.attributes.GlobalID);
           //Incident Communications Plan
           getIncidentCommPlan(grpItem.GRP.ics_205, grpItem.GRP.contacts, feature.attributes.GlobalID);
+          //MEDICAL PLAN (ICS 206)
+          getMedicalActionPlan(grpItem.GRP.ics_206, feature.attributes.GlobalID);
+          //Attachments
+          displayAttachments(grpItem.GRP.iaps.layer, feature, 'attachmentsIAPTab');
 
           //add tab
           // new ContentPane({
