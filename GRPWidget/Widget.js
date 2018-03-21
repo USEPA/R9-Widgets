@@ -4,11 +4,13 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
     'dojo/data/ItemFileWriteStore', 'esri/layers/FeatureLayer', 'esri/tasks/query', 'dojo/on', 'dojo/dom-style',
     'jimu/SelectionManager', 'esri/symbols/SimpleFillSymbol', 'esri/symbols/SimpleLineSymbol', 'esri/symbols/SimpleMarkerSymbol', 'esri/Color',
     'esri/geometry/Extent', 'esri/SpatialReference', 'dojo/promise/all', 'dojo/parser', 'dijit/layout/TabContainer', 'dijit/Tooltip',
-    'dijit/layout/ContentPane', 'dijit/TitlePane', 'jimu/LayerStructure', 'jimu/LayerNode', 'dojo/dom-construct', 'dojo/dom', 'dojo/_base/lang', "dojo/domReady!"],
+    'dijit/layout/ContentPane', 'dijit/TitlePane', 'jimu/LayerStructure', 'jimu/LayerNode', 'esri/tasks/PrintTask', 'esri/tasks/Geoprocessor',
+    'dojo/json', 'dojo/dom-construct', 'dojo/dom', 'dojo/_base/lang', "dojo/domReady!"],
   function (declare, BaseWidget, _WidgetsInTemplateMixin, Deferred, LoadingShelter, LayerInfos, arcgisPortal, array,
             DataGrid, registry, ItemFileWriteStore, FeatureLayer, Query, on, domStyle, SelectionManager, SimpleFillSymbol, SimpleLineSymbol,
             SimpleMarkerSymbol, Color, Extent, SpatialReference,
-            all, parser, TabContainer, Tooltip, ContentPane, TitlePane, LayerStructure, LayerNode, domConstruct, dom, lang) {
+            all, parser, TabContainer, Tooltip, ContentPane, TitlePane, LayerStructure, LayerNode, PrintTask, Geoprocessor,
+            JSON, domConstruct, dom, lang) {
     //To create a widget, you need to derive from BaseWidget.
     return declare([BaseWidget, _WidgetsInTemplateMixin], {
 
@@ -82,6 +84,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           });
         }
 
+
         function convertFields(item, fields) {
           item.fields = {};
           dojo.forEach(fields, function (field) {
@@ -108,17 +111,21 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                   );
                 }
               } else {
-                if(field == 'EMT' || field == 'BurnCenter' || field == 'Helipad'){
+                if (field == 'EMT' || field == 'BurnCenter' || field == 'Helipad') {
                   var val = item.attributes[field] ? item.attributes[field] : '';
                   var reVal;
-                  if(val =='1'){reVal = 'Yes'}else{reVal = 'No'}
+                  if (val == '1') {
+                    reVal = 'Yes'
+                  } else {
+                    reVal = 'No'
+                  }
 
                   row = domConstruct.toDom(
                     '<tr><td><b>' + fields_meta[field].alias + '</b>:</td><td>' +
-                     reVal + '</td></tr>'
+                    reVal + '</td></tr>'
                   );
 
-                }else{
+                } else {
                   row = domConstruct.toDom(
                     '<tr><td><b>' + fields_meta[field].alias + '</b>:</td><td>' +
                     (item.attributes[field] ? item.attributes[field] : '') + '</td></tr>'
@@ -180,6 +187,24 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           return deferred.promise;
         }
 
+        function setPrintConfig(grpItem, service_location, item) {
+          var print_services = {
+              coastal: 'https://utility.arcgis.com/usrsvcs/servers/bbb2a09a111e45e1a210e9e9f9e669e7/rest/services/R9GIS/CoastalZoneReport/GPServer/CoastalZoneReport',
+              inland: 'https://utility.arcgis.com/usrsvcs/servers/e386a76752a543e094d24b44ea347b6e/rest/services/R9GIS/GRPInlandZoneReport/GPServer/InlandZoneReport',
+              iap: 'https://utility.arcgis.com/usrsvcs/servers/8fec0d610af54407990746c0f16a1fef/rest/services/R9GIS/IAPReport/GPServer/IAPReport'
+            },
+            grp_tag = array.filter(grpItem.item.tags, function (tag) {
+              return tag.indexOf('GRP App:') > -1;
+            });
+          vm.print_service = print_services[service_location];
+          vm.print_params = {
+            config_index: (grp_tag[0] ? grp_tag[0].substring(grp_tag[0].indexOf(':') + 1, grp_tag[0].length) : '5'),
+            service_root: grpItem.item.url + '/',
+            globalid: item.attributes.GlobalID
+          };
+          console.log(grpItem);
+        }
+
         function searchInland(grpItem, featureQuery) {
           var deferred = new Deferred();
           if (!grpItem.GRP.inland_sites.layer) deferred.resolve(false);
@@ -190,6 +215,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                 // vm.selectionManager.clearSelection(grpItem.GRP.inland_sites.layer);
                 vm.selectionManager.addFeaturesToSelection(grpItem.GRP.inland_sites.layer, features);
                 displayInland(grpItem, features[0]);
+                setPrintConfig(grpItem, 'inland', features[0]);
                 deferred.resolve(true);
               } else deferred.resolve(false);
             });
@@ -208,6 +234,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                 vm.selectionManager.addFeaturesToSelection(item.GRP.coastal_sites.layer, features);
                 // convertFields(featureSet.features[0], featureSet.fields);
                 displayCoastal(item, features[0]);
+                vm.current_globalid = features[0].attributes.GlobalID;
+                setPrintConfig(item, 'coastal', features[0]);
                 deferred.resolve(true);
               } else deferred.resolve(false);
             });
@@ -219,8 +247,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           item.GRP.iaps.layer.queryFeatures(featureQuery, function (featureSet) {
             if (featureSet.features.length === 1) {
               // convertFields(featureSet.features[0], featureSet.fields);
+              vm.selectionManager.addFeaturesToSelection(item.GRP.iaps.layer, featureSet.features);
               displayIAP(item, featureSet.features[0]);
-              console.log(featureSet.features[0]);
+              vm.current_globalid = featureSet.features[0].attributes.GlobalID;
+              setPrintConfig(item, 'iap', featureSet.features[0]);
             }
           });
         }
@@ -381,10 +411,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                 title: assignment.attributes.Agency, open: false,
                 content: '<table><tbody id="a_' + assignment.attributes.OBJECTID + '"></tbody></table>'
               });
-              dom.byId('assign_' + assignment.attributes.OBJECTID).appendChild( AssignPane.domNode);
+              dom.byId('assign_' + assignment.attributes.OBJECTID).appendChild(AssignPane.domNode);
               AssignPane.startup();
               //Will need to add contacts and
-              addToTab(['Agency','', 'GeneralResponsibilities','', 'IncidentAssignments','','SpecialInstructions','','AdditionalInfo'], assignment, assignmentItem.fields, 'a_' + assignment.attributes.OBJECTID, null);
+              addToTab(['Agency', '', 'GeneralResponsibilities', '', 'IncidentAssignments', '', 'SpecialInstructions', '', 'AdditionalInfo'], assignment, assignmentItem.fields, 'a_' + assignment.attributes.OBJECTID, null);
 
             });
           });
@@ -392,16 +422,16 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           vm.tabContainer.resize();
         }
 
-        function getIncidentCommPlan(icpItem, contactsItem, featureGlobalID){
-          var types = ['Command','Staff', 'Chief'];
+        function getIncidentCommPlan(icpItem, contactsItem, featureGlobalID) {
+          var types = ['Command', 'Staff', 'Chief'];
 
           dojo.forEach(types, function (type) {
             var title = '';
-            if(type =='Command'){
+            if (type == 'Command') {
               title = 'Incident Command/Unified Command';
-            }else if(type == 'Staff'){
+            } else if (type == 'Staff') {
               title = 'Command Staff';
-            }else if(type =='Chief'){
+            } else if (type == 'Chief') {
               title = 'Section Chiefs';
             }
 
@@ -411,7 +441,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
               title: title, open: false,
               content: '<table><tbody id="a_' + type + '"></tbody></table>'
             });
-            dom.byId('commType_' + type).appendChild( commPane.domNode);
+            dom.byId('commType_' + type).appendChild(commPane.domNode);
             commPane.startup();
 
           });
@@ -423,16 +453,15 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           icpItem.layer.queryFeatures(query, function (response) {
 
             dojo.forEach(response.features, function (assignment) {
-              addToTab(['Position','Team'], assignment, icpItem.fields, 'a_' + assignment.attributes.Team, null);
+              addToTab(['Position', 'Team'], assignment, icpItem.fields, 'a_' + assignment.attributes.Team, null);
 
               var contactsQuery = new Query();
               contactsQuery.where = "GlobalID='" + assignment.attributes.Contact_FK + "'";
               contactsQuery.outFields = ['*'];
               contactsItem.layer.queryFeatures(contactsQuery, function (response) {
                 dojo.forEach(response.features, function (contact) {
-                  addToTab(['Name','Title','Organization','Organization_Type','Phone','EmergencyPhone','Email'], contact, contactsItem.fields, 'a_' + assignment.attributes.Team, null);
+                  addToTab(['Name', 'Title', 'Organization', 'Organization_Type', 'Phone', 'EmergencyPhone', 'Email'], contact, contactsItem.fields, 'a_' + assignment.attributes.Team, null);
                 });
-
 
 
               });
@@ -444,15 +473,15 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
         }
 
         function getMedicalActionPlan(medItem, featureGlobalID) {
-          var types = ['firstaid','transportation', 'hospital'];
+          var types = ['firstaid', 'transportation', 'hospital'];
 
           dojo.forEach(types, function (type) {
             var title = '';
-            if(type =='firstaid'){
+            if (type == 'firstaid') {
               title = 'First Aid Stations';
-            }else if(type == 'transportation'){
+            } else if (type == 'transportation') {
               title = 'Transportation (Ground and/or Ambulance Services)';
-            }else if(type =='hospital'){
+            } else if (type == 'hospital') {
               title = 'Hospitals';
             }
 
@@ -462,7 +491,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
               title: title, open: false,
               content: '<table><tbody id="a_' + type + '"></tbody></table>'
             });
-            dom.byId('medPlan_' + type).appendChild( commPane.domNode);
+            dom.byId('medPlan_' + type).appendChild(commPane.domNode);
             commPane.startup();
 
           });
@@ -474,12 +503,12 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           medItem.layer.queryFeatures(query, function (response) {
             console.log("here");
             dojo.forEach(response.features, function (medicalPlan) {
-              if(medicalPlan.attributes.Type == "firstaid" || medicalPlan.attributes.Type == "transportation"){
-                addToTab(['Name','Location','EMT','Phone','Radio'], medicalPlan, medItem.fields, 'a_' + medicalPlan.attributes.Type, null);
+              if (medicalPlan.attributes.Type == "firstaid" || medicalPlan.attributes.Type == "transportation") {
+                addToTab(['Name', 'Location', 'EMT', 'Phone', 'Radio'], medicalPlan, medItem.fields, 'a_' + medicalPlan.attributes.Type, null);
 
                 console.log("What is this");
-              }else{
-                addToTab(['Name','Location','EMT','Helipad','Phone','Radio'], medicalPlan, medItem.fields, 'a_' + medicalPlan.attributes.Type, null);
+              } else {
+                addToTab(['Name', 'Location', 'EMT', 'Helipad', 'Phone', 'Radio'], medicalPlan, medItem.fields, 'a_' + medicalPlan.attributes.Type, null);
               }
 
 
@@ -758,6 +787,37 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
 
       displayBoom: function () {
         console.log("finally made vm");
+      },
+
+
+      printPDF: function () {
+        var printTask = new PrintTask();
+        var mapjson = printTask._getPrintDefinition(this.map, {'map': this.map});
+
+        var print_gp = new Geoprocessor(this.print_service),
+          gp_params = {
+            f: 'json',
+            webmap_json: JSON.stringify(mapjson),
+            service_root: this.print_params.service_root,
+            config_layer: this.print_params.config_index
+          };
+
+        if (this.print_service.indexOf('IAPReport') > -1) {
+          gp_params.iap_id = this.print_params.globalid;
+        } else {
+          gp_params.site_id = this.print_params.globalid;
+        }
+        print_gp.submitJob(gp_params, function (e) {
+          // in geoprocessing service the output paramater must be name ReportName
+          // todo: add config for report name field name?
+          if (e.jobStatus === "esriJobFailed") {
+            console.log('error')
+          } else {
+            print_gp.getResultData(e.jobId, 'ReportName', function (result) {
+              window.open(result.value.url);
+            });
+          }
+        });
       }
       // onMinimize: function(){
       //   console.log('GRPWidget::onMinimize');
