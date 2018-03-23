@@ -375,14 +375,13 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
             //   fields[field.name] = field;
             // });
             dojo.forEach(response.features, function (wamObjective) {
-              // wamObjective.fields = fields;
-              // addToTab(['Text'], cat, 'matrixIAPTab', null);
+              var objectNum = wamObjective.attributes.SortOrder + 1;
 
               //title pane
               var row = domConstruct.toDom('<tr><td colspan="2" id="wamObj_' + wamObjective.attributes.OBJECTID + '"></td></tr>');
               domConstruct.place(row, 'matrixIAPTab');
               var boomPane = new TitlePane({
-                title: 'Objective', open: false,
+                title: 'Objective' + ' '+  objectNum, open: false,
                 content: '<table><tbody id="WAM_' + wamObjective.attributes.OBJECTID + '"></tbody></table>'
               });
               dom.byId('wamObj_' + wamObjective.attributes.OBJECTID).appendChild(boomPane.domNode);
