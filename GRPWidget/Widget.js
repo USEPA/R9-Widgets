@@ -567,6 +567,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           var iapTabContainer = dom.byId('iapTabs');
           domStyle.set(iapTabContainer, 'display', 'none');
 
+          var instructionsDiv = dom.byId('instructions');
+          domStyle.set(instructionsDiv, 'display', 'none');
+
           displaySCAT();
           //General Tabl
           addToTab(['Name', 'Other_Name', 'Site_ID', 'USGS_Quad', 'QUAD_Name', 'GRP_Map_No',
@@ -632,6 +635,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           var iapTabContainer = dom.byId('iapTabs');
           domStyle.set(iapTabContainer, 'display', 'none');
 
+          var instructionsDiv = dom.byId('instructions');
+          domStyle.set(instructionsDiv, 'display', 'none');
+
           addToTab(['Name', 'Other_Name', 'Site_ID', 'USGS_Quad_Num', 'USGS_Quad_Name', 'GRP_Map_No',
             'Access_Agreement', 'General_Location', 'Access_Crossing', 'River_Miles', 'RR_Mile_Marker', 'Highway_Milepost',
             'Physical_Description', 'Waterway_Characteristics', 'Water_Width_and_Depths', 'Gaging_Station_Link',
@@ -668,6 +674,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
 
           var iapTabContainer = dom.byId('iapTabs');
           domStyle.set(iapTabContainer, 'display', 'block');
+
+          var instructionsDiv = dom.byId('instructions');
+          domStyle.set(instructionsDiv, 'display', 'none');
 
           vm.tabContainerB.resize();
           //General Tab
