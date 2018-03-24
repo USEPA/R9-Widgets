@@ -140,10 +140,6 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           });
         }
 
-        // function displayBoom() {
-        //   console.log("Display Boom");
-        // }
-
         function displayAttachments(layer, item, tab) {
           var row;
           layer.queryAttachmentInfos(item.attributes.OBJECTID, function (attachments) {
@@ -305,7 +301,6 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                   on(boomBtn, "click", lang.hitch(boom, showboom));
 
                 });
-
                 // probably a better way but this will turn on all booms by default, Travis
                 allBoomBtn.click();
               });
@@ -313,6 +308,17 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           });
           vm.loadingShelter.hide();
           vm.tabContainer.resize();
+        }
+
+        function addExpandingPane(paneTitle, rowID, panetable, tabID ){
+          var row = domConstruct.toDom('<tr><td colspan="2" id="' + rowID + '"></td></tr>');
+          domConstruct.place(row, tabID);
+          var pane = new TitlePane({
+            title: paneTitle, open: false,
+            content: '<table><tbody id="' + panetable + '"></tbody></table>'
+          });
+          dom.byId(rowID).appendChild(pane.domNode);
+          pane.startup();
         }
 
         function getObjectives(CategoryItem, ObjectiveItem, featureGlobalID) {
@@ -323,37 +329,27 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           CategoryItem.layer.queryFeatures(query, function (response) {
             // var fields = {};
             var selectedFeats = [];
-            // dojo.forEach(response.fields, function (field) {
-            //   fields[field.name] = field;
-            // });
-            dojo.forEach(response.features, function (cat) {
-              // cat.fields = fields;
-              //addToTab(['Category'], cat, 'objectivesIAPTab', null);
 
-              //title pane
-              var row = domConstruct.toDom('<tr><td colspan="2" id="objective_' + cat.attributes.OBJECTID + '"></td></tr>');
-              domConstruct.place(row, 'objectivesIAPTab');
-              var boomPane = new TitlePane({
-                title: cat.attributes.Category, open: false,
-                content: '<table><tbody id="obj_' + cat.attributes.OBJECTID + '"></tbody></table>'
-              });
-              dom.byId('objective_' + cat.attributes.OBJECTID).appendChild(boomPane.domNode);
-              boomPane.startup();
+            dojo.forEach(response.features, function (cat) {
+              //Expanding pane
+              addExpandingPane(cat.attributes.Category, 'objective_' + cat.attributes.OBJECTID, 'obj_' + cat.attributes.OBJECTID, 'objectivesIAPTab');
+              // var row = domConstruct.toDom('<tr><td colspan="2" id="objective_' + cat.attributes.OBJECTID + '"></td></tr>');
+              // domConstruct.place(row, 'objectivesIAPTab');
+              // var objectivePane = new TitlePane({
+              //   title: cat.attributes.Category, open: false,
+              //   content: '<table><tbody id="obj_' + cat.attributes.OBJECTID + '"></tbody></table>'
+              // });
+              // dom.byId('objective_' + cat.attributes.OBJECTID).appendChild(objectivePane.domNode);
+              // objectivePane.startup();
 
               var catQuery = new Query();
               catQuery.where = "Category_FK='" + cat.attributes.GlobalID + "'";
               catQuery.outFields = ['*'];
 
               ObjectiveItem.layer.queryFeatures(catQuery, function (objResponse) {
-                console.log("this is objectives");
 
-                // var Objfields = {};
-                //
-                // dojo.forEach(objResponse.fields, function (field) {
-                //   Objfields[field.name] = field;
-                // });
                 dojo.forEach(objResponse.features, function (obj) {
-                  // obj.fields = Objfields;
+
                   addToTab(['Objective', ''], obj, ObjectiveItem.fields, 'obj_' + cat.attributes.OBJECTID, null);
                 });
               });
@@ -369,26 +365,15 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           query.orderByFields = ['SortOrder'];
           query.outFields = ['*'];
           CategoryItem.layer.queryFeatures(query, function (response) {
-            // var fields = {};
+
             var selectedFeats = [];
-            // dojo.forEach(response.fields, function (field) {
-            //   fields[field.name] = field;
-            // });
+
             dojo.forEach(response.features, function (wamObjective) {
               var objectNum = wamObjective.attributes.SortOrder + 1;
-
-              //title pane
-              var row = domConstruct.toDom('<tr><td colspan="2" id="wamObj_' + wamObjective.attributes.OBJECTID + '"></td></tr>');
-              domConstruct.place(row, 'matrixIAPTab');
-              var boomPane = new TitlePane({
-                title: 'Objective' + ' '+  objectNum, open: false,
-                content: '<table><tbody id="WAM_' + wamObjective.attributes.OBJECTID + '"></tbody></table>'
-              });
-              dom.byId('wamObj_' + wamObjective.attributes.OBJECTID).appendChild(boomPane.domNode);
-              boomPane.startup();
+              //Expanding pane
+              addExpandingPane('Objective' + ' '+  objectNum, 'wamObj_' + wamObjective.attributes.OBJECTID, 'WAM_' + wamObjective.attributes.OBJECTID, 'matrixIAPTab');
 
               addToTab(['Text'], wamObjective, CategoryItem.fields, 'WAM_' + wamObjective.attributes.OBJECTID, null);
-
             });
             vm.loadingShelter.hide();
             vm.tabContainer.resize();
@@ -403,18 +388,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           assignmentItem.layer.queryFeatures(query, function (response) {
 
             dojo.forEach(response.features, function (assignment) {
+              //TitlePane
+              addExpandingPane(assignment.attributes.Agency, 'assign_' + assignment.attributes.OBJECTID, 'a_' + assignment.attributes.OBJECTID, 'listsIAPTab');
 
-              var row = domConstruct.toDom('<tr><td colspan="2" id="assign_' + assignment.attributes.OBJECTID + '"></td></tr>');
-              domConstruct.place(row, 'listsIAPTab');
-              var AssignPane = new TitlePane({
-                title: assignment.attributes.Agency, open: false,
-                content: '<table><tbody id="a_' + assignment.attributes.OBJECTID + '"></tbody></table>'
-              });
-              dom.byId('assign_' + assignment.attributes.OBJECTID).appendChild(AssignPane.domNode);
-              AssignPane.startup();
-              //Will need to add contacts and
               addToTab(['Agency', '', 'GeneralResponsibilities', '', 'IncidentAssignments', '', 'SpecialInstructions', '', 'AdditionalInfo'], assignment, assignmentItem.fields, 'a_' + assignment.attributes.OBJECTID, null);
-
             });
           });
           vm.loadingShelter.hide();
@@ -433,16 +410,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
             } else if (type == 'Chief') {
               title = 'Section Chiefs';
             }
-
-            var row = domConstruct.toDom('<tr><td colspan="2" id="commType_' + type + '"></td></tr>');
-            domConstruct.place(row, 'icpIAPTab');
-            var commPane = new TitlePane({
-              title: title, open: false,
-              content: '<table><tbody id="a_' + type + '"></tbody></table>'
-            });
-            dom.byId('commType_' + type).appendChild(commPane.domNode);
-            commPane.startup();
-
+            //Expanding Pane
+            addExpandingPane(title, 'commType_' + type, 'i_' + type, 'icpIAPTab');
           });
 
           var query = new Query();
@@ -452,17 +421,15 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           icpItem.layer.queryFeatures(query, function (response) {
 
             dojo.forEach(response.features, function (assignment) {
-              addToTab(['Position', 'Team'], assignment, icpItem.fields, 'a_' + assignment.attributes.Team, null);
+              addToTab(['Position', 'Team'], assignment, icpItem.fields, 'i_' + assignment.attributes.Team, null);
 
               var contactsQuery = new Query();
               contactsQuery.where = "GlobalID='" + assignment.attributes.Contact_FK + "'";
               contactsQuery.outFields = ['*'];
               contactsItem.layer.queryFeatures(contactsQuery, function (response) {
                 dojo.forEach(response.features, function (contact) {
-                  addToTab(['Name', 'Title', 'Organization', 'Organization_Type', 'Phone', 'EmergencyPhone', 'Email'], contact, contactsItem.fields, 'a_' + assignment.attributes.Team, null);
+                  addToTab(['Name', 'Title', 'Organization', 'Organization_Type', 'Phone', 'EmergencyPhone', 'Email'], contact, contactsItem.fields, 'i_' + assignment.attributes.Team, null);
                 });
-
-
               });
             });
           });
@@ -483,16 +450,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
             } else if (type == 'hospital') {
               title = 'Hospitals';
             }
-
-            var row = domConstruct.toDom('<tr><td colspan="2" id="medPlan_' + type + '"></td></tr>');
-            domConstruct.place(row, 'medicalIAPTab');
-            var commPane = new TitlePane({
-              title: title, open: false,
-              content: '<table><tbody id="a_' + type + '"></tbody></table>'
-            });
-            dom.byId('medPlan_' + type).appendChild(commPane.domNode);
-            commPane.startup();
-
+            //Expanding Pand
+            addExpandingPane(title, 'medPlan_' + type, 'm_' + type, 'medicalIAPTab');
           });
 
           var query = new Query();
@@ -503,14 +462,12 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
             console.log("here");
             dojo.forEach(response.features, function (medicalPlan) {
               if (medicalPlan.attributes.Type == "firstaid" || medicalPlan.attributes.Type == "transportation") {
-                addToTab(['Name', 'Location', 'EMT', 'Phone', 'Radio'], medicalPlan, medItem.fields, 'a_' + medicalPlan.attributes.Type, null);
+                addToTab(['Name', 'Location', 'EMT', 'Phone', 'Radio'], medicalPlan, medItem.fields, 'm_' + medicalPlan.attributes.Type, null);
 
                 console.log("What is this");
               } else {
-                addToTab(['Name', 'Location', 'EMT', 'Helipad', 'Phone', 'Radio'], medicalPlan, medItem.fields, 'a_' + medicalPlan.attributes.Type, null);
+                addToTab(['Name', 'Location', 'EMT', 'Helipad', 'Phone', 'Radio'], medicalPlan, medItem.fields, 'm_' + medicalPlan.attributes.Type, null);
               }
-
-
             });
           });
           vm.loadingShelter.hide();
