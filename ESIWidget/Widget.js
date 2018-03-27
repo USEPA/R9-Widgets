@@ -1,60 +1,254 @@
-define(['dojo/_base/declare', 'jimu/BaseWidget'],
-function(declare, BaseWidget) {
-  //To create a widget, you need to derive from BaseWidget.
-  return declare([BaseWidget], {
+define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'dojo/promise/all', 'dojox/grid/DataGrid',
+    'dojo/data/ItemFileWriteStore', 'esri/arcgis/Portal', 'esri/SpatialReference', 'esri/geometry/Extent', 'esri/tasks/query', 'esri/layers/FeatureLayer',
+    'esri/Color', 'esri/graphic', 'esri/symbols/SimpleLineSymbol', 'esri/symbols/SimpleMarkerSymbol',
+    'jimu/LayerStructure', 'jimu/dijit/LoadingShelter', 'jimu/SelectionManager'],
+  function (declare, BaseWidget, Deferred, on, all, DataGrid, ItemFileWriteStore,
+            Portal, SpatialReference, Extent, Query, FeatureLayer, Color, Graphic, SimpleLineSymbol, SimpleMarkerSymbol,
+            LayerStructure, LoadingShelter, SelectionManager) {
+    //To create a widget, you need to derive from BaseWidget.
+    return declare([BaseWidget], {
 
-    // Custom widget code goes here
+      // Custom widget code goes here
 
-    baseClass: 'esi-widget',
-    // this property is set by the framework when widget is loaded.
-    // name: 'ESIWidget',
-    // add additional properties here
+      baseClass: 'esi-widget',
+      // this property is set by the framework when widget is loaded.
+      name: 'ESI Widget',
+      // add additional properties here
+      loadingDeferred: new Deferred(),
+      loadingShelter: new LoadingShelter({hidden: true}),
 
-    //methods to communication with app container:
-    postCreate: function() {
-      this.inherited(arguments);
-      console.log('ESIWidget::postCreate');
-    }
+      //methods to communication with app container:
+      postCreate: function () {
+        this.inherited(arguments);
+        console.log('ESIWidget::postCreate');
+        this.selectionManager = SelectionManager.getInstance();
+      },
+      esiAGOLItems: [],
+      findESILayers: function () {
+        let vm = this;
+        let epaPortal = new Portal.Portal("https://epa.maps.arcgis.com");
+        epaPortal.signIn().then(function () {
+          epaPortal.queryItems({q: 'tags: "ESI Widget"', num: 100}).then(function (response) {
+            dojo.forEach(response.results, function (item) {
+              item.grpLayers = [];
+              let structure = LayerStructure.getInstance();
+              let filteredResults = dojo.filter(structure.getLayerNodes(), function (layerNode) {
+                return item.id === layerNode._layerInfo.originOperLayer.itemId;
+              });
+              if (filteredResults.length > 0) {
+                let spatialExtent = new Extent(item.extent[0][0], item.extent[0][1], item.extent[1][0], item.extent[1][1],
+                  new SpatialReference({wkid: 4326}));
+                let layers = [], promises = [];
+                filteredResults[0]._layerInfo.originOperLayer.layerObject.layerInfos.forEach(function (layer) {
 
-    // startup: function() {
-    //   this.inherited(arguments);
-    //   console.log('ESIWidget::startup');
-    // },
+                  layer.fl = new FeatureLayer(filteredResults[0]._layerInfo.originOperLayer.url + '/' + layer.id, {outFields: ['*']});
+                  let deferred = new Deferred();
+                  layers.push(layer);
+                  promises.push(deferred.promise);
+                  layer.fl.on('load', function () {
+                    deferred.resolve();
+                  });
+                });
+                all(promises).then(function () {
+                  vm.esiAGOLItems.push({
+                    item: item,
+                    spatialExtent: spatialExtent,
+                    layers: layers,
+                    originalLayer: filteredResults[0]._layerInfo.originOperLayer.layerObject
+                  });
+                });
+              }
+            });
+            vm.clickHandler = on.pausable(vm.map, "click", function (e) {
+              // vm.loadingShelter.show();
+              // vm.graphicLayer.clear();
+              // let pixelWidth = vm.map.extent.getWidth() / vm.map.width;
+              vm.loadingShelter.show();
+              let pixelWidth = vm.map.extent.getWidth() / vm.map.width;
+              let toleraceInMapCoords = 10 * pixelWidth;
+              let clickExtent = new Extent(e.mapPoint.x - toleraceInMapCoords,
+                e.mapPoint.y - toleraceInMapCoords,
+                e.mapPoint.x + toleraceInMapCoords,
+                e.mapPoint.y + toleraceInMapCoords,
+                vm.map.spatialReference);
 
-    // onOpen: function(){
-    //   console.log('ESIWidget::onOpen');
-    // },
+              let query = new Query();
+              query.outFields = ['*'];
+              query.geometry = clickExtent;
 
-    // onClose: function(){
-    //   console.log('ESIWidget::onClose');
-    // },
+              // vm.clearAllSelections(vm.esiAGOLItems);
+              dojo.forEach(vm.esiAGOLItems, function (item) {
+                if (item.spatialExtent.contains(e.mapPoint)) {
+                  // do something to fill content and highlight feature
+                  // configGRPObject(item, function (item) {
+                  //   let coastalPromise = searchCoastal(item, featureQuery);
+                  //   let inlandPromise = searchInland(item, featureQuery);
+                  //
+                  //   all({coastal: coastalPromise, inland: inlandPromise})
+                  //     .then(function (results) {
+                  //       // todo: this feature query like doesn't work for IAP
+                  //       if (!results.coastal && !results.inland) searchIAP(item, featureQuery);
+                  //       vm.loadingShelter.hide();
+                  //     });
+                  // });
+                  vm.searchESIService(item, query);
+                }
+              });
+            });
+            vm.loadingShelter.hide();
+          });
+        });
+      },
+      // this will loop through all ESI layers in the map and clear any selections
+      // but this will probably not work since the service in the map is a MapService
+      clearAllSelections: function (grp_configs) {
+        let vm = this;
+        grp_configs.forEach(function (grp_config) {
+          grp_config.layers.forEach(function (layer) {
+            layer.getLayerObject().then(function (layer_object) {
+              vm.selectionManager.clearSelection(layer_object);
+            });
+          });
+        });
+      },
+      highlightFeature: function (feature) {
+        this.map.graphics.clear();
+        let color = new Color([0, 255, 197, 1]);
+        let mySymbol;
+        if (feature.geometry.type === 'point') {
+          let line = new SimpleLineSymbol();
+          line.setWidth(2.5);
+          line.setColor(color);
+          mySymbol = new SimpleMarkerSymbol();
+          mySymbol.setOutline(line);
+        } else if (feature.geometry.type === 'polygon') {
+          mySymbol = new SimpleLineSymbol();
+          mySymbol.setWidth(1.5);
+          mySymbol.setColor(color);
+        }
+        let graphic = new Graphic(feature.geometry, mySymbol);
+        this.map.graphics.add(graphic);
+      },
+      foundFeatures: [],
+      searchESIService: function (item, query) {
+        let vm = this,
+          promises = [];
+        // reset foundFeatures back to empty
+        vm.foundFeatures = [];
 
-    // onMinimize: function(){
-    //   console.log('ESIWidget::onMinimize');
-    // },
+        item.layers.forEach(function (layer) {
+          if (layer.fl.relationships.length > 0 && item.originalLayer.visibleLayers.indexOf(layer.id) > -1) {
+            let deferred = new Deferred();
+            promises.push(
+              layer.fl.queryFeatures(query, function (featureSet) {
+                vm.foundFeatures = vm.foundFeatures.concat(featureSet.features);
+                deferred.resolve();
+              }));
+          }
+        });
+        all(promises).then(function () {
+          vm.loadingShelter.hide();
+          if (vm.foundFeatures.length === 1) {
+            console.log(vm.foundFeatures[0]);
+            vm.highlightFeature(vm.foundFeatures[0]);
+            vm.domNode.innerHTML = 'Found 1 thing';
+            // noneFound.push(false);
+            /// do something to display the features related data using vm.foundFeatures[0].getLayer().relationships
+          } else if (vm.foundFeatures.length > 1) {
+            vm.domNode.innerHTML = '<h3>Multiple features at that location</h3><br/><h5>Select one to continue</h5>' +
+              '<div id="gridDiv" style="width:100%;"></div>';
+            let data = {
+              identifier: 'OBJECTID',
+              items: []
+            };
+            dojo.forEach(vm.foundFeatures, function (feature) {
+              let attrs = dojo.mixin({}, {OBJECTID: feature.attributes.OBJECTID, name: feature.getLayer().name, feature: feature});
+              data.items.push(attrs);
+            });
 
-    // onMaximize: function(){
-    //   console.log('ESIWidget::onMaximize');
-    // },
+            let store = new ItemFileWriteStore({data: data});
+            store.data = data;
 
-    // onSignIn: function(credential){
-    //   console.log('ESIWidget::onSignIn', credential);
-    // },
+            let grid = dijit.byId("grid");
 
-    // onSignOut: function(){
-    //   console.log('ESIWidget::onSignOut');
-    // }
+            if (grid !== undefined) {
+              grid.destroy();
+            }
 
-    // onPositionChange: function(){
-    //   console.log('ESIWidget::onPositionChange');
-    // },
+            let layout = [
+              {'name': 'Name', 'field': 'name', 'width': '100%'}
+            ];
+            grid = new DataGrid({
+              id: 'grid',
+              store: store,
+              structure: layout,
+              //rowSelector: '20px',
+              autoHeight: true
+            });
 
-    // resize: function(){
-    //   console.log('ESIWidget::resize');
-    // }
+            grid.placeAt("gridDiv");
 
-    //methods to communication between widgets:
+            grid.on('RowClick', function (e) {
+              let rowItem = grid.getItem(e.rowIndex);
+              let feature = dojo.filter(vm.foundFeatures, function (feature) {
+                return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
+              });
+              // call function to display the feature
+              vm.highlightFeature(feature[0]);
+
+            });
+
+            grid.startup();
+            vm.loadingShelter.hide();
+            // noneFound.push(false);
+          } else {
+            vm.domNode.innerHTML = '<h3>No facilities found at this location</h3><br/>';
+            vm.loadingShelter.hide();
+          }
+        });
+      },
+      startup: function () {
+        this.inherited(arguments);
+        console.log('ESIWidget::startup');
+        this.loadingShelter.placeAt(this.domNode);
+        this.loadingShelter.show();
+        this.findESILayers();
+      },
+
+      // onOpen: function(){
+      //   console.log('ESIWidget::onOpen');
+      // },
+
+      // onClose: function(){
+      //   console.log('ESIWidget::onClose');
+      // },
+
+      // onMinimize: function(){
+      //   console.log('ESIWidget::onMinimize');
+      // },
+
+      // onMaximize: function(){
+      //   console.log('ESIWidget::onMaximize');
+      // },
+
+      // onSignIn: function(credential){
+      //   console.log('ESIWidget::onSignIn', credential);
+      // },
+
+      // onSignOut: function(){
+      //   console.log('ESIWidget::onSignOut');
+      // }
+
+      // onPositionChange: function(){
+      //   console.log('ESIWidget::onPositionChange');
+      // },
+
+      // resize: function(){
+      //   console.log('ESIWidget::resize');
+      // }
+
+      //methods to communication between widgets:
+
+    });
 
   });
-
-});
