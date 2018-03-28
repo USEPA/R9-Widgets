@@ -30,17 +30,22 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
         epaPortal.signIn().then(function () {
           epaPortal.queryItems({q: 'tags: "ESI Widget"', num: 100}).then(function (response) {
             dojo.forEach(response.results, function (item) {
-              item.grpLayers = [];
+              // item.grpLayers = [];
+              // get all layers loaded into map
               let structure = LayerStructure.getInstance();
               let filteredResults = dojo.filter(structure.getLayerNodes(), function (layerNode) {
                 return item.id === layerNode._layerInfo.originOperLayer.itemId;
               });
+
+              // if ESI Widget service found in map do this
               if (filteredResults.length > 0) {
+                // build spatialExtent of found ESI Widget service for use later
                 let spatialExtent = new Extent(item.extent[0][0], item.extent[0][1], item.extent[1][0], item.extent[1][1],
                   new SpatialReference({wkid: 4326}));
+
+                // since we need FeatureLayer objects to query the service build that here
                 let layers = [], promises = [];
                 filteredResults[0]._layerInfo.originOperLayer.layerObject.layerInfos.forEach(function (layer) {
-
                   layer.fl = new FeatureLayer(filteredResults[0]._layerInfo.originOperLayer.url + '/' + layer.id, {outFields: ['*']});
                   let deferred = new Deferred();
                   layers.push(layer);
@@ -49,6 +54,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
                     deferred.resolve();
                   });
                 });
+
                 all(promises).then(function () {
                   vm.esiAGOLItems.push({
                     item: item,
@@ -59,6 +65,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
                 });
               }
             });
+
             vm.clickHandler = on.pausable(vm.map, "click", function (e) {
               // vm.loadingShelter.show();
               // vm.graphicLayer.clear();
@@ -79,18 +86,6 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
               // vm.clearAllSelections(vm.esiAGOLItems);
               dojo.forEach(vm.esiAGOLItems, function (item) {
                 if (item.spatialExtent.contains(e.mapPoint)) {
-                  // do something to fill content and highlight feature
-                  // configGRPObject(item, function (item) {
-                  //   let coastalPromise = searchCoastal(item, featureQuery);
-                  //   let inlandPromise = searchInland(item, featureQuery);
-                  //
-                  //   all({coastal: coastalPromise, inland: inlandPromise})
-                  //     .then(function (results) {
-                  //       // todo: this feature query like doesn't work for IAP
-                  //       if (!results.coastal && !results.inland) searchIAP(item, featureQuery);
-                  //       vm.loadingShelter.hide();
-                  //     });
-                  // });
                   vm.searchESIService(item, query);
                 }
               });
@@ -123,7 +118,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
           mySymbol.setOutline(line);
         } else if (feature.geometry.type === 'polygon') {
           mySymbol = new SimpleLineSymbol();
-          mySymbol.setWidth(1.5);
+          mySymbol.setWidth(2.5);
           mySymbol.setColor(color);
         }
         let graphic = new Graphic(feature.geometry, mySymbol);
@@ -133,6 +128,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
       searchESIService: function (item, query) {
         let vm = this,
           promises = [];
+
         // reset foundFeatures back to empty
         vm.foundFeatures = [];
 
@@ -146,8 +142,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
               }));
           }
         });
+
         all(promises).then(function () {
-          vm.loadingShelter.hide();
           if (vm.foundFeatures.length === 1) {
             console.log(vm.foundFeatures[0]);
             vm.highlightFeature(vm.foundFeatures[0]);
@@ -195,18 +191,19 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
               });
               // call function to display the feature
               vm.highlightFeature(feature[0]);
-
+              // use feature[0].getLayer() to get the layer object for this feature and query all of the
+              // relationships in the relationships attribute of the layer
             });
 
             grid.startup();
-            vm.loadingShelter.hide();
             // noneFound.push(false);
           } else {
             vm.domNode.innerHTML = '<h3>No facilities found at this location</h3><br/>';
-            vm.loadingShelter.hide();
           }
+          vm.loadingShelter.hide();
         });
       },
+
       startup: function () {
         this.inherited(arguments);
         console.log('ESIWidget::startup');
