@@ -2,8 +2,9 @@
   <div data-dojo-attach-point="grpWidgetNode"></div>
   <div id="instructions" style="display: block;"><h3>Insturctions:</h3>
     <span>Select a Coastal/Inland Zone Sensitive site or a Incident Action Plan from the map</span></div>
+  <button data-dojo-type="dijit/form/Button" type="button" data-dojo-attach-event="onClick:printPDF">Export to PDF</button>
   <div id="siteTabs" style="height: 97%; display: none">
-    <button data-dojo-type="dijit/form/Button" type="button" data-dojo-attach-event="onClick:printPDF">Export to PDF</button>
+
     <div data-dojo-attach-point="tabContainer" data-dojo-type="dijit/layout/TabContainer" doLayout="false" style="height: 100%;">
       <div data-dojo-type="dijit/layout/ContentPane" title="General" data-dojo-props="selected:true">
         <table class="tableTab"><tbody id="generalSiteTab"></tbody></table>
@@ -26,7 +27,7 @@
     </div>
   </div>
   <div id="iapTabs" style="height: 97%; display: none">
-    <button data-dojo-type="dijit/form/Button" type="button" data-dojo-attach-event="onClick:printPDF">Export to PDF</button>
+    <!--<button data-dojo-type="dijit/form/Button" type="button" data-dojo-attach-event="onClick:printPDF">Export to PDF</button>-->
     <div data-dojo-attach-point="tabContainerB" data-dojo-type="dijit/layout/TabContainer" doLayout="false" style="height: 100%;">
       <div data-dojo-type="dijit/layout/ContentPane" title="General" data-dojo-props="selected:true">
         <table class="tableTab"><tbody id="generalIAPTab"></tbody></table>
