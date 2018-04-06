@@ -1,10 +1,10 @@
 define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'dojo/promise/all', 'dojox/grid/DataGrid',
     'dojo/data/ItemFileWriteStore', 'esri/arcgis/Portal', 'esri/SpatialReference', 'esri/geometry/Extent', 'esri/tasks/query', 'esri/layers/FeatureLayer',
     'esri/Color', 'esri/graphic', 'esri/symbols/SimpleLineSymbol', 'esri/symbols/SimpleMarkerSymbol',
-    'jimu/LayerStructure', 'jimu/dijit/LoadingShelter', 'jimu/SelectionManager'],
+    'jimu/LayerStructure', 'jimu/dijit/LoadingShelter', 'jimu/SelectionManager','esri/tasks/RelationshipQuery'],
   function (declare, BaseWidget, Deferred, on, all, DataGrid, ItemFileWriteStore,
             Portal, SpatialReference, Extent, Query, FeatureLayer, Color, Graphic, SimpleLineSymbol, SimpleMarkerSymbol,
-            LayerStructure, LoadingShelter, SelectionManager) {
+            LayerStructure, LoadingShelter, SelectionManager, RelationshipQuery) {
     //To create a widget, you need to derive from BaseWidget.
     return declare([BaseWidget], {
 
@@ -150,6 +150,28 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
             vm.domNode.innerHTML = 'Found 1 thing';
             // noneFound.push(false);
             /// do something to display the features related data using vm.foundFeatures[0].getLayer().relationships
+
+            var rel_queries = [];
+            vm.foundFeatures[0].getLayer().relationships.forEach(function (relationship) {
+              console.log(relationship);
+              var relatedQuery = new RelationshipQuery();
+              relatedQuery.outFields = ["*"];
+              relatedQuery.relationshipId = relationship.id;
+              relatedQuery.objectIds = [vm.foundFeatures[0].attributes.OBJECTID];
+              relatedQuery.returnGeometry = false;
+
+              vm.foundFeatures[0].getLayer().queryRelatedFeatures(relatedQuery, function (relatedfeatureSet) {
+                console.log(relatedfeatureSet);
+                rel_queries.push(relatedfeatureSet);
+              },function(e){
+                console.log(e);
+              });
+            });
+
+            //console.log(rel_queries);
+
+
+
           } else if (vm.foundFeatures.length > 1) {
             vm.domNode.innerHTML = '<h3>Multiple features at that location</h3><br/><h5>Select one to continue</h5>' +
               '<div id="gridDiv" style="width:100%;"></div>';
@@ -157,6 +179,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
               identifier: 'OBJECTID',
               items: []
             };
+            //getting object ID error.  Concatenate ibject id + Layer name.
             dojo.forEach(vm.foundFeatures, function (feature) {
               let attrs = dojo.mixin({}, {OBJECTID: feature.attributes.OBJECTID, name: feature.getLayer().name, feature: feature});
               data.items.push(attrs);
