@@ -143,15 +143,18 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
           }
         });
 
+
         all(promises).then(function () {
           if (vm.foundFeatures.length === 1) {
             console.log(vm.foundFeatures[0]);
             vm.highlightFeature(vm.foundFeatures[0]);
-            vm.domNode.innerHTML = 'Found 1 thing';
+            vm.domNode.innerHTML = 'Found 1 thing' + '<br>';
             // noneFound.push(false);
             /// do something to display the features related data using vm.foundFeatures[0].getLayer().relationships
 
-            var rel_queries = [];
+            //Maybe add to the HTML here.. clear before first loop, then keep appending.
+            var rel_queries =[];
+            console.log(vm.foundFeatures[0]);
             vm.foundFeatures[0].getLayer().relationships.forEach(function (relationship) {
               console.log(relationship);
               var relatedQuery = new RelationshipQuery();
@@ -161,15 +164,27 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
               relatedQuery.returnGeometry = false;
 
               vm.foundFeatures[0].getLayer().queryRelatedFeatures(relatedQuery, function (relatedfeatureSet) {
+
                 console.log(relatedfeatureSet);
-                rel_queries.push(relatedfeatureSet);
+                var fset = relatedfeatureSet[vm.foundFeatures[0].attributes.OBJECTID];
+                if (fset != undefined){
+                  fset.features.forEach(function(f){
+                    vm.domNode.innerHTML += '<br>'+ 'Layer: ' + f._layer.name + ' Feature: ' + f.attributes.NAME;
+                    //need the layer name for the related feature.  I think _layer.name is wrong layer
+                    console.log('Layer: ' + f._layer.name + ' Feature: ' + f.attributes.NAME);
+                  });
+                  //console.log(fset.attributes.name);
+                  rel_queries.push(fset.features);
+                }
               },function(e){
                 console.log(e);
               });
             });
-
-            //console.log(rel_queries);
-
+            // console.log('Testing');
+            // console.log(rel_queries);
+            // rel_queries.forEach((function (i) {
+            //   console.log(i.attributes.NAME);
+            // }));
 
 
           } else if (vm.foundFeatures.length > 1) {
