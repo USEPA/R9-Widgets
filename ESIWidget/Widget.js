@@ -1,8 +1,8 @@
 define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'dojo/promise/all', 'dojox/grid/DataGrid',
-    'dojo/data/ItemFileWriteStore', 'esri/arcgis/Portal', 'esri/SpatialReference', 'esri/geometry/Extent', 'esri/tasks/query', 'esri/layers/FeatureLayer',
+    'dojo/data/ItemFileWriteStore','dojo/dom', 'esri/arcgis/Portal', 'esri/SpatialReference', 'esri/geometry/Extent', 'esri/tasks/query', 'esri/layers/FeatureLayer',
     'esri/Color', 'esri/graphic', 'esri/symbols/SimpleLineSymbol', 'esri/symbols/SimpleMarkerSymbol',
     'jimu/LayerStructure', 'jimu/dijit/LoadingShelter', 'jimu/SelectionManager','esri/tasks/RelationshipQuery'],
-  function (declare, BaseWidget, Deferred, on, all, DataGrid, ItemFileWriteStore,
+  function (declare, BaseWidget, Deferred, on, all, DataGrid, ItemFileWriteStore, dom,
             Portal, SpatialReference, Extent, Query, FeatureLayer, Color, Graphic, SimpleLineSymbol, SimpleMarkerSymbol,
             LayerStructure, LoadingShelter, SelectionManager, RelationshipQuery) {
     //To create a widget, you need to derive from BaseWidget.
@@ -124,11 +124,40 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
         let graphic = new Graphic(feature.geometry, mySymbol);
         this.map.graphics.add(graphic);
       },
+
+      getRelatedFromFeature: function (vm, feature){
+
+        vm.domNode.innerHTML = '';
+        feature.getLayer().relationships.forEach(function (relationship) {
+          //console.log(relationship);
+          let relatedQuery = new RelationshipQuery();
+          relatedQuery.outFields = ["*"];
+          relatedQuery.relationshipId = relationship.id;
+          relatedQuery.objectIds = [feature.attributes.OBJECTID];
+          relatedQuery.returnGeometry = true;
+
+          //ESI always has 4 related tables: breed_dt, biofile, soc_bat, and sources
+          //Catch each table and create a specific format for each
+
+          feature.getLayer().queryRelatedFeatures(relatedQuery, function (relatedfeatureSet) {
+            //console.log(relatedfeatureSet);
+            let fset = relatedfeatureSet[feature.attributes.OBJECTID];
+            if (fset !== undefined){
+              fset.features.forEach(function(f){
+                vm.domNode.innerHTML += '<br>'+ 'Layer: ' + relationship.name + ' Feature: ' + f.attributes.NAME;
+                console.log('Layer: ' + f._layer.name + ' Feature: ' + f.attributes.NAME);
+              });
+            }
+          },function(e){
+            console.log(e);
+          });
+        });
+      },
+
       foundFeatures: [],
       searchESIService: function (item, query) {
         let vm = this,
           promises = [];
-
         // reset foundFeatures back to empty
         vm.foundFeatures = [];
 
@@ -149,43 +178,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
             console.log(vm.foundFeatures[0]);
             vm.highlightFeature(vm.foundFeatures[0]);
             vm.domNode.innerHTML = 'Found 1 thing' + '<br>';
+
+            vm.getRelatedFromFeature(vm, vm.foundFeatures[0]);
             // noneFound.push(false);
-            /// do something to display the features related data using vm.foundFeatures[0].getLayer().relationships
-
-            //Maybe add to the HTML here.. clear before first loop, then keep appending.
-            var rel_queries =[];
-            console.log(vm.foundFeatures[0]);
-            vm.foundFeatures[0].getLayer().relationships.forEach(function (relationship) {
-              console.log(relationship);
-              var relatedQuery = new RelationshipQuery();
-              relatedQuery.outFields = ["*"];
-              relatedQuery.relationshipId = relationship.id;
-              relatedQuery.objectIds = [vm.foundFeatures[0].attributes.OBJECTID];
-              relatedQuery.returnGeometry = false;
-
-              vm.foundFeatures[0].getLayer().queryRelatedFeatures(relatedQuery, function (relatedfeatureSet) {
-
-                console.log(relatedfeatureSet);
-                var fset = relatedfeatureSet[vm.foundFeatures[0].attributes.OBJECTID];
-                if (fset != undefined){
-                  fset.features.forEach(function(f){
-                    vm.domNode.innerHTML += '<br>'+ 'Layer: ' + f._layer.name + ' Feature: ' + f.attributes.NAME;
-                    //need the layer name for the related feature.  I think _layer.name is wrong layer
-                    console.log('Layer: ' + f._layer.name + ' Feature: ' + f.attributes.NAME);
-                  });
-                  //console.log(fset.attributes.name);
-                  rel_queries.push(fset.features);
-                }
-              },function(e){
-                console.log(e);
-              });
-            });
-            // console.log('Testing');
-            // console.log(rel_queries);
-            // rel_queries.forEach((function (i) {
-            //   console.log(i.attributes.NAME);
-            // }));
-
 
           } else if (vm.foundFeatures.length > 1) {
             vm.domNode.innerHTML = '<h3>Multiple features at that location</h3><br/><h5>Select one to continue</h5>' +
@@ -229,6 +224,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
               });
               // call function to display the feature
               vm.highlightFeature(feature[0]);
+              vm.getRelatedFromFeature(vm,feature[0]);
               // use feature[0].getLayer() to get the layer object for this feature and query all of the
               // relationships in the relationships attribute of the layer
             });
