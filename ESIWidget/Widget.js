@@ -198,9 +198,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
               domConstruct.place(row, 'breed_dt_tbody');
             });
 
-          }else if (tableName === 'soc_bat'){
+          }else if (tableName === 'soc_dat'){
             row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">Breed Date (Found: '+ featureSet.features.length +')</th></tr>');
-            domConstruct.place(row, 'soc_bat_hd');
+            domConstruct.place(row, 'soc_dat_hd');
 
             featureSet.features.forEach(function(f){
               row = domConstruct.toDom('<tr><td>NAME</td><td>' + f.attributes.NAME + '</td></tr>' +
@@ -208,29 +208,29 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
                 '<tr><td>CONTACT</td><td>' + f.attributes.CONTACT + '</td></tr>' +
                 '<tr><td class="rowLine2">PHONE</td><td class="rowLine2">' + f.attributes.PHONE + '</td></tr>'
               );
-              domConstruct.place(row, 'soc_bat_tbody');
+              domConstruct.place(row, 'soc_dat_tbody');
             });
 
           }else if (tableName == 'sources'){
             row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">Breed Date (Found: '+ featureSet.features.length +')</th></tr>');
             domConstruct.place(row, 'sources_hd');
 
-            featureSet.features.forEach(function(f){
+            featureSet.features.forEach(function(f) {
               row = domConstruct.toDom('<tr><td>NAME</td><td>' + f.attributes.NAME + '</td></tr>' +
                 '<tr><td>TYPE</td><td>' + f.attributes.TYPE + '</td></tr>' +
                 '<tr><td>CONTACT</td><td>' + f.attributes.CONTACT + '</td></tr>' +
                 '<tr><td class="rowLine2">PHONE</td><td class="rowLine2">' + f.attributes.PHONE + '</td></tr>'
               );
               domConstruct.place(row, 'sources_tbody');
+            });
 
           }else {
-              row = domConstruct.toDom('Error Formatting Data');
+              row = domConstruct.toDom('Error Formatting Data For Related Table ' + tableName);
               domConstruct.place(row, 'sdiv');
             }
             //clear or provide error message
 
           }
-        }
       },
 
 
@@ -256,12 +256,13 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
         all(promises).then(function () {
           dojo.empty('biofile_tbody');
           dojo.empty('breed_dt_tbody');
-          dojo.empty('soc_bat_tbody');
+          dojo.empty('soc_dat_tbody');
           dojo.empty('sources_tbody');
           dojo.empty('biofile_hd');
           dojo.empty('breed_dt_hd');
-          dojo.empty('soc_bat_hd');
+          dojo.empty('soc_dat_hd');
           dojo.empty('sources_hd');
+          dojo.empty('sdiv');
 
           if (vm.foundFeatures.length === 1) {
             console.log(vm.foundFeatures[0]);
