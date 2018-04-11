@@ -1,10 +1,11 @@
 define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'dojo/promise/all', 'dojox/grid/DataGrid',
-    'dojo/data/ItemFileWriteStore','dojo/dom', 'esri/arcgis/Portal', 'esri/SpatialReference', 'esri/geometry/Extent', 'esri/tasks/query', 'esri/layers/FeatureLayer',
+    'dojo/data/ItemFileWriteStore', 'esri/arcgis/Portal', 'esri/SpatialReference', 'esri/geometry/Extent', 'esri/tasks/query', 'esri/layers/FeatureLayer',
     'esri/Color', 'esri/graphic', 'esri/symbols/SimpleLineSymbol', 'esri/symbols/SimpleMarkerSymbol',
-    'jimu/LayerStructure', 'jimu/dijit/LoadingShelter', 'jimu/SelectionManager','esri/tasks/RelationshipQuery'],
-  function (declare, BaseWidget, Deferred, on, all, DataGrid, ItemFileWriteStore, dom,
+    'jimu/LayerStructure', 'jimu/dijit/LoadingShelter', 'jimu/SelectionManager','esri/tasks/RelationshipQuery',
+    'dojo/dom-construct', 'dojo/dom', 'dojo/domReady!'],
+  function (declare, BaseWidget, Deferred, on, all, DataGrid, ItemFileWriteStore,
             Portal, SpatialReference, Extent, Query, FeatureLayer, Color, Graphic, SimpleLineSymbol, SimpleMarkerSymbol,
-            LayerStructure, LoadingShelter, SelectionManager, RelationshipQuery) {
+            LayerStructure, LoadingShelter, SelectionManager, RelationshipQuery, domConstruct, dom) {
     //To create a widget, you need to derive from BaseWidget.
     return declare([BaseWidget], {
 
@@ -127,7 +128,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
       getRelatedFromFeature: function (vm, feature){
 
-        vm.domNode.innerHTML = '';
+        vm.EsiData.innerHTML = '';
+
         feature.getLayer().relationships.forEach(function (relationship) {
           //console.log(relationship);
           let relatedQuery = new RelationshipQuery();
@@ -138,21 +140,68 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
           //ESI always has 4 related tables: breed_dt, biofile, soc_bat, and sources
           //Catch each table and create a specific format for each
+          //relationship.name
+
+          dojo.empty('biofile_tbody');
+
+          // var testDiv = dom.byId('sdiv');
+          //
+          // var tb = dom.byId('biofile_tbody');
+          //
+          // var row;
+          // row = domConstruct.toDom('<tr><td>Name</td><td>' + 'someting' + '</td></tr>');
+          // domConstruct.place(row, 'biofile_tbody');
 
           feature.getLayer().queryRelatedFeatures(relatedQuery, function (relatedfeatureSet) {
             //console.log(relatedfeatureSet);
             let fset = relatedfeatureSet[feature.attributes.OBJECTID];
             if (fset !== undefined){
-              fset.features.forEach(function(f){
-                vm.domNode.innerHTML += '<br>'+ 'Layer: ' + relationship.name + ' Feature: ' + f.attributes.NAME;
-                console.log('Layer: ' + f._layer.name + ' Feature: ' + f.attributes.NAME);
-              });
+              formatRelatedData(relationship.name, fset);
+              // fset.features.forEach(function(f){
+              //   var row = domConstruct.toDom('<tr><td>Name</td><td>' + f.attributes.Name + '</td></tr>');
+              //   domConstruct.place(row, 'biofile_tbody');
+              //   //vm.EsiData.innerHTML += '<br>'+ 'Layer: ' + relationship.name + ' Feature: ' + f.attributes.NAME;
+              //   console.log('Layer: ' + f._layer.name + ' Feature: ' + f.attributes.NAME);
+              // });
             }
           },function(e){
             console.log(e);
           });
+
         });
+
+        function formatRelatedData(tableName, featureSet) {
+
+          if (tableName ==='biofile'){
+            var row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">Biofile (Found: '+ featureSet.features.length +')</th></tr>');
+            domConstruct.place(row, 'biofile_hd');
+
+            featureSet.features.forEach(function(f){
+              row = domConstruct.toDom('<tr><td>NAME</td><td>' + f.attributes.NAME + '</td></tr>' +
+                '<tr><td>ELEMENT</td><td>' + f.attributes.ELEMENT + '</td></tr>' +
+                '<tr><td>SUBELEMENT</td><td>' + f.attributes.SUBELEMENT + '</td></tr>' +
+                '<tr><td>GEN_SPEC</td><td>' + f.attributes.GEN_SPEC + '</td></tr>' +
+                '<tr><td>S_F</td><td>' + f.attributes.S_F + '</td></tr>' +
+                '<tr><td>T_E</td><td>' + f.attributes.T_E + '</td></tr>' +
+                '<tr><td>CONC</td><td>' + f.attributes.CONC + '</td></tr>' +
+                '<tr><td class="rowLine2">SEASSUM</td><td class="rowLine2">' + f.attributes.SEASSUM + '</td></tr>'
+              );
+              domConstruct.place(row, 'biofile_tbody');
+            });
+
+          }else if (tableName === 'breed_dt'){
+
+          }else if (tableName === 'soc_bat'){
+
+          }else if (tableName == 'sources'){
+
+          }else {
+            //clear or provide error message
+
+          }
+        }
       },
+
 
       foundFeatures: [],
       searchESIService: function (item, query) {
@@ -174,16 +223,26 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
 
         all(promises).then(function () {
+          dojo.empty('biofile_tbody');
+          dojo.empty('breed_dt_tbody');
+          dojo.empty('soc_bat_tbody');
+          dojo.empty('sources_tbody');
+          dojo.empty('biofile_hd');
+          dojo.empty('breed_dt_hd');
+          dojo.empty('soc_bat_hd');
+          dojo.empty('sources_hd');
+
           if (vm.foundFeatures.length === 1) {
             console.log(vm.foundFeatures[0]);
             vm.highlightFeature(vm.foundFeatures[0]);
-            vm.domNode.innerHTML = 'Found 1 thing' + '<br>';
+            vm.EsiData.innerHTML = 'Found 1 thing' + '<br>';
+
 
             vm.getRelatedFromFeature(vm, vm.foundFeatures[0]);
             // noneFound.push(false);
 
           } else if (vm.foundFeatures.length > 1) {
-            vm.domNode.innerHTML = '<h3>Multiple features at that location</h3><br/><h5>Select one to continue</h5>' +
+            vm.EsiData.innerHTML = '<h3>Multiple features at that location</h3><br/><h5>Select one to continue</h5>' +
               '<div id="gridDiv" style="width:100%;"></div>';
             let data = {
               identifier: 'OBJECTID',
@@ -232,7 +291,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
             grid.startup();
             // noneFound.push(false);
           } else {
-            vm.domNode.innerHTML = '<h3>No facilities found at this location</h3><br/>';
+            vm.EsiData.innerHTML = '<h3>No facilities found at this location</h3><br/>';
           }
           vm.loadingShelter.hide();
         });
@@ -241,18 +300,27 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
       startup: function () {
         this.inherited(arguments);
         console.log('ESIWidget::startup');
-        this.loadingShelter.placeAt(this.domNode);
+        this.loadingShelter.placeAt(this.EsiData);
         this.loadingShelter.show();
         this.findESILayers();
       },
 
-      // onOpen: function(){
-      //   console.log('ESIWidget::onOpen');
-      // },
 
-      // onClose: function(){
-      //   console.log('ESIWidget::onClose');
-      // },
+      onOpen: function(){
+        console.log('ESIWidget::onOpen');
+        this.map.setInfoWindowOnClick(false);
+        var vm = this;
+        if (vm.clickHandler !== undefined) {
+          vm.clickHandler.resume();
+        }
+      },
+
+      onClose: function(){
+        console.log('ESIWidget::onClose');
+        this.clickHandler.pause();
+        this.map.graphics.clear();
+        this.map.setInfoWindowOnClick(true);
+      },
 
       // onMinimize: function(){
       //   console.log('ESIWidget::onMinimize');

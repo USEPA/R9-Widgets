@@ -8,3 +8,11 @@
 }
 
 /* add additional custom styles */
+.rowLine1{
+  border-bottom: 2pt solid black;
+  font-size: medium;
+}
+.rowLine2
+{
+  border-bottom: 1pt solid black;
+}
