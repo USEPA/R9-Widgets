@@ -142,16 +142,6 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
           //Catch each table and create a specific format for each
           //relationship.name
 
-          dojo.empty('biofile_tbody');
-
-          // var testDiv = dom.byId('sdiv');
-          //
-          // var tb = dom.byId('biofile_tbody');
-          //
-          // var row;
-          // row = domConstruct.toDom('<tr><td>Name</td><td>' + 'someting' + '</td></tr>');
-          // domConstruct.place(row, 'biofile_tbody');
-
           feature.getLayer().queryRelatedFeatures(relatedQuery, function (relatedfeatureSet) {
             //console.log(relatedfeatureSet);
             let fset = relatedfeatureSet[feature.attributes.OBJECTID];
@@ -172,8 +162,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
         function formatRelatedData(tableName, featureSet) {
 
+          var row;
+
           if (tableName ==='biofile'){
-            var row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">Biofile (Found: '+ featureSet.features.length +')</th></tr>');
+            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">Biofile (Found: '+ featureSet.features.length +')</th></tr>');
             domConstruct.place(row, 'biofile_hd');
 
             featureSet.features.forEach(function(f){
@@ -191,11 +183,50 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
           }else if (tableName === 'breed_dt'){
 
+            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">Breed Date (Found: '+ featureSet.features.length +')</th></tr>');
+            domConstruct.place(row, 'breed_dt_hd');
+
+            featureSet.features.forEach(function(f){
+              row = domConstruct.toDom('<tr><td>BREED</td><td>' + f.attributes.BREED + '</td></tr>' +
+                '<tr><td>MONTH</td><td>' + f.attributes.MONTH_ + '</td></tr>' +
+                '<tr><td>BREED1</td><td>' + f.attributes.BREED1 + '</td></tr>' +
+                '<tr><td>BREED2</td><td>' + f.attributes.BREED2 + '</td></tr>' +
+                '<tr><td>BREED3</td><td>' + f.attributes.BREED3 + '</td></tr>' +
+                '<tr><td>BREED4</td><td>' + f.attributes.BREED4 + '</td></tr>' +
+                '<tr><td class="rowLine2">BREED5</td><td class="rowLine2">' + f.attributes.BREED5 + '</td></tr>'
+              );
+              domConstruct.place(row, 'breed_dt_tbody');
+            });
+
           }else if (tableName === 'soc_bat'){
+            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">Breed Date (Found: '+ featureSet.features.length +')</th></tr>');
+            domConstruct.place(row, 'soc_bat_hd');
+
+            featureSet.features.forEach(function(f){
+              row = domConstruct.toDom('<tr><td>NAME</td><td>' + f.attributes.NAME + '</td></tr>' +
+                '<tr><td>TYPE</td><td>' + f.attributes.TYPE + '</td></tr>' +
+                '<tr><td>CONTACT</td><td>' + f.attributes.CONTACT + '</td></tr>' +
+                '<tr><td class="rowLine2">PHONE</td><td class="rowLine2">' + f.attributes.PHONE + '</td></tr>'
+              );
+              domConstruct.place(row, 'soc_bat_tbody');
+            });
 
           }else if (tableName == 'sources'){
+            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">Breed Date (Found: '+ featureSet.features.length +')</th></tr>');
+            domConstruct.place(row, 'sources_hd');
+
+            featureSet.features.forEach(function(f){
+              row = domConstruct.toDom('<tr><td>NAME</td><td>' + f.attributes.NAME + '</td></tr>' +
+                '<tr><td>TYPE</td><td>' + f.attributes.TYPE + '</td></tr>' +
+                '<tr><td>CONTACT</td><td>' + f.attributes.CONTACT + '</td></tr>' +
+                '<tr><td class="rowLine2">PHONE</td><td class="rowLine2">' + f.attributes.PHONE + '</td></tr>'
+              );
+              domConstruct.place(row, 'sources_tbody');
 
           }else {
+              row = domConstruct.toDom('Error Formatting Data');
+              domConstruct.place(row, 'sdiv');
+            }
             //clear or provide error message
 
           }
