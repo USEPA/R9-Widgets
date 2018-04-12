@@ -165,7 +165,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
           var row;
 
           if (tableName ==='biofile'){
-            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">Biofile (Found: '+ featureSet.features.length +')</th></tr>');
+            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">biofile (Found: '+ featureSet.features.length +')</th></tr>');
             domConstruct.place(row, 'biofile_hd');
 
             featureSet.features.forEach(function(f){
@@ -183,7 +183,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
           }else if (tableName === 'breed_dt'){
 
-            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">Breed Date (Found: '+ featureSet.features.length +')</th></tr>');
+            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">breed_dt (Found: '+ featureSet.features.length +')</th></tr>');
             domConstruct.place(row, 'breed_dt_hd');
 
             featureSet.features.forEach(function(f){
@@ -199,7 +199,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
             });
 
           }else if (tableName === 'soc_dat'){
-            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">Breed Date (Found: '+ featureSet.features.length +')</th></tr>');
+            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">soc_dat (Found: '+ featureSet.features.length +')</th></tr>');
             domConstruct.place(row, 'soc_dat_hd');
 
             featureSet.features.forEach(function(f){
@@ -212,14 +212,15 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
             });
 
           }else if (tableName == 'sources'){
-            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">Breed Date (Found: '+ featureSet.features.length +')</th></tr>');
+            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">sources (Found: '+ featureSet.features.length +')</th></tr>');
             domConstruct.place(row, 'sources_hd');
 
             featureSet.features.forEach(function(f) {
-              row = domConstruct.toDom('<tr><td>NAME</td><td>' + f.attributes.NAME + '</td></tr>' +
-                '<tr><td>TYPE</td><td>' + f.attributes.TYPE + '</td></tr>' +
-                '<tr><td>CONTACT</td><td>' + f.attributes.CONTACT + '</td></tr>' +
-                '<tr><td class="rowLine2">PHONE</td><td class="rowLine2">' + f.attributes.PHONE + '</td></tr>'
+              row = domConstruct.toDom('<tr><td>TITLE</td><td>' + f.attributes.TITLE + '</td></tr>' +
+                '<tr><td>PUBLICATION</td><td>' + f.attributes.PUBLICATION + '</td></tr>' +
+                '<tr><td>DATA_FORMAT</td><td>' + f.attributes.DATA_FORMAT + '</td></tr>' +
+                '<tr><td>DATE_PUB</td><td>' + f.attributes.DATE_PUB + '</td></tr>' +
+                '<tr><td class="rowLine2">TIME_PERIOD</td><td class="rowLine2">' + f.attributes.TIME_PERIOD + '</td></tr>'
               );
               domConstruct.place(row, 'sources_tbody');
             });
@@ -240,6 +241,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
           promises = [];
         // reset foundFeatures back to empty
         vm.foundFeatures = [];
+        vm.clearEsiWidgetText();
 
         item.layers.forEach(function (layer) {
           if (layer.fl.relationships.length > 0 && item.originalLayer.visibleLayers.indexOf(layer.id) > -1) {
@@ -254,15 +256,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
 
         all(promises).then(function () {
-          dojo.empty('biofile_tbody');
-          dojo.empty('breed_dt_tbody');
-          dojo.empty('soc_dat_tbody');
-          dojo.empty('sources_tbody');
-          dojo.empty('biofile_hd');
-          dojo.empty('breed_dt_hd');
-          dojo.empty('soc_dat_hd');
-          dojo.empty('sources_hd');
-          dojo.empty('sdiv');
+
 
           if (vm.foundFeatures.length === 1) {
             console.log(vm.foundFeatures[0]);
@@ -307,6 +301,16 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
             });
 
             grid.placeAt("gridDiv");
+            //Mouse Over and Mouse Out
+
+            grid.on('MouseOver', function (e) {
+              let rowItem = grid.getItem(e.rowIndex);
+              let feature = dojo.filter(vm.foundFeatures, function (feature) {
+                return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
+              });
+              // call function to display the feature
+              vm.highlightFeature(feature[0]);
+            });
 
             grid.on('RowClick', function (e) {
               let rowItem = grid.getItem(e.rowIndex);
@@ -345,6 +349,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
         if (vm.clickHandler !== undefined) {
           vm.clickHandler.resume();
         }
+        vm.clearEsiWidgetText();
       },
 
       onClose: function(){
@@ -352,6 +357,20 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
         this.clickHandler.pause();
         this.map.graphics.clear();
         this.map.setInfoWindowOnClick(true);
+      },
+
+      clearEsiWidgetText: function() {
+        dojo.empty('biofile_tbody');
+        dojo.empty('breed_dt_tbody');
+        dojo.empty('soc_dat_tbody');
+        dojo.empty('sources_tbody');
+        dojo.empty('biofile_hd');
+        dojo.empty('breed_dt_hd');
+        dojo.empty('soc_dat_hd');
+        dojo.empty('sources_hd');
+        dojo.empty('sdiv');
+        this.map.graphics.clear();
+        this.EsiData.innerHTML = '';
       },
 
       // onMinimize: function(){
