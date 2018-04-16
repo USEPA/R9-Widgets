@@ -126,9 +126,16 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
         this.map.graphics.add(graphic);
       },
 
-      getRelatedFromFeature: function (vm, feature){
+      getRelatedFromFeature: function (feature, item){
 
+        var vm = this;
         vm.EsiData.innerHTML = '';
+
+        console.log(item);
+        //Currently, the queryRelatedFeatures does not include alias info.  Need to either
+        //use a where clause instead, or modify the item array to include a tables object.
+        //need to add table object and check if the table exists. e.g., table 23 biofiles.
+        //add the table and meta to array
 
         feature.getLayer().relationships.forEach(function (relationship) {
           //console.log(relationship);
@@ -170,9 +177,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
             featureSet.features.forEach(function(f){
               row = domConstruct.toDom('<tr><td>NAME</td><td>' + f.attributes.NAME + '</td></tr>' +
-                '<tr><td>ELEMENT</td><td>' + f.attributes.ELEMENT + '</td></tr>' +
-                '<tr><td>SUBELEMENT</td><td>' + f.attributes.SUBELEMENT + '</td></tr>' +
-                '<tr><td>GEN_SPEC</td><td>' + f.attributes.GEN_SPEC + '</td></tr>' +
+                '<tr><td>f.fields[ELEMENT].alias</td><td>' + f.attributes.ELEMENT + '</td></tr>' +
+                '<tr><td>f.fields[SUBELEMENT].alias</td><td>' + f.attributes.SUBELEMENT + '</td></tr>' +
+                '<tr><td>  GEN_SPEC</td><td>' + f.attributes.GEN_SPEC + '</td></tr>' +
                 '<tr><td>S_F</td><td>' + f.attributes.S_F + '</td></tr>' +
                 '<tr><td>T_E</td><td>' + f.attributes.T_E + '</td></tr>' +
                 '<tr><td>CONC</td><td>' + f.attributes.CONC + '</td></tr>' +
@@ -264,7 +271,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
             vm.EsiData.innerHTML = 'Found 1 thing' + '<br>';
 
 
-            vm.getRelatedFromFeature(vm, vm.foundFeatures[0]);
+            vm.getRelatedFromFeature(vm.foundFeatures[0], item);
             // noneFound.push(false);
 
           } else if (vm.foundFeatures.length > 1) {
