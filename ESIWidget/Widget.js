@@ -21,7 +21,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
       //methods to communication with app container:
       postCreate: function () {
         this.inherited(arguments);
-        console.log('ESIWidget::postCreate');
+        //console.log('ESIWidget::postCreate');
         this.selectionManager = SelectionManager.getInstance();
       },
       esiAGOLItems: [],
@@ -126,17 +126,12 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
         this.map.graphics.add(graphic);
       },
 
-      getRelatedFromFeature: function (feature, item){
+      getRelatedFromFeature: function (feature){
 
         var vm = this;
         vm.EsiData.innerHTML = '';
 
-        console.log(item);
-        //Currently, the queryRelatedFeatures does not include alias info.  Need to either
-        //use a where clause instead, or modify the item array to include a tables object.
-        //need to add table object and check if the table exists. e.g., table 23 biofiles.
-        //add the table and meta to array
-
+        //Looping thru each relationship just to be sure we get the targeted relationship.
         feature.getLayer().relationships.forEach(function (relationship) {
           //console.log(relationship);
           let relatedQuery = new RelationshipQuery();
@@ -145,30 +140,26 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
           relatedQuery.objectIds = [feature.attributes.OBJECTID];
           relatedQuery.returnGeometry = true;
 
-          //ESI always has 4 related tables: breed_dt, biofile, soc_bat, and sources
+          //ESI always has 4 related tables: breed_dt(aka Breed, related to biofile), biofile (aka Status?), soc_bat, and sources
           //Catch each table and create a specific format for each
           //relationship.name
+          //To DO:  Need to possibly query sub-relationships if time permits.
 
           feature.getLayer().queryRelatedFeatures(relatedQuery, function (relatedfeatureSet) {
             //console.log(relatedfeatureSet);
             let fset = relatedfeatureSet[feature.attributes.OBJECTID];
             if (fset !== undefined){
               formatRelatedData(relationship.name, fset);
-              // fset.features.forEach(function(f){
-              //   var row = domConstruct.toDom('<tr><td>Name</td><td>' + f.attributes.Name + '</td></tr>');
-              //   domConstruct.place(row, 'biofile_tbody');
-              //   //vm.EsiData.innerHTML += '<br>'+ 'Layer: ' + relationship.name + ' Feature: ' + f.attributes.NAME;
-              //   console.log('Layer: ' + f._layer.name + ' Feature: ' + f.attributes.NAME);
-              // });
             }
           },function(e){
-            console.log(e);
+            //console.log(e);
           });
 
         });
 
         function formatRelatedData(tableName, featureSet) {
 
+          //No aliases are set on the services.  Will need to determine a user-friendly presentation of the data.
           var row;
 
           if (tableName ==='biofile'){
@@ -177,9 +168,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
             featureSet.features.forEach(function(f){
               row = domConstruct.toDom('<tr><td>NAME</td><td>' + f.attributes.NAME + '</td></tr>' +
-                '<tr><td>f.fields[ELEMENT].alias</td><td>' + f.attributes.ELEMENT + '</td></tr>' +
-                '<tr><td>f.fields[SUBELEMENT].alias</td><td>' + f.attributes.SUBELEMENT + '</td></tr>' +
-                '<tr><td>  GEN_SPEC</td><td>' + f.attributes.GEN_SPEC + '</td></tr>' +
+                '<tr><td>ELEMENT</td><td>' + f.attributes.ELEMENT + '</td></tr>' +
+                '<tr><td>SUBELEMENT</td><td>' + f.attributes.SUBELEMENT + '</td></tr>' +
+                '<tr><td>GEN_SPEC</td><td>' + f.attributes.GEN_SPEC + '</td></tr>' +
                 '<tr><td>S_F</td><td>' + f.attributes.S_F + '</td></tr>' +
                 '<tr><td>T_E</td><td>' + f.attributes.T_E + '</td></tr>' +
                 '<tr><td>CONC</td><td>' + f.attributes.CONC + '</td></tr>' +
@@ -266,16 +257,16 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
 
           if (vm.foundFeatures.length === 1) {
-            console.log(vm.foundFeatures[0]);
+            //console.log(vm.foundFeatures[0]);
             vm.highlightFeature(vm.foundFeatures[0]);
             vm.EsiData.innerHTML = 'Found 1 thing' + '<br>';
 
 
-            vm.getRelatedFromFeature(vm.foundFeatures[0], item);
+            vm.getRelatedFromFeature(vm.foundFeatures[0]);
             // noneFound.push(false);
 
           } else if (vm.foundFeatures.length > 1) {
-            vm.EsiData.innerHTML = '<h3>Multiple features at that location</h3><br/><h5>Select one to continue</h5>' +
+            vm.EsiData.innerHTML = '<h3>Multiple features found</h3><br/><h5>Select one to continue</h5>' +
               '<div id="gridDiv" style="width:100%;"></div>';
             let data = {
               identifier: 'OBJECTID',
@@ -283,7 +274,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
             };
             //getting object ID error.  Concatenate ibject id + Layer name.
             dojo.forEach(vm.foundFeatures, function (feature) {
-              let attrs = dojo.mixin({}, {OBJECTID: feature.attributes.OBJECTID, name: feature.getLayer().name, feature: feature});
+              let attrs = dojo.mixin({}, {OBJECTID: feature.attributes.OBJECTID + feature.getLayer().name, name: feature.getLayer().name, feature: feature});
               data.items.push(attrs);
             });
 
@@ -313,7 +304,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
             grid.on('MouseOver', function (e) {
               let rowItem = grid.getItem(e.rowIndex);
               let feature = dojo.filter(vm.foundFeatures, function (feature) {
-                return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
+                return feature.attributes.OBJECTID + feature.getLayer().name === rowItem.OBJECTID[0];
               });
               // call function to display the feature
               vm.highlightFeature(feature[0]);
@@ -322,11 +313,11 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
             grid.on('RowClick', function (e) {
               let rowItem = grid.getItem(e.rowIndex);
               let feature = dojo.filter(vm.foundFeatures, function (feature) {
-                return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
+                return feature.attributes.OBJECTID + feature.getLayer().name === rowItem.OBJECTID[0];
               });
               // call function to display the feature
               vm.highlightFeature(feature[0]);
-              vm.getRelatedFromFeature(vm,feature[0]);
+              vm.getRelatedFromFeature(feature[0]);
               // use feature[0].getLayer() to get the layer object for this feature and query all of the
               // relationships in the relationships attribute of the layer
             });
@@ -334,7 +325,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
             grid.startup();
             // noneFound.push(false);
           } else {
-            vm.EsiData.innerHTML = '<h3>No facilities found at this location</h3><br/>';
+            vm.EsiData.innerHTML = '<h3>No data found at this location</h3><br/>';
           }
           vm.loadingShelter.hide();
         });
@@ -342,7 +333,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
       startup: function () {
         this.inherited(arguments);
-        console.log('ESIWidget::startup');
+        //console.log('ESIWidget::startup');
         this.loadingShelter.placeAt(this.EsiData);
         this.loadingShelter.show();
         this.findESILayers();
@@ -350,7 +341,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
 
       onOpen: function(){
-        console.log('ESIWidget::onOpen');
+        //console.log('ESIWidget::onOpen');
         this.map.setInfoWindowOnClick(false);
         var vm = this;
         if (vm.clickHandler !== undefined) {
@@ -371,11 +362,12 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
           ' HYDRO geographic features, SOC or socioeconomic features, and HYDRO or water features. This data set' +
           ' comprises a portion of the ESI for Hawaii, Guam, American Samoa, and California. ESI data characterize the marine and coastal' +
           ' environments and wildlife by their sensitivity to spilled oil. The ESI data include information for' +
-          ' three main components: shoreline habitats, sensitive biological resources, and human-use resources.';
+          ' three main components: shoreline habitats, sensitive biological resources, and human-use resources.' +
+          '</br></br><a href="https://response.restoration.noaa.gov/esi" target="_blank">More ESI information</a>';
       },
 
       onClose: function(){
-        console.log('ESIWidget::onClose');
+        //console.log('ESIWidget::onClose');
         this.clickHandler.pause();
         this.map.graphics.clear();
         this.map.setInfoWindowOnClick(true);
