@@ -643,7 +643,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
           that.clickHandler.resume();
         }
 
-        this.mapIdNode.innerHTML = '<h1>RMP Indentify</h1><br/>' +
+        this.mapIdNode.innerHTML = '<h1>RMP Identify</h1><br/>' +
           '<h5 id="refresh_date"></h5>' +
           '<br/>Click Facility to view information.' +
           '<br/><br/><h5 style="text-decoration: underline;">RMP Program Levels</h5>' +

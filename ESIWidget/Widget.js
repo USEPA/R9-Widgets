@@ -13,7 +13,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
       baseClass: 'esi-widget',
       // this property is set by the framework when widget is loaded.
-      name: 'ESI Widget',
+      name: 'ESI Identify',
       // add additional properties here
       loadingDeferred: new Deferred(),
       loadingShelter: new LoadingShelter({hidden: true}),
@@ -357,6 +357,21 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
           vm.clickHandler.resume();
         }
         vm.clearEsiWidgetText();
+        vm.EsiData.innerHTML = '<h1>ESI Identify</h1><br/>' +
+          '<br/>Click on an ESI Layer to view information.' +
+          '<br/><h5 style="text-decoration: underline;">Purpose</h5>' +
+          '<br/> The Environmental Sensitivity Index (ESI) data were collected, mapped, and digitized to provide environmental data for oil spill' +
+          ' planning and response. The Clean Water Act with amendments by the Oil Pollution Act of 1990' +
+          ' requires response plans for immediate and effective protection of sensitive resources.' +
+          '<br/><h5 style="text-decoration: underline;">Dataset Notes</h5>' +
+          'This data set contains vector arcs and polygons representing coastal hydrography used in the' +
+          ' creation of the Environmental Sensitivity Index. The HYDRO data layer' +
+          ' contains all annotation used in producing the atlas. The annotation features are categorized into' +
+          ' three subclasses in order to simplify the mapping and quality control procedures: GEOG or' +
+          ' HYDRO geographic features, SOC or socioeconomic features, and HYDRO or water features. This data set' +
+          ' comprises a portion of the ESI for Hawaii, Guam, American Samoa, and California. ESI data characterize the marine and coastal' +
+          ' environments and wildlife by their sensitivity to spilled oil. The ESI data include information for' +
+          ' three main components: shoreline habitats, sensitive biological resources, and human-use resources.';
       },
 
       onClose: function(){
