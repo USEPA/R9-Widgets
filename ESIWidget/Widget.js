@@ -2,10 +2,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
     'dojo/data/ItemFileWriteStore', 'esri/arcgis/Portal', 'esri/SpatialReference', 'esri/geometry/Extent', 'esri/tasks/query', 'esri/layers/FeatureLayer',
     'esri/Color', 'esri/graphic', 'esri/symbols/SimpleLineSymbol', 'esri/symbols/SimpleMarkerSymbol',
     'jimu/LayerStructure', 'jimu/dijit/LoadingShelter', 'jimu/SelectionManager', 'esri/tasks/RelationshipQuery',
-    'dojo/dom-construct', 'dojo/dom', 'dojo/domReady!'],
+    'dojo/dom-construct', 'dojo/dom', 'dijit/TitlePane', 'dojo/domReady!'],
   function (declare, BaseWidget, Deferred, on, all, DataGrid, ItemFileWriteStore,
             Portal, SpatialReference, Extent, Query, FeatureLayer, Color, Graphic, SimpleLineSymbol, SimpleMarkerSymbol,
-            LayerStructure, LoadingShelter, SelectionManager, RelationshipQuery, domConstruct, dom) {
+            LayerStructure, LoadingShelter, SelectionManager, RelationshipQuery, domConstruct, dom, TitlePane) {
     //To create a widget, you need to derive from BaseWidget.
     return declare([BaseWidget], {
 
@@ -169,17 +169,26 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
             domConstruct.place(row, 'biofile_hd');
 
             featureSet.features.forEach(function (f) {
+              var lifecyclePane = new TitlePane({
+                title: 'Lifecycles', open: false,
+                content: '<table style="width: 100%"><tbody></tbody></table>'
+              });
               row = domConstruct.toDom('<tr><td>Common Name</td><td>' + f.attributes.NAME + '</td></tr>' +
                 (f.attributes.ELEMENT ? '<tr><td>Element</td><td>' + f.attributes.ELEMENT + '</td></tr>' : '') +
                 (f.attributes.SUBELEMENT ? '<tr><td>Sub-Element</td><td>' + f.attributes.SUBELEMENT + '</td></tr>' : '') +
                 (f.attributes.GEN_SPEC ? '<tr><td>Scientific Name</td><td>' + f.attributes.GEN_SPEC + '</td></tr>' : '') +
-                (f.attributes.S_F ? '<tr><td>State & Federal Listing Status</td><td>' + f.attributes.S_F + '</td></tr>' : '') +
-                (f.attributes.T_E ? '<tr><td>Threatened and Endangered Status</td><td>' + f.attributes.T_E + '</td></tr>' : '') +
+                '<tr><td>State & Federal Listing Status</td><td>' + (f.attributes.S_F !== " " ? f.attributes.S_F : 'NA') + '</td></tr>' +
+                '<tr><td>Threatened & Endangered Status</td><td>' + (f.attributes.T_E !== " " ? f.attributes.T_E : 'NA') +  '</td></tr>' +
                 (f.attributes.CONC ? '<tr><td>Concentration</td><td>' + f.attributes.CONC + '</td></tr>' : '') +
-                (f.attributes.SEASSUM ? '<tr><td>Season Summary</td><td class="rowLine2">' + f.attributes.SEASSUM + '</td></tr>' : '') +
+                (f.attributes.SEASSUM ? '<tr><td>Season Summary</td><td>' + f.attributes.SEASSUM + '</td></tr>' : '') +
+                //lifecyclePane.domNode +
+                '<tr><td colspan="2" id="breed_dt' + f.attributes.OBJECTID + '" ></td></tr>' +
+
                 '<tr><td colspan="2" class="rowLine2"></td></tr>'
               );
               domConstruct.place(row, 'biofile_tbody');
+              dom.byId('breed_dt' + f.attributes.OBJECTID ).appendChild(lifecyclePane.domNode);
+              lifecyclePane.startup();
             });
 
           } else if (tableName === 'breed_dt') {
@@ -187,8 +196,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
             row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">breed_dt (Found: ' + featureSet.features.length + ')</th></tr>');
             domConstruct.place(row, 'breed_dt_hd');
 
-            //This is per month, and needs to be formatted so that Breed1-4 are column labled Lifecycle
-            //
+            //This is per month, and needs to be formatted so that Breed1-4 are column labeled Lifecycle
+            //Rebuild query just for this record at the given OBJECT ID for biofile.  There should be an orderby field
             featureSet.features.forEach(function (f) {
               row = domConstruct.toDom(
                 '<tr><td>MONTH</td><td>' + f.attributes.MONTH_ + '</td></tr>' +
