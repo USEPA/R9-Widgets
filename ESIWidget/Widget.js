@@ -144,6 +144,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
           //Catch each table and create a specific format for each
           //relationship.name
           //To DO:  Need to possibly query sub-relationships if time permits.
+          //if biofile need to get breed_dt and sources (two relationships) for each feature.
+          //if soc_dat need to get sources (two relationships) for each feature
 
           feature.getLayer().queryRelatedFeatures(relatedQuery, function (relatedfeatureSet) {
             //console.log(relatedfeatureSet);
@@ -163,18 +165,18 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
           var row;
 
           if (tableName === 'biofile') {
-            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">biofile (Found: ' + featureSet.features.length + ')</th></tr>');
+            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">Biological Profile (Found: ' + featureSet.features.length + ')</th></tr>');
             domConstruct.place(row, 'biofile_hd');
 
             featureSet.features.forEach(function (f) {
-              row = domConstruct.toDom('<tr><td>NAME</td><td>' + f.attributes.NAME + '</td></tr>' +
-                (f.attributes.ELEMENT ? '<tr><td>ELEMENT</td><td>' + f.attributes.ELEMENT + '</td></tr>' : '') +
-                (f.attributes.SUBELEMENT ? '<tr><td>SUBELEMENT</td><td>' + f.attributes.SUBELEMENT + '</td></tr>' : '') +
-                (f.attributes.GEN_SPEC ? '<tr><td>GEN_SPEC</td><td>' + f.attributes.GEN_SPEC + '</td></tr>' : '') +
-                (f.attributes.S_F ? '<tr><td>S_F</td><td>' + f.attributes.S_F + '</td></tr>' : '') +
-                (f.attributes.T_E ? '<tr><td>T_E</td><td>' + f.attributes.T_E + '</td></tr>' : '') +
-                (f.attributes.CONC ? '<tr><td>CONC</td><td>' + f.attributes.CONC + '</td></tr>' : '') +
-                (f.attributes.SEASSUM ? '<tr><td>SEASSUM</td><td class="rowLine2">' + f.attributes.SEASSUM + '</td></tr>' : '') +
+              row = domConstruct.toDom('<tr><td>Common Name</td><td>' + f.attributes.NAME + '</td></tr>' +
+                (f.attributes.ELEMENT ? '<tr><td>Element</td><td>' + f.attributes.ELEMENT + '</td></tr>' : '') +
+                (f.attributes.SUBELEMENT ? '<tr><td>Sub-Element</td><td>' + f.attributes.SUBELEMENT + '</td></tr>' : '') +
+                (f.attributes.GEN_SPEC ? '<tr><td>Scientific Name</td><td>' + f.attributes.GEN_SPEC + '</td></tr>' : '') +
+                (f.attributes.S_F ? '<tr><td>State & Federal Listing Status</td><td>' + f.attributes.S_F + '</td></tr>' : '') +
+                (f.attributes.T_E ? '<tr><td>Threatened and Endangered Status</td><td>' + f.attributes.T_E + '</td></tr>' : '') +
+                (f.attributes.CONC ? '<tr><td>Concentration</td><td>' + f.attributes.CONC + '</td></tr>' : '') +
+                (f.attributes.SEASSUM ? '<tr><td>Season Summary</td><td class="rowLine2">' + f.attributes.SEASSUM + '</td></tr>' : '') +
                 '<tr><td colspan="2" class="rowLine2"></td></tr>'
               );
               domConstruct.place(row, 'biofile_tbody');
@@ -185,8 +187,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
             row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">breed_dt (Found: ' + featureSet.features.length + ')</th></tr>');
             domConstruct.place(row, 'breed_dt_hd');
 
+            //This is per month, and needs to be formatted so that Breed1-4 are column labled Lifecycle
+            //
             featureSet.features.forEach(function (f) {
-              row = domConstruct.toDom('<tr><td>BREED</td><td>' + f.attributes.BREED + '</td></tr>' +
+              row = domConstruct.toDom(
                 '<tr><td>MONTH</td><td>' + f.attributes.MONTH_ + '</td></tr>' +
                 '<tr><td>BREED1</td><td>' + f.attributes.BREED1 + '</td></tr>' +
                 '<tr><td>BREED2</td><td>' + f.attributes.BREED2 + '</td></tr>' +
