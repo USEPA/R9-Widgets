@@ -165,7 +165,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
           var row;
 
           if (tableName ==='biofile'){
-            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">Biologic Profile (Found: '+ featureSet.features.length +')</th></tr>');
+            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">Biological Profile (Found: '+ featureSet.features.length +')</th></tr>');
             domConstruct.place(row, 'biofile_hd');
 
             featureSet.features.forEach(function(f){
@@ -173,7 +173,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
                 '<tr><td>Element</td><td>' + f.attributes.ELEMENT + '</td></tr>' +
                 '<tr><td>Sub-Element</td><td>' + f.attributes.SUBELEMENT + '</td></tr>' +
                 '<tr><td>Scientific Name</td><td>' + f.attributes.GEN_SPEC + '</td></tr>' +
-                '<tr><td>State & Federal Status</td><td>' + f.attributes.S_F + '</td></tr>' +
+                '<tr><td>State & Federal Listing Status</td><td>' + f.attributes.S_F + '</td></tr>' +
                 '<tr><td>Threatened and Endangered Status</td><td>' + f.attributes.T_E + '</td></tr>' +
                 '<tr><td>Concentration</td><td>' + f.attributes.CONC + '</td></tr>' +
                 '<tr><td class="rowLine2">Season Summary</td><td class="rowLine2">' + f.attributes.SEASSUM + '</td></tr>'
