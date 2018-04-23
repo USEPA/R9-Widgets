@@ -159,6 +159,28 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
         });
 
+        function showBreedInfo() {
+          // feature.getLayer().relationships
+            // var row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">breed_dt (Found: ' + featureSet.features.length + ')</th></tr>');
+            // domConstruct.place(row, 'breed_dt_hd');
+            //
+            // //This is per month, and needs to be formatted so that Breed1-4 are column labeled Lifecycle
+            // //Rebuild query just for this record at the given OBJECT ID for biofile.  There should be an orderby field
+            // featureSet.features.forEach(function (f) {
+            //   row = domConstruct.toDom(
+            //     '<tr><td>MONTH</td><td>' + f.attributes.MONTH_ + '</td></tr>' +
+            //     '<tr><td>BREED1</td><td>' + f.attributes.BREED1 + '</td></tr>' +
+            //     '<tr><td>BREED2</td><td>' + f.attributes.BREED2 + '</td></tr>' +
+            //     '<tr><td>BREED3</td><td>' + f.attributes.BREED3 + '</td></tr>' +
+            //     '<tr><td>BREED4</td><td>' + f.attributes.BREED4 + '</td></tr>' +
+            //     '<tr><td class="rowLine2">BREED5</td><td class="rowLine2">' + f.attributes.BREED5 + '</td></tr>'
+            //   );
+            //   domConstruct.place(row, 'breed_dt_tbody');
+            // });
+
+
+        }
+
         function formatRelatedData(tableName, featureSet) {
 
           //No aliases are set on the services.  Will need to determine a user-friendly presentation of the data.
@@ -171,7 +193,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
             featureSet.features.forEach(function (f) {
               var lifecyclePane = new TitlePane({
                 title: 'Lifecycles', open: false,
-                content: '<table style="width: 100%"><tbody></tbody></table>'
+                content: 'feature-' + f.attributes.OBJECTID,
+
               });
               row = domConstruct.toDom('<tr><td>Common Name</td><td>' + f.attributes.NAME + '</td></tr>' +
                 (f.attributes.ELEMENT ? '<tr><td>Element</td><td>' + f.attributes.ELEMENT + '</td></tr>' : '') +
@@ -188,26 +211,14 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
               );
               domConstruct.place(row, 'biofile_tbody');
               dom.byId('breed_dt' + f.attributes.OBJECTID ).appendChild(lifecyclePane.domNode);
+              lifecyclePane.watch('open', function () {
+                if (this.open && this.get('content').indexOf('feature-') === 0) {
+                  var feature_id = this.content.split('-')[1];
+                  this.set('content', 'Query the breed_dt table using id: '+feature_id);
+                  // showBreedInfo()
+                }
+              });
               lifecyclePane.startup();
-            });
-
-          } else if (tableName === 'breed_dt') {
-
-            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">breed_dt (Found: ' + featureSet.features.length + ')</th></tr>');
-            domConstruct.place(row, 'breed_dt_hd');
-
-            //This is per month, and needs to be formatted so that Breed1-4 are column labeled Lifecycle
-            //Rebuild query just for this record at the given OBJECT ID for biofile.  There should be an orderby field
-            featureSet.features.forEach(function (f) {
-              row = domConstruct.toDom(
-                '<tr><td>MONTH</td><td>' + f.attributes.MONTH_ + '</td></tr>' +
-                '<tr><td>BREED1</td><td>' + f.attributes.BREED1 + '</td></tr>' +
-                '<tr><td>BREED2</td><td>' + f.attributes.BREED2 + '</td></tr>' +
-                '<tr><td>BREED3</td><td>' + f.attributes.BREED3 + '</td></tr>' +
-                '<tr><td>BREED4</td><td>' + f.attributes.BREED4 + '</td></tr>' +
-                '<tr><td class="rowLine2">BREED5</td><td class="rowLine2">' + f.attributes.BREED5 + '</td></tr>'
-              );
-              domConstruct.place(row, 'breed_dt_tbody');
             });
 
           } else if (tableName === 'soc_dat') {
