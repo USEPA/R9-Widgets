@@ -1,7 +1,7 @@
 define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'dojo/promise/all', 'dojox/grid/DataGrid',
     'dojo/data/ItemFileWriteStore', 'esri/arcgis/Portal', 'esri/SpatialReference', 'esri/geometry/Extent', 'esri/tasks/query', 'esri/layers/FeatureLayer',
     'esri/Color', 'esri/graphic', 'esri/symbols/SimpleLineSymbol', 'esri/symbols/SimpleMarkerSymbol',
-    'jimu/LayerStructure', 'jimu/dijit/LoadingShelter', 'jimu/SelectionManager','esri/tasks/RelationshipQuery',
+    'jimu/LayerStructure', 'jimu/dijit/LoadingShelter', 'jimu/SelectionManager', 'esri/tasks/RelationshipQuery',
     'dojo/dom-construct', 'dojo/dom', 'dojo/domReady!'],
   function (declare, BaseWidget, Deferred, on, all, DataGrid, ItemFileWriteStore,
             Portal, SpatialReference, Extent, Query, FeatureLayer, Color, Graphic, SimpleLineSymbol, SimpleMarkerSymbol,
@@ -126,7 +126,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
         this.map.graphics.add(graphic);
       },
 
-      getRelatedFromFeature: function (feature){
+      getRelatedFromFeature: function (feature) {
 
         var vm = this;
         vm.EsiData.innerHTML = '';
@@ -148,10 +148,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
           feature.getLayer().queryRelatedFeatures(relatedQuery, function (relatedfeatureSet) {
             //console.log(relatedfeatureSet);
             let fset = relatedfeatureSet[feature.attributes.OBJECTID];
-            if (fset !== undefined){
+            if (fset !== undefined) {
               formatRelatedData(relationship.name, fset);
             }
-          },function(e){
+          }, function (e) {
             //console.log(e);
           });
 
@@ -162,29 +162,30 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
           //No aliases are set on the services.  Will need to determine a user-friendly presentation of the data.
           var row;
 
-          if (tableName ==='biofile'){
-            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">biofile (Found: '+ featureSet.features.length +')</th></tr>');
+          if (tableName === 'biofile') {
+            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">biofile (Found: ' + featureSet.features.length + ')</th></tr>');
             domConstruct.place(row, 'biofile_hd');
 
-            featureSet.features.forEach(function(f){
+            featureSet.features.forEach(function (f) {
               row = domConstruct.toDom('<tr><td>NAME</td><td>' + f.attributes.NAME + '</td></tr>' +
-                '<tr><td>ELEMENT</td><td>' + f.attributes.ELEMENT + '</td></tr>' +
-                '<tr><td>SUBELEMENT</td><td>' + f.attributes.SUBELEMENT + '</td></tr>' +
-                '<tr><td>GEN_SPEC</td><td>' + f.attributes.GEN_SPEC + '</td></tr>' +
-                '<tr><td>S_F</td><td>' + f.attributes.S_F + '</td></tr>' +
-                '<tr><td>T_E</td><td>' + f.attributes.T_E + '</td></tr>' +
-                '<tr><td>CONC</td><td>' + f.attributes.CONC + '</td></tr>' +
-                '<tr><td class="rowLine2">SEASSUM</td><td class="rowLine2">' + f.attributes.SEASSUM + '</td></tr>'
+                (f.attributes.ELEMENT ? '<tr><td>ELEMENT</td><td>' + f.attributes.ELEMENT + '</td></tr>' : '') +
+                (f.attributes.SUBELEMENT ? '<tr><td>SUBELEMENT</td><td>' + f.attributes.SUBELEMENT + '</td></tr>' : '') +
+                (f.attributes.GEN_SPEC ? '<tr><td>GEN_SPEC</td><td>' + f.attributes.GEN_SPEC + '</td></tr>' : '') +
+                (f.attributes.S_F ? '<tr><td>S_F</td><td>' + f.attributes.S_F + '</td></tr>' : '') +
+                (f.attributes.T_E ? '<tr><td>T_E</td><td>' + f.attributes.T_E + '</td></tr>' : '') +
+                (f.attributes.CONC ? '<tr><td>CONC</td><td>' + f.attributes.CONC + '</td></tr>' : '') +
+                (f.attributes.SEASSUM ? '<tr><td>SEASSUM</td><td class="rowLine2">' + f.attributes.SEASSUM + '</td></tr>' : '') +
+                '<tr><td colspan="2" class="rowLine2"></td></tr>'
               );
               domConstruct.place(row, 'biofile_tbody');
             });
 
-          }else if (tableName === 'breed_dt'){
+          } else if (tableName === 'breed_dt') {
 
-            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">breed_dt (Found: '+ featureSet.features.length +')</th></tr>');
+            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">breed_dt (Found: ' + featureSet.features.length + ')</th></tr>');
             domConstruct.place(row, 'breed_dt_hd');
 
-            featureSet.features.forEach(function(f){
+            featureSet.features.forEach(function (f) {
               row = domConstruct.toDom('<tr><td>BREED</td><td>' + f.attributes.BREED + '</td></tr>' +
                 '<tr><td>MONTH</td><td>' + f.attributes.MONTH_ + '</td></tr>' +
                 '<tr><td>BREED1</td><td>' + f.attributes.BREED1 + '</td></tr>' +
@@ -196,11 +197,11 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
               domConstruct.place(row, 'breed_dt_tbody');
             });
 
-          }else if (tableName === 'soc_dat'){
-            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">soc_dat (Found: '+ featureSet.features.length +')</th></tr>');
+          } else if (tableName === 'soc_dat') {
+            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">soc_dat (Found: ' + featureSet.features.length + ')</th></tr>');
             domConstruct.place(row, 'soc_dat_hd');
 
-            featureSet.features.forEach(function(f){
+            featureSet.features.forEach(function (f) {
               row = domConstruct.toDom('<tr><td>NAME</td><td>' + f.attributes.NAME + '</td></tr>' +
                 '<tr><td>TYPE</td><td>' + f.attributes.TYPE + '</td></tr>' +
                 '<tr><td>CONTACT</td><td>' + f.attributes.CONTACT + '</td></tr>' +
@@ -209,11 +210,11 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
               domConstruct.place(row, 'soc_dat_tbody');
             });
 
-          }else if (tableName == 'sources'){
-            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">sources (Found: '+ featureSet.features.length +')</th></tr>');
+          } else if (tableName == 'sources') {
+            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">sources (Found: ' + featureSet.features.length + ')</th></tr>');
             domConstruct.place(row, 'sources_hd');
 
-            featureSet.features.forEach(function(f) {
+            featureSet.features.forEach(function (f) {
               row = domConstruct.toDom('<tr><td>TITLE</td><td>' + f.attributes.TITLE + '</td></tr>' +
                 '<tr><td>PUBLICATION</td><td>' + f.attributes.PUBLICATION + '</td></tr>' +
                 '<tr><td>DATA_FORMAT</td><td>' + f.attributes.DATA_FORMAT + '</td></tr>' +
@@ -223,13 +224,13 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
               domConstruct.place(row, 'sources_tbody');
             });
 
-          }else {
-              row = domConstruct.toDom('Error Formatting Data For Related Table ' + tableName);
-              domConstruct.place(row, 'sdiv');
-            }
-            //clear or provide error message
-
+          } else {
+            row = domConstruct.toDom('Error Formatting Data For Related Table ' + tableName);
+            domConstruct.place(row, 'sdiv');
           }
+          //clear or provide error message
+
+        }
       },
 
 
@@ -274,7 +275,11 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
             };
             //getting object ID error.  Concatenate ibject id + Layer name.
             dojo.forEach(vm.foundFeatures, function (feature) {
-              let attrs = dojo.mixin({}, {OBJECTID: feature.attributes.OBJECTID + feature.getLayer().name, name: feature.getLayer().name, feature: feature});
+              let attrs = dojo.mixin({}, {
+                OBJECTID: feature.attributes.OBJECTID + feature.getLayer().name,
+                name: feature.getLayer().name,
+                feature: feature
+              });
               data.items.push(attrs);
             });
 
@@ -303,11 +308,13 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
             grid.on('MouseOver', function (e) {
               let rowItem = grid.getItem(e.rowIndex);
-              let feature = dojo.filter(vm.foundFeatures, function (feature) {
-                return feature.attributes.OBJECTID + feature.getLayer().name === rowItem.OBJECTID[0];
-              });
-              // call function to display the feature
-              vm.highlightFeature(feature[0]);
+              if (rowItem) {
+                let feature = dojo.filter(vm.foundFeatures, function (feature) {
+                  return feature.attributes.OBJECTID + feature.getLayer().name === rowItem.OBJECTID[0];
+                });
+                // call function to display the feature
+                vm.highlightFeature(feature[0]);
+              }
             });
 
             grid.on('RowClick', function (e) {
@@ -334,13 +341,11 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
       startup: function () {
         this.inherited(arguments);
         //console.log('ESIWidget::startup');
-        this.loadingShelter.placeAt(this.EsiData);
+        this.loadingShelter.placeAt(this.domNode);
         this.loadingShelter.show();
         this.findESILayers();
       },
-
-
-      onOpen: function(){
+      onOpen: function () {
         //console.log('ESIWidget::onOpen');
         this.map.setInfoWindowOnClick(false);
         var vm = this;
@@ -366,14 +371,14 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
           '</br></br><a href="https://response.restoration.noaa.gov/esi" target="_blank">More ESI information</a>';
       },
 
-      onClose: function(){
+      onClose: function () {
         //console.log('ESIWidget::onClose');
         this.clickHandler.pause();
         this.map.graphics.clear();
         this.map.setInfoWindowOnClick(true);
       },
 
-      clearEsiWidgetText: function() {
+      clearEsiWidgetText: function () {
         dojo.empty('biofile_tbody');
         dojo.empty('breed_dt_tbody');
         dojo.empty('soc_dat_tbody');
