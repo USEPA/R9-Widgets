@@ -1,10 +1,11 @@
 define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'dojo/promise/all', 'dojox/grid/DataGrid',
-    'dojo/data/ItemFileWriteStore', 'esri/arcgis/Portal', 'esri/SpatialReference', 'esri/geometry/Extent', 'esri/tasks/query', 'esri/layers/FeatureLayer',
+    'dojo/data/ItemFileWriteStore', 'esri/arcgis/Portal', 'esri/SpatialReference', 'esri/geometry/Extent',
+    'esri/tasks/query', 'esri/tasks/QueryTask', 'esri/layers/FeatureLayer',
     'esri/Color', 'esri/graphic', 'esri/symbols/SimpleLineSymbol', 'esri/symbols/SimpleMarkerSymbol',
     'jimu/LayerStructure', 'jimu/dijit/LoadingShelter', 'jimu/SelectionManager', 'esri/tasks/RelationshipQuery',
     'dojo/dom-construct', 'dojo/dom', 'dijit/TitlePane', 'dojo/domReady!'],
   function (declare, BaseWidget, Deferred, on, all, DataGrid, ItemFileWriteStore,
-            Portal, SpatialReference, Extent, Query, FeatureLayer, Color, Graphic, SimpleLineSymbol, SimpleMarkerSymbol,
+            Portal, SpatialReference, Extent, Query, QueryTask, FeatureLayer, Color, Graphic, SimpleLineSymbol, SimpleMarkerSymbol,
             LayerStructure, LoadingShelter, SelectionManager, RelationshipQuery, domConstruct, dom, TitlePane) {
     //To create a widget, you need to derive from BaseWidget.
     return declare([BaseWidget], {
@@ -147,6 +148,18 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
           //if biofile need to get breed_dt and sources (two relationships) for each feature.
           //if soc_dat need to get sources (two relationships) for each feature
 
+          //To Do... if biofile get it's related tables and if breed_dt, sources, etc get related featureSets
+          //Need to use relationships since the FKs are not exposed in the rest EndPoint.
+          // var baseUrl = feature.getLayer().url.split("MapServer/");
+          // console.log(baseUrl[0] +"MapServer/"+ relationship.relatedTableId);
+          // var relatedTableUrl = baseUrl[0] +"MapServer/"+ relationship.relatedTableId;
+          //
+          // var fl = new FeatureLayer(relatedTableUrl, {outFields: ['*']});
+          //
+          // fl.relationships.forEach(function(r){
+          //   console.log(r.name)
+          // });
+
           feature.getLayer().queryRelatedFeatures(relatedQuery, function (relatedfeatureSet) {
             //console.log(relatedfeatureSet);
             let fset = relatedfeatureSet[feature.attributes.OBJECTID];
@@ -215,6 +228,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
                 if (this.open && this.get('content').indexOf('feature-') === 0) {
                   var feature_id = this.content.split('-')[1];
                   this.set('content', 'Query the breed_dt table using id: '+feature_id);
+
                   // showBreedInfo()
                 }
               });
