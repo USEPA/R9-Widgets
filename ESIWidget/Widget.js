@@ -38,6 +38,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
               let filteredResults = dojo.filter(structure.getLayerNodes(), function (layerNode) {
                 return item.id === layerNode._layerInfo.originOperLayer.itemId;
               });
+              let filteredTableResults = dojo.filter(structure.getTableNodes(), function (layerNode) {
+                return item.id === layerNode._layerInfo.originOperLayer.itemId;
+              });
 
               // if ESI Widget service found in map do this
               if (filteredResults.length > 0) {
@@ -46,7 +49,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
                   new SpatialReference({wkid: 4326}));
 
                 // since we need FeatureLayer objects to query the service build that here
-                let layers = [], promises = [];
+                let layers = [], promises = [], tables = [];
+                filteredTableResults.forEach(function (table) {
+                  tables.push(table._layerInfo.layerObject);
+                });
                 filteredResults[0]._layerInfo.originOperLayer.layerObject.layerInfos.forEach(function (layer) {
                   layer.fl = new FeatureLayer(filteredResults[0]._layerInfo.originOperLayer.url + '/' + layer.id, {outFields: ['*']});
                   let deferred = new Deferred();
@@ -62,7 +68,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
                     item: item,
                     spatialExtent: spatialExtent,
                     layers: layers,
-                    originalLayer: filteredResults[0]._layerInfo.originOperLayer.layerObject
+                    tables: tables,
+                    originalLayer: filteredResults[0]._layerInfo.originOperLayer.layerObject,
+                    root_url: filteredResults[0]._layerInfo.originOperLayer.url
                   });
                 });
               }
@@ -160,11 +168,12 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
           //   console.log(r.name)
           // });
 
+
           feature.getLayer().queryRelatedFeatures(relatedQuery, function (relatedfeatureSet) {
             //console.log(relatedfeatureSet);
             let fset = relatedfeatureSet[feature.attributes.OBJECTID];
             if (fset !== undefined) {
-              formatRelatedData(relationship.name, fset);
+              formatRelatedData(relationship.name, fset, feature.agol_item);
             }
           }, function (e) {
             //console.log(e);
@@ -174,27 +183,11 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
         function showBreedInfo() {
           // feature.getLayer().relationships
-            // var row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">breed_dt (Found: ' + featureSet.features.length + ')</th></tr>');
-            // domConstruct.place(row, 'breed_dt_hd');
-            //
-            // //This is per month, and needs to be formatted so that Breed1-4 are column labeled Lifecycle
-            // //Rebuild query just for this record at the given OBJECT ID for biofile.  There should be an orderby field
-            // featureSet.features.forEach(function (f) {
-            //   row = domConstruct.toDom(
-            //     '<tr><td>MONTH</td><td>' + f.attributes.MONTH_ + '</td></tr>' +
-            //     '<tr><td>BREED1</td><td>' + f.attributes.BREED1 + '</td></tr>' +
-            //     '<tr><td>BREED2</td><td>' + f.attributes.BREED2 + '</td></tr>' +
-            //     '<tr><td>BREED3</td><td>' + f.attributes.BREED3 + '</td></tr>' +
-            //     '<tr><td>BREED4</td><td>' + f.attributes.BREED4 + '</td></tr>' +
-            //     '<tr><td class="rowLine2">BREED5</td><td class="rowLine2">' + f.attributes.BREED5 + '</td></tr>'
-            //   );
-            //   domConstruct.place(row, 'breed_dt_tbody');
-            // });
 
 
         }
 
-        function formatRelatedData(tableName, featureSet) {
+        function formatRelatedData(tableName, featureSet, item) {
 
           //No aliases are set on the services.  Will need to determine a user-friendly presentation of the data.
           var row;
@@ -205,9 +198,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
             featureSet.features.forEach(function (f) {
               var lifecyclePane = new TitlePane({
-                title: 'Lifecycles', open: false,
-                content: 'feature-' + f.attributes.OBJECTID,
-
+                title: 'Lifecycles', open: false, content: ''
               });
               row = domConstruct.toDom('<tr><td>Common Name</td><td>' + f.attributes.NAME + '</td></tr>' +
                 (f.attributes.ELEMENT ? '<tr><td>Element</td><td>' + f.attributes.ELEMENT + '</td></tr>' : '') +
@@ -219,17 +210,17 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
                 (f.attributes.SEASSUM ? '<tr><td>Season Summary</td><td>' + f.attributes.SEASSUM + '</td></tr>' : '') +
                 //lifecyclePane.domNode +
                 '<tr><td colspan="2" id="breed_dt' + f.attributes.OBJECTID + '" ></td></tr>' +
-
                 '<tr><td colspan="2" class="rowLine2"></td></tr>'
               );
               domConstruct.place(row, 'biofile_tbody');
               dom.byId('breed_dt' + f.attributes.OBJECTID ).appendChild(lifecyclePane.domNode);
               lifecyclePane.watch('open', function () {
-                if (this.open && this.get('content').indexOf('feature-') === 0) {
-                  var feature_id = this.content.split('-')[1];
-                  this.set('content', 'Query the breed_dt table using id: '+feature_id);
-
-                  // showBreedInfo()
+                if (this.open && this.get('content') === '') {
+                  this.set('content', '<table style="width: 100%">'+
+                    '<thead></thead>'+
+                    '<tbody id="breed_dt'+ f.attributes.OBJECTID +'_tbody"></tbody>'+
+                    '</table>');
+                  vm.queryBreedTable(f, item, this);
                 }
               });
               lifecyclePane.startup();
@@ -270,7 +261,39 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
         }
       },
+      queryBreedTable: function (biofile_feature, item, pane) {
+          var biofile_table = dojo.filter(item.tables, function (table) {
+            return table.name.indexOf('biofile') > -1;
+          })[0];
+          biofile_table.relationships.forEach(function (relationship) {
+            if (relationship.name === 'breed_dt') {
+              var query = new RelationshipQuery();
+              query.objectIds = [biofile_feature.attributes.OBJECTID];
+              query.outFields = ['*'];
+              query.relationshipId = relationship.id;
 
+              biofile_table.queryRelatedFeatures(query, function (featureSet) {
+                var row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">breed_dt (Found: ' + featureSet[biofile_feature.attributes.OBJECTID].features.length + ')</th></tr>');
+                domConstruct.place(row, 'breed_dt'+ biofile_feature.attributes.OBJECTID +'_tbody');
+
+                //This is per month, and needs to be formatted so that Breed1-4 are column labeled Lifecycle
+                //Rebuild query just for this record at the given OBJECT ID for biofile.  There should be an orderby field
+                featureSet[biofile_feature.attributes.OBJECTID].features.forEach(function (f) {
+                  row = domConstruct.toDom(
+                    '<tr><td>MONTH</td><td>' + f.attributes.MONTH_ + '</td></tr>' +
+                    '<tr><td>BREED1</td><td>' + f.attributes.BREED1 + '</td></tr>' +
+                    '<tr><td>BREED2</td><td>' + f.attributes.BREED2 + '</td></tr>' +
+                    '<tr><td>BREED3</td><td>' + f.attributes.BREED3 + '</td></tr>' +
+                    '<tr><td>BREED4</td><td>' + f.attributes.BREED4 + '</td></tr>' +
+                    '<tr><td class="rowLine2">BREED5</td><td class="rowLine2">' + f.attributes.BREED5 + '</td></tr>'
+                  );
+                  domConstruct.place(row, 'breed_dt'+ biofile_feature.attributes.OBJECTID +'_tbody');
+                });
+
+              });
+            }
+          });
+      },
 
       foundFeatures: [],
       searchESIService: function (item, query) {
@@ -285,7 +308,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
             let deferred = new Deferred();
             promises.push(
               layer.fl.queryFeatures(query, function (featureSet) {
-                vm.foundFeatures = vm.foundFeatures.concat(featureSet.features);
+                featureSet.features.forEach(function (feature) {
+                  feature.agol_item = item;
+                  vm.foundFeatures.push(feature);
+                });
                 deferred.resolve();
               }));
           }
@@ -418,11 +444,11 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
 
       clearEsiWidgetText: function () {
         dojo.empty('biofile_tbody');
-        dojo.empty('breed_dt_tbody');
+        // dojo.empty('breed_dt_tbody');
         dojo.empty('soc_dat_tbody');
         dojo.empty('sources_tbody');
         dojo.empty('biofile_hd');
-        dojo.empty('breed_dt_hd');
+        // dojo.empty('breed_dt_hd');
         dojo.empty('soc_dat_hd');
         dojo.empty('sources_hd');
         dojo.empty('sdiv');
