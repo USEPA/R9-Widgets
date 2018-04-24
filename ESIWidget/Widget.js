@@ -279,9 +279,30 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
                 //This is per month, and needs to be formatted so that Breed1-4 are column labeled Lifecycle
                 //Rebuild query just for this record at the given OBJECT ID for biofile.  There should be an orderby field
                 featureSet[biofile_feature.attributes.OBJECTID].features.forEach(function (f) {
+                  var breed1 = '';
+                  if(biofile_feature.attributes.ELEMENT=== 'BIRD'){
+                    breed1 = 'Nesting';
+                    //breed2, 3, etc.
+                  }
+                  else if (biofile_feature.attributes.ELEMENT==='FISH'){
+                    breed1 = 'Spawning';
+                  }
+                  else if (biofile_feature.attributes.ELEMENT==='INVERT'){
+                    breed1 = 'Spawning/Mating';
+                  }
+                  else if (biofile_feature.attributes.ELEMENT==='M_MAMMAL'){
+                    breed1 = 'Mating';
+                  }
+                  else if (biofile_feature.attributes.SUBELEMENT==='coral'){
+                    breed1 = 'Spawning';
+                  }
+                  else{
+                    breed1 = 'Something';
+
+                  }
                   row = domConstruct.toDom(
                     '<tr><td>MONTH</td><td>' + f.attributes.MONTH_ + '</td></tr>' +
-                    '<tr><td>BREED1</td><td>' + f.attributes.BREED1 + '</td></tr>' +
+                    '<tr><td>' + breed1 +'</td><td>' + f.attributes.BREED1 + '</td></tr>' +
                     '<tr><td>BREED2</td><td>' + f.attributes.BREED2 + '</td></tr>' +
                     '<tr><td>BREED3</td><td>' + f.attributes.BREED3 + '</td></tr>' +
                     '<tr><td>BREED4</td><td>' + f.attributes.BREED4 + '</td></tr>' +
