@@ -2,7 +2,9 @@
   <div data-dojo-attach-point="grpWidgetNode"></div>
   <div id="instructions" style="display: block;"><h3>Insturctions:</h3>
     <span>Select a Coastal/Inland Zone Sensitive site or a Incident Action Plan from the map</span></div>
-  <button data-dojo-type="dijit/form/Button" type="button" data-dojo-attach-event="onClick:printPDF">Export to PDF</button>
+  <div id="printButton" style="display: none">
+    <button data-dojo-type="dijit/form/Button" type="button" data-dojo-attach-event="onClick:printPDF">Export to PDF</button>
+  </div>
   <div id="siteTabs" style="height: 97%; display: none">
 
     <div data-dojo-attach-point="tabContainer" data-dojo-type="dijit/layout/TabContainer" doLayout="false" style="height: 100%;">

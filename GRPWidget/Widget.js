@@ -76,6 +76,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                     convertFields(item.GRP[config_layer.attributes.layer], map_layer_object.fields);
                   } else if (config_layer.attributes.layer === 'scat_service' || config_layer.attributes.layer === 'scat_booms') {
                     item.GRP[config_layer.attributes.layer] = {layer: new FeatureLayer(config_layer.attributes.layer_location, {outFields: ['*']})};
+                    // convertFields(item.GRP[config_layer.attributes.layer], map_layer_object.fields);
                   }
                 });
               }));
@@ -513,8 +514,71 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
         }
 
         function displaySCAT(grpItem, feature) {
-          var pane = new ContentPane({title: 'SCATs'});
+          var pane = new ContentPane({title: 'SCATs', content: '<table class="tableTab"><tbody id="SCATs"></tbody></table>'});
           vm.tabContainer.addChild(pane, 3);
+
+
+        }
+
+        function addSCATContent(scatItem, scatboomItem, featureScatID) {
+          var scatquery = new Query();
+          scatquery.where = "Drawing_La ='" + featureScatID + "'";
+          scatquery.outFields = ['*'];
+          scatItem.layer.queryFeatures(scatquery, function (response) {
+            console.log (response);
+            var selectedFeats = [];
+            dojo.forEach(response.features, function (scat) {
+              var scatboomQuery = new Query();
+              scatboomQuery.where = "ForeignKey='" + scat.attributes.ForeignKey + "'";
+              scatboomQuery.outFields = ['*'];
+
+              scatboomItem.layer.queryFeatures(scatboomQuery, function (scatboomResponse) {
+                console.log(scatboomResponse);
+                convertFields(scatItem, response.fields);
+                convertFields(scatboomItem, scatboomResponse.fields);
+                selectedFeats = scatboomResponse;
+                addToTab(['Drawing_La', 'SHORELINE_', 'ADDITIONAL'], scat, scatItem.fields, 'SCATs', 'scatboomsVis_' + scat.attributes.OBJECTID);
+
+                //Hover tip for toggle all booms in strategy
+                // new Tooltip({
+                //   connectId: ['ts_' + 'scatboomsVis_' + scat.attributes.OBJECTID],
+                //   label: "Display Booms"
+                // });
+                //click event for toggle to turn on/off all booms in strategy
+                // var allBoomBtn = dom.byId('scatboomsVis_' + scat.attributes.OBJECTID);
+                // on(allBoomBtn, "click", lang.hitch(selectedFeats.features, showboom));
+              //
+              //
+                var row = domConstruct.toDom('<tr><td colspan="3" id="scat_' + scat.attributes.OBJECTID + '_scatbooms"></td></tr>');
+                domConstruct.place(row, 'SCATs');
+                var boomPane = new TitlePane({
+                  title: 'Booms', open: false,
+                  content: '<table style="width: 100%"><tbody id="scatbooms_' + scat.attributes.OBJECTID + '"></tbody></table>'
+                });
+                dom.byId('scat_' + scat.attributes.OBJECTID + '_scatbooms').appendChild(boomPane.domNode);
+                boomPane.startup();
+
+                dojo.forEach(scatboomResponse.features, function (scatboom) {
+
+                  addToTab(['label', 'General_De', 'BoomLength'], scatboom, scatboomItem.fields, 'scatbooms_' + scat.attributes.OBJECTID, 'scatboom_' + scatboom.attributes.OBJECTID);
+
+                  //add hover tip to toggle button for booms
+                  new Tooltip({
+                    connectId: ['ts_' + 'scatboom_' + scatboom.attributes.OBJECTID],
+                    label: "Display Boom"
+                  });
+              //     //click event for making an individual boom visible
+              //     var boomBtn = dom.byId('boom_' + boom.attributes.OBJECTID);
+              //     on(boomBtn, "click", lang.hitch(boom, showboom));
+              //
+                });
+              //   // probably a better way but this will turn on all booms by default, Travis
+              //   allBoomBtn.click();
+              });
+            });
+
+          });
+
         }
 
         function displayCoastal(grpItem, feature) {
@@ -528,7 +592,14 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           var instructionsDiv = dom.byId('instructions');
           domStyle.set(instructionsDiv, 'display', 'none');
 
+          var printerbuttonDiv = dom.byId('printButton');
+          domStyle.set(printerbuttonDiv, 'display', 'block');
+
+          //Add SCAT tab and contents
           displaySCAT();
+          addSCATContent(grpItem.GRP.scat_service, grpItem.GRP.scat_booms, feature.attributes.scat_id);
+
+
           //General Tabl
           addToTab(['Name', 'Other_Name', 'Site_ID', 'USGS_Quad', 'QUAD_Name', 'GRP_Map_No',
             'Access_Comments', 'General_Location',
@@ -596,6 +667,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           var instructionsDiv = dom.byId('instructions');
           domStyle.set(instructionsDiv, 'display', 'none');
 
+          var printerbuttonDiv = dom.byId('printButton');
+          domStyle.set(printerbuttonDiv, 'display', 'block');
+
           addToTab(['Name', 'Other_Name', 'Site_ID', 'USGS_Quad_Num', 'USGS_Quad_Name', 'GRP_Map_No',
             'Access_Agreement', 'General_Location', 'Access_Crossing', 'River_Miles', 'RR_Mile_Marker', 'Highway_Milepost',
             'Physical_Description', 'Waterway_Characteristics', 'Water_Width_and_Depths', 'Gaging_Station_Link',
@@ -635,6 +709,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
 
           var instructionsDiv = dom.byId('instructions');
           domStyle.set(instructionsDiv, 'display', 'none');
+
+          var printerbuttonDiv = dom.byId('printButton');
+          domStyle.set(printerbuttonDiv, 'display', 'block');
 
           vm.tabContainerB.resize();
           //General Tab
@@ -749,7 +826,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
         console.log('GRPWidget::onClose');
         this.map.setInfoWindowOnClick(true);
 
-        //vm.selectionManager.clearSelection(this.grpItems[0].GRP.coastal_booms);
+        // this.selectionManager.clearSelection();
+        // clearAllTabs();
+
+        //.selectionManager.clearSelection(this.grpItems[0].GRP.coastal_booms);
       },
 
       displayBoom: function () {
