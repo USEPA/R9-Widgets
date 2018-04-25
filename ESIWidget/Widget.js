@@ -213,42 +213,50 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
                 '<tr><td colspan="2" class="rowLine2"></td></tr>'
               );
               domConstruct.place(row, 'biofile_tbody');
-              dom.byId('breed_dt' + f.attributes.OBJECTID ).appendChild(lifecyclePane.domNode);
-              lifecyclePane.watch('open', function () {
-                if (this.open && this.get('content') === '') {
-                  this.set('content', '<table style="width: 100%">'+
-                    '<thead></thead>'+
-                    '<tbody id="breed_dt'+ f.attributes.OBJECTID +'_tbody"></tbody>'+
-                    '</table>');
-                  vm.queryBreedTable(f, item, this);
-                }
-              });
-              lifecyclePane.startup();
+              if(f.attributes.ELEMENT ==='BIRD' || f.attributes.ELEMENT ==='FISH' || f.attributes.ELEMENT ==='INVERT' ||
+                f.attributes.ELEMENT ==='REPTILE' || f.attributes.ELEMENT ==='M_MAMMAL' ||
+                (f.attributes.ELEMENT ==='T_MAMMAL' && f.attributes.SUBELEMENT ==='coral') ||
+                (f.attributes.ELEMENT ==='HABITAT' && f.attributes.SUBELEMENT ==='coral')) {
+
+                dom.byId('breed_dt' + f.attributes.OBJECTID).appendChild(lifecyclePane.domNode);
+                lifecyclePane.watch('open', function () {
+                  if (this.open && this.get('content') === '') {
+                    this.set('content', '<table style="width: 100%">' +
+                      '<thead></thead>' +
+                      '<tbody id="breed_dt' + f.attributes.OBJECTID + '_tbody"></tbody>' +
+                      '</table>');
+                    vm.queryBreedTable(f, item, this);
+                  }
+                });
+                lifecyclePane.startup();
+              }
             });
 
           } else if (tableName === 'soc_dat') {
-            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">soc_dat (Found: ' + featureSet.features.length + ')</th></tr>');
+            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">Sources Data (Found: ' + featureSet.features.length + ')</th></tr>');
             domConstruct.place(row, 'soc_dat_hd');
 
             featureSet.features.forEach(function (f) {
-              row = domConstruct.toDom('<tr><td>NAME</td><td>' + f.attributes.NAME + '</td></tr>' +
-                '<tr><td>TYPE</td><td>' + f.attributes.TYPE + '</td></tr>' +
-                '<tr><td>CONTACT</td><td>' + f.attributes.CONTACT + '</td></tr>' +
-                '<tr><td class="rowLine2">PHONE</td><td class="rowLine2">' + f.attributes.PHONE + '</td></tr>'
+              row = domConstruct.toDom('<tr><td>Name</td><td>' + f.attributes.NAME + '</td></tr>' +
+                '<tr><td>Type</td><td>' + f.attributes.TYPE + '</td></tr>' +
+                '<tr><td>Contact</td><td>' + f.attributes.CONTACT + '</td></tr>' +
+                '<tr><td>Phone</td><td>' + f.attributes.PHONE + '</td></tr>' +
+                '<tr><td colspan="2" class="rowLine2"></td></tr>'
               );
               domConstruct.place(row, 'soc_dat_tbody');
             });
 
           } else if (tableName == 'sources') {
-            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">sources (Found: ' + featureSet.features.length + ')</th></tr>');
+            row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">Sources (Found: ' + featureSet.features.length + ')</th></tr>');
             domConstruct.place(row, 'sources_hd');
 
             featureSet.features.forEach(function (f) {
-              row = domConstruct.toDom('<tr><td>TITLE</td><td>' + f.attributes.TITLE + '</td></tr>' +
-                '<tr><td>PUBLICATION</td><td>' + f.attributes.PUBLICATION + '</td></tr>' +
-                '<tr><td>DATA_FORMAT</td><td>' + f.attributes.DATA_FORMAT + '</td></tr>' +
-                '<tr><td>DATE_PUB</td><td>' + f.attributes.DATE_PUB + '</td></tr>' +
-                '<tr><td class="rowLine2">TIME_PERIOD</td><td class="rowLine2">' + f.attributes.TIME_PERIOD + '</td></tr>'
+              row = domConstruct.toDom('<tr><td>Title</td><td>' + f.attributes.TITLE + '</td></tr>' +
+                '<tr><td>Publication</td><td>' + f.attributes.PUBLICATION + '</td></tr>' +
+                '<tr><td>Data Format</td><td>' + f.attributes.DATA_FORMAT + '</td></tr>' +
+                '<tr><td>Date Published</td><td>' + f.attributes.DATE_PUB + '</td></tr>' +
+                '<tr><td>Time Period</td><td>' + f.attributes.TIME_PERIOD + '</td></tr>' +
+                '<tr><td colspan="2" class="rowLine2"></td></tr>'
               );
               domConstruct.place(row, 'sources_tbody');
             });
@@ -273,41 +281,93 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/Deferred', 'dojo/on', 'do
               query.relationshipId = relationship.id;
 
               biofile_table.queryRelatedFeatures(query, function (featureSet) {
-                var row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">breed_dt (Found: ' + featureSet[biofile_feature.attributes.OBJECTID].features.length + ')</th></tr>');
+                //var row = domConstruct.toDom('<tr><th class="rowLine1" colspan="2">breed_dt (Found: ' + featureSet[biofile_feature.attributes.OBJECTID].features.length + ')</th></tr>');
+                var row = domConstruct.toDom('<tr><th class="rowLine1" colspan="3"></th></tr>');
                 domConstruct.place(row, 'breed_dt'+ biofile_feature.attributes.OBJECTID +'_tbody');
 
                 //This is per month, and needs to be formatted so that Breed1-4 are column labeled Lifecycle
                 //Rebuild query just for this record at the given OBJECT ID for biofile.  There should be an orderby field
+
+                var months = {1:"January", 2:"February", 3:"March",4:"April",5:"May", 6:"June", 7:"July",
+                8:"August", 9:"September", 10:"October", 11:"November",12:"December"};
+
                 featureSet[biofile_feature.attributes.OBJECTID].features.forEach(function (f) {
-                  var breed1 = '';
-                  if(biofile_feature.attributes.ELEMENT=== 'BIRD'){
-                    breed1 = 'Nesting';
-                    //breed2, 3, etc.
+                  var tableString = '';
+
+                  if(biofile_feature.attributes.ELEMENT === 'BIRD'){
+                    //breed1 = 'Nesting'; breed2 = 'Laying'; breed3 = 'Hatching'; 4 Fledging; 5 not used
+
+                    tableString =
+                      '<tr><td>' + months[f.attributes.MONTH_] + '</td>' +
+                      '<td>Nesting</td><td>' + f.attributes.BREED1 + '</td></tr>' +
+                      '<tr><td></td><td>Laying</td><td>' + f.attributes.BREED2 + '</td></tr>' +
+                      '<tr><td></td><td>Hatching</td><td>' + f.attributes.BREED3 + '</td></tr>' +
+                      '<tr><td></td><td>Fledging</td><td>' + f.attributes.BREED4 + '</td></tr>' +
+                      '<tr><td colspan="3" class="rowLine2"></td></tr>'
+                    ;
                   }
-                  else if (biofile_feature.attributes.ELEMENT==='FISH'){
-                    breed1 = 'Spawning';
+                  else if (biofile_feature.attributes.ELEMENT === 'FISH'){
+                    //breed1 = 'Spawning'; breed2 = 'Eggs'; breed3 = 'Larvae'; 4 Juvenile; 5 Adults
+                    tableString =
+                      '<tr><td>' + months[f.attributes.MONTH_] + '</td>' +
+                      '<td>Spawning</td><td>' + f.attributes.BREED1 + '</td></tr>' +
+                      '<tr><td></td><td>Eggs</td><td>' + f.attributes.BREED2 + '</td></tr>' +
+                      '<tr><td></td><td>Larvae</td><td>' + f.attributes.BREED3 + '</td></tr>' +
+                      '<tr><td></td><td>Juvenile</td><td>' + f.attributes.BREED4 + '</td></tr>' +
+                      '<tr><td></td><td>Adults</td><td>' + f.attributes.BREED5 + '</td></tr>' +
+                      '<tr><td colspan="3" class="rowLine2"></td></tr>'
+                    ;
                   }
-                  else if (biofile_feature.attributes.ELEMENT==='INVERT'){
-                    breed1 = 'Spawning/Mating';
+                  else if (biofile_feature.attributes.ELEMENT === 'INVERT'){
+                    //breed1 = 'Spawning/Mating'; breed2 = 'Eggs'; breed3 = 'Larvae'; 4 Juvenile 5 Adults
+                    tableString =
+                      '<tr><td>' + months[f.attributes.MONTH_] + '</td>' +
+                      '<td>Spawning/Mating</td><td>' + f.attributes.BREED1 + '</td></tr>' +
+                      '<tr><td></td><td>Eggs</td><td>' + f.attributes.BREED2 + '</td></tr>' +
+                      '<tr><td></td><td>Larvae</td><td>' + f.attributes.BREED3 + '</td></tr>' +
+                      '<tr><td></td><td>Juvenile</td><td>' + f.attributes.BREED4 + '</td></tr>' +
+                      '<tr><td></td><td>Adults</td><td>' + f.attributes.BREED5 + '</td></tr>' +
+                      '<tr><td colspan="3" class="rowLine2"></td></tr>'
+                    ;
                   }
-                  else if (biofile_feature.attributes.ELEMENT==='M_MAMMAL'){
-                    breed1 = 'Mating';
+                  else if (biofile_feature.attributes.ELEMENT === 'REPTILE'){
+                    //breed1 = 'Spawning/Mating'; breed2 = 'Hatching'; breed3 = 'Internesting'; 4 Juvenile; 5 Adults
+                    tableString =
+                      '<tr><td>' + months[f.attributes.MONTH_] + '</td>' +
+                      '<td>Spawning/Mating</td><td>' + f.attributes.BREED1 + '</td></tr>' +
+                      '<tr><td></td><td>Hatching</td><td>' + f.attributes.BREED2 + '</td></tr>' +
+                      '<tr><td></td><td>Internesting</td><td>' + f.attributes.BREED3 + '</td></tr>' +
+                      '<tr><td></td><td>Juvenile</td><td>' + f.attributes.BREED4 + '</td></tr>' +
+                      '<tr><td></td><td>Adults</td><td>' + f.attributes.BREED5 + '</td></tr>' +
+                      '<tr><td colspan="3" class="rowLine2"></td></tr>'
+                    ;
                   }
-                  else if (biofile_feature.attributes.SUBELEMENT==='coral'){
-                    breed1 = 'Spawning';
+                  else if (biofile_feature.attributes.ELEMENT === 'M_MAMMAL'){
+                    //breed1 = 'Mating'; breed2 = 'Calving'; breed3 = 'Pupping'; 4 Molting  5 not used
+                    tableString =
+                      '<tr><td>' + months[f.attributes.MONTH_] + '</td>' +
+                      '<td>Mating</td><td>' + f.attributes.BREED1 + '</td></tr>' +
+                      '<tr><td></td><td>Calving</td><td>' + f.attributes.BREED2 + '</td></tr>' +
+                      '<tr><td></td><td>Pupping</td><td>' + f.attributes.BREED3 + '</td></tr>' +
+                      '<tr><td></td><td>Molting</td><td>' + f.attributes.BREED4 + '</td></tr>' +
+                      '<tr><td colspan="3" class="rowLine2"></td></tr>'
+                    ;
+                  }
+                  else if (biofile_feature.attributes.SUBELEMENT === 'coral' &&
+                    (biofile_feature.attributes.ELEMENT === 'T_MAMMAL' || biofile_feature.attributes.ELEMENT === 'HABITAT')){
+                    //breed1 = 'Spawning'; breed2 = 'Juvenile';
+                    tableString =
+                      '<tr><td>' + months[f.attributes.MONTH_] + '</td>' +
+                      '<td><td>Spawning</td><td>' + f.attributes.BREED1 + '</td></tr>' +
+                      '<tr><td></td><td>Juvenile</td><td>' + f.attributes.BREED2 + '</td></tr>' +
+                      '<tr><td colspan="3" class="rowLine2"></td></tr>'
+                    ;
                   }
                   else{
-                    breed1 = 'Something';
-
+                    //breed1 = 'Something';
                   }
-                  row = domConstruct.toDom(
-                    '<tr><td>MONTH</td><td>' + f.attributes.MONTH_ + '</td></tr>' +
-                    '<tr><td>' + breed1 +'</td><td>' + f.attributes.BREED1 + '</td></tr>' +
-                    '<tr><td>BREED2</td><td>' + f.attributes.BREED2 + '</td></tr>' +
-                    '<tr><td>BREED3</td><td>' + f.attributes.BREED3 + '</td></tr>' +
-                    '<tr><td>BREED4</td><td>' + f.attributes.BREED4 + '</td></tr>' +
-                    '<tr><td class="rowLine2">BREED5</td><td class="rowLine2">' + f.attributes.BREED5 + '</td></tr>'
-                  );
+                  row = domConstruct.toDom(tableString);
+
                   domConstruct.place(row, 'breed_dt'+ biofile_feature.attributes.OBJECTID +'_tbody');
                 });
 
