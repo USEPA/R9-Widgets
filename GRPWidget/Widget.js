@@ -49,7 +49,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
         //   new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([0, 0, 0]), 1.25),
         //   new Color([0, 255, 255]));
 
-        function configGRPObject(item, callback) {
+        function configGRPObject(item, callback, map) {
           if (item.GRP) {
             callback(item);
             return;
@@ -76,6 +76,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                     convertFields(item.GRP[config_layer.attributes.layer], map_layer_object.fields);
                   } else if (config_layer.attributes.layer === 'scat_service' || config_layer.attributes.layer === 'scat_booms') {
                     item.GRP[config_layer.attributes.layer] = {layer: new FeatureLayer(config_layer.attributes.layer_location, {outFields: ['*']})};
+                    var featureLayer = new FeatureLayer(config_layer._layer.url);
+                    map.addLayer(featureLayer);
                     // convertFields(item.GRP[config_layer.attributes.layer], map_layer_object.fields);
                   }
                 });
@@ -537,7 +539,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                 convertFields(scatItem, response.fields);
                 convertFields(scatboomItem, scatboomResponse.fields);
                 selectedFeats = scatboomResponse;
-                addToTab(['Drawing_La', 'SHORELINE_', 'ADDITIONAL'], scat, scatItem.fields, 'SCATs', 'scatboomsVis_' + scat.attributes.OBJECTID);
+                addToTab(['Drawing_La', 'SHORELINE_', 'ADDITIONAL'], scat, scatItem.fields, 'SCATs');
+                // addToTab(['Drawing_La', 'SHORELINE_', 'ADDITIONAL'], scat, scatItem.fields, 'SCATs', 'scatboomsVis_' + scat.attributes.OBJECTID);
 
                 //Hover tip for toggle all booms in strategy
                 // new Tooltip({
@@ -567,10 +570,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                     connectId: ['ts_' + 'scatboom_' + scatboom.attributes.OBJECTID],
                     label: "Display Boom"
                   });
-              //     //click event for making an individual boom visible
-              //     var boomBtn = dom.byId('boom_' + boom.attributes.OBJECTID);
-              //     on(boomBtn, "click", lang.hitch(boom, showboom));
-              //
+                  //click event for making an individual boom visible
+                  var boomBtn = dom.byId('scatboom_' + scatboom.attributes.OBJECTID);
+                  on(boomBtn, "click", lang.hitch(scatboom, showboom));
+
                 });
               //   // probably a better way but this will turn on all booms by default, Travis
               //   allBoomBtn.click();
@@ -802,7 +805,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                         if (!results.coastal && !results.inland) searchIAP(item, featureQuery);
                         vm.loadingShelter.hide();
                       });
-                  });
+                  },vm.map);
                 }
               });
             });
