@@ -75,10 +75,15 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
                     item.GRP[config_layer.attributes.layer] = {layer: map_layer_object};
                     convertFields(item.GRP[config_layer.attributes.layer], map_layer_object.fields);
                   } else if (config_layer.attributes.layer === 'scat_service' || config_layer.attributes.layer === 'scat_booms') {
-                    item.GRP[config_layer.attributes.layer] = {layer: new FeatureLayer(config_layer.attributes.layer_location, {outFields: ['*']})};
-                    var featureLayer = new FeatureLayer(config_layer._layer.url);
-                    map.addLayer(featureLayer);
-                    // convertFields(item.GRP[config_layer.attributes.layer], map_layer_object.fields);
+                    if(item.GRP[config_layer.attributes.layer]){
+                      item.GRP[config_layer.attributes.layer] = {layer: new FeatureLayer(config_layer.attributes.layer_location, {outFields: ['*']})};
+                    }else{
+                      item.GRP[config_layer.attributes.layer] = {layer: new FeatureLayer(config_layer.attributes.layer_location, {outFields: ['*']})};
+                      var featureLayer = new FeatureLayer(config_layer._layer.url);
+                      map.addLayer(featureLayer);
+                      // convertFields(item.GRP[config_layer.attributes.layer], map_layer_object.fields);
+                    }
+
                   }
                 });
               }));
