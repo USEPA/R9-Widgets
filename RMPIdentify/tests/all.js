@@ -1,0 +1,4 @@
+define([
+  './utils',
+  './ComponentA'
+], function() {});
