@@ -89,10 +89,10 @@ export default declare([BaseWidget], {
   },
   onClose() {
     console.log('Wind::onClose');
-    this.map.removeLayer(this.rasterLayer);
     this.listeners.forEach(function (listener) {
       listener.remove();
     });
+    this.map.removeLayer(this.rasterLayer);
   },
   // onMinimize(){
   //   console.log('Wind::onMinimize');
@@ -177,15 +177,17 @@ export default declare([BaseWidget], {
     var vm = this;
     vm.legend_update_interval = setInterval(function () {
       //   var legendWidget = wm.getWidgetsByName('Legend');
-      if (vm._legend.domNode.children.length === 2 && vm._legend.domNode.innerHTML.indexOf('id="wind_widget_legend"') === -1) {
-        var wind_legend = domConstruct.toDom('<div style="display: block;" class="esriLegendService" id="wind_widget_legend">' +
-          '<table><tbody>' +
-          '<tr><td align="left" colspan="2"><span class="esriLegendServiceLabel">Forecast Wind Speed for ' +
-          vm._forecast_datetime +
-          '</span></td></tr>' +
-          vm._generateWindLegend() +
-          '</tbody></table></div>');
-        domConstruct.place(wind_legend, vm._legend.domNode.children[1], 'first');
+      if (vm._legend.domNode.children.length === 2) {
+        if ( vm._legend.domNode.innerHTML.indexOf('id="wind_widget_legend"') === -1) {
+          vm.wind_legend = domConstruct.toDom('<div style="display: block;" class="esriLegendService" id="wind_widget_legend">' +
+            '<table><tbody>' +
+            '<tr><td align="left" colspan="2"><span class="esriLegendServiceLabel">Forecast Wind Speed for ' +
+            vm._forecast_datetime +
+            '</span></td></tr>' +
+            vm._generateWindLegend() +
+            '</tbody></table></div>');
+          domConstruct.place(vm.wind_legend, vm._legend.domNode.children[1], 'first');
+        }
         clearInterval(vm.legend_update_interval);
       }
     }, 200);
