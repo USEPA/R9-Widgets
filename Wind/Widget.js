@@ -31,7 +31,8 @@ export default declare([BaseWidget], {
     if (this.canvasSupport) {
       vm._getIconNode();
       vm.rasterLayer = new RasterLayer(null, {
-        opacity: 0.9
+        opacity: 0.9,
+        id: 'Current Wind Forecast'
       });
 
       vm.layersRequest = esriRequest({
@@ -166,7 +167,7 @@ export default declare([BaseWidget], {
     var legend = pm.widgetManager.appConfig.widgetPool.widgets.filter(function (item) {
       return item.name === "Legend";
     })[0];
-    pm.destroyAllPanels();
+    // pm.destroyAllPanels();
     pm.showPanel(legend);
     return wm.loadWidget(legend).then(function (legendWidget) {
       vm._legend = legendWidget;
