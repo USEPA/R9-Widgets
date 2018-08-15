@@ -36,7 +36,7 @@ export default declare([BaseWidget], {
       });
 
       vm.layersRequest = esriRequest({
-        url: './widgets/Wind/wind_surface_level_gfs_1.0.json',
+        url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind.json',
         content: {},
         handleAs: "json"
       });
