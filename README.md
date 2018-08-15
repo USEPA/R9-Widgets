@@ -2,7 +2,7 @@
 
 This repository contains various widgets developed by Region 9. 
 
-These widgets are generated using https://github.com/Esri/generator-esri-appbuilder-js
+These widgets are generated using https://github.com/Esri/generator-esri-appbuilder-js.
 
 See individual folder README.md files for specific information about their contents:
  
