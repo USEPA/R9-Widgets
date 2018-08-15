@@ -1,5 +1,5 @@
 {
-	"showLabels": false,
+	"showLabels": true,
 	"autoPlay" : true,
-	"timeFormat": "auto"
+  "timeFormat": "ddd MMM DD  h:mm a"
 }
