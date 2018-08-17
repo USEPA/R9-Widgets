@@ -16,6 +16,7 @@ vm.layersRequest = esriRequest({
 
 The code to actually display this data was obtained from a Esri demo project called <a href="https://github.com/Esri/wind-js">Wind-JS</a>.  This widget primarily serves as a wrapper to the Wind-JS code so the data can be displayed inside an Esri WAB.
 
+[image](https://user-images.githubusercontent.com/4040295/44286016-64e03780-a21c-11e8-8822-1012464deb5c.png)
 ### Contact Information
 
 * **Cheryl Henley**, GIS Coordinator 415-972-3586 henley.cheryl@epa.gov
