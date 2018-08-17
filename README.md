@@ -6,8 +6,8 @@ These widgets are generated using https://github.com/Esri/generator-esri-appbuil
 
 See individual folder README.md files for specific information about their contents:
  
- * ESI Widget (TRAVIS ADD SOMETHING)
- * GRP Widget (TRAVIS ADD SOMETHING)
+ * [ESI Widget](https://github.com/USEPA/R9-Widgets/blob/master/ESIWidget)
+ * [GRP Widget](https://github.com/USEPA/R9-Widgets/blob/master/GRPWidget)
  * [RMP Identify Widget](https://github.com/USEPA/R9-Widgets/blob/master/RMPIdentify)
  * [Smoke Widget](https://github.com/USEPA/R9-Widgets/blob/master/Smoke)
  * [Tier II Identify Widget](https://github.com/USEPA/R9-Widgets/blob/master/TierIIIdentify)
