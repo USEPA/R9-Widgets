@@ -8,10 +8,10 @@ See individual folder README.md files for specific information about their conte
  
  * ESI Widget (TRAVIS ADD SOMETHING)
  * GRP Widget (TRAVIS ADD SOMETHING)
- * [RMP Identify Widget](https://github.com/USEPA/R9-Widgets/blob/master/RMPIdentify/README.md)
- * [Smoke Widget](https://github.com/USEPA/R9-Widgets/blob/master/Smoke/README.md)
- * [Tier II Identify Widget](https://github.com/USEPA/R9-Widgets/blob/master/TierIIIdentify/README.md)
- * [Wind Widget](https://github.com/USEPA/R9-Widgets/blob/master/Wind/README.md)
+ * [RMP Identify Widget](https://github.com/USEPA/R9-Widgets/blob/master/RMPIdentify)
+ * [Smoke Widget](https://github.com/USEPA/R9-Widgets/blob/master/Smoke)
+ * [Tier II Identify Widget](https://github.com/USEPA/R9-Widgets/blob/master/TierIIIdentify)
+ * [Wind Widget](https://github.com/USEPA/R9-Widgets/blob/master/Wind)
 
 ### Contact Information
 
