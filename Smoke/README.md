@@ -6,6 +6,8 @@ The images are harvested using the get_airfire_images.py script found <a target=
 
 Once images have been harvested, you will need to update the root_url attribute to point to the location of the hosted images. Each time the widget loads, it will look for the latest images available based on the timestamps of the folders created by the harvesting script.  Additionally, the names of the files can not be changed, as the widget uses the naming convention to determine the timestamp of the image.
 
+![Example of Smoke Widget](https://github.com/USEPA/R9-Widgets/blob/master/Smoke/SmokeWidgetDemo.PNG)
+
 ### Contact Information
 
 * **Cheryl Henley**, GIS Coordinator 415-972-3586 henley.cheryl@epa.gov
