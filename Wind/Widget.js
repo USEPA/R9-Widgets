@@ -65,6 +65,7 @@ export default declare([BaseWidget], {
     var vm = this;
     console.log('Wind::onOpen');
     this._showLoading();
+    dojo.setStyle(this.buttonNode, 'border', 'solid 1px white');
     this.map.addLayer(this.rasterLayer);
     if (vm.layersRequest.isResolved()) {
       vm.windy = new Windy({canvas: vm.rasterLayer._element, data: vm.data});
@@ -93,6 +94,7 @@ export default declare([BaseWidget], {
     this.listeners.forEach(function (listener) {
       listener.remove();
     });
+    dojo.setStyle(this.buttonNode, 'border', '');
     this.map.removeLayer(this.rasterLayer);
   },
   // onMinimize(){
@@ -136,8 +138,8 @@ export default declare([BaseWidget], {
     }
   },
   _getIconNode() {
-    var node = query("div[data-widget-name='Wind']")[0];
-    var parentWid = html.getAttr(node, 'widgetId');
+    this.buttonNode = query("div[data-widget-name='Wind']")[0];
+    var parentWid = html.getAttr(this.buttonNode, 'widgetId');
     this.buttonWidg = registry.byId(parentWid);
     this.buttonWidg._showLoading = function () {
     };

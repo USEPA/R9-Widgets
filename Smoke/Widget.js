@@ -180,6 +180,9 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/
         if (this.images[this.start.clone().add(1, 'hour').format('YYYYMMDDHHmm')] !== undefined) {
           this.mapImageLayer.addImage(this.images[this.start.clone().add(1, 'hour').format('YYYYMMDDHHmm')]);
         }
+        var node = query("div[data-widget-name='Smoke']")[0];
+        dojo.setStyle(node, 'border', 'solid 1px white');
+
         this.map.addLayer(this.mapImageLayer);
         // this._initLayerInfosObj().then(lang.hitch(this, function () {
         //   if (!this.layerProcesser.hasVisibleTemporalLayer()) {
@@ -229,6 +232,8 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/
         //     }
         //   }
         // }));
+        var node = query("div[data-widget-name='Smoke']")[0];
+        dojo.setStyle(node, 'border', '');
         this.closeTimeSlider();
         this.mapImageLayer.removeAllImages();
         this.map.removeLayer(this.mapImageLayer);
