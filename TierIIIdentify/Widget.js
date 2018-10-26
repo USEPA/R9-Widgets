@@ -475,7 +475,10 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
 
         this.mapIdNode.innerHTML = '<h1>Tier II Records Status</h1><br/>' +
           '<table><tbody id="tierii_status"></tbody></table>' +
-          '<br/>Click Facility to view contact and chemical information.';
+          '<p>Click Facility to view contact and chemical information.</p><br/>' +
+          '<p>More info on the Emergency Planning and Community Right-to-Know Act (EPCRA): ' +
+          '<a href="https://www.epa.gov/epcra">https://www.epa.gov/epcra</a></p><br/>' +
+          '<p>EPCRA Fact Sheet: <a href="https://www.epa.gov/sites/production/files/2017-08/documents/epcra_fact_sheet_overview_8-2-17.pdf">https://www.epa.gov/sites/production/files/2017-08/documents/epcra_fact_sheet_overview_8-2-17.pdf</a></p>';
 
         // could pull this once and check if the values are set instead of pulling data each time
         statusLayer.queryFeatures(statusQuery, function (records) {
