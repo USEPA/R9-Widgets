@@ -23,12 +23,12 @@ define([
       titleLabel: 'Select Source',
       map: null,
       layerChooser: null,
-      constructor: function () {
-        this.inherited(arguments);
+      constructor: function constructor() {
+        this.inherited(constructor, arguments);
         this.buttons = [{label: 'OK', onClick:this._setSelection, that:this}, {label: 'Cancel'}];
       },
-      postCreate: function () {
-        this.inherited(arguments);
+      postCreate: function postCreate() {
+        this.inherited(postCreate, arguments);
 
         this.layerChooser = new LayerChooserFromMap({createMapResponse: this.map.webMapResponse}, this.contentContainerNode);
       },
