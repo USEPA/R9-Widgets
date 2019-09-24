@@ -756,6 +756,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
               dojo.forEach(vm.grpItems, function (item) {
                 if (item.spatialExtent.contains(e.mapPoint)) {
                   configGRPObject(item, function (item) {
+                    vm.currentItem = item;
                     clearAllSelections(item);
                     var coastalPromise = searchCoastal(item, featureQuery);
                     var inlandPromise = searchInland(item, featureQuery);
@@ -824,6 +825,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
             });
           }
         });
+      },
+      editGRP: function () {
+        window.open("https://r9.ercloud.org/GRPApp/app/" + this.currentItem.item.id, '_blank');
       }
       // onMinimize: function(){
       //   console.log('GRPWidget::onMinimize');

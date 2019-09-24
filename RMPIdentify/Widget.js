@@ -232,7 +232,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
             var features = e[attributes.OBJECTID].features;
             if (features.length === 1) {
               that.multipleRMPs = false;
-              that.loadFeature(features[0])
+              that.loadFeature(features[0]);
             } else {
               that.multipleRMPs = true;
               that.mapIdNode.innerHTML = '<h3>Multiple RMPs Found for ' + attributes.FacilityName + '</h3>' +

@@ -20,9 +20,8 @@ define([
       },
 
       setConfig: function (config) {
-        var that = this;
         this.config = config;
-        this.status.innerHTML = this.config.statusLayerName;
+        // this.status.innerHTML = this.config.statusLayerName;
         this.source.innerHTML = this.config.layerName;
 
         // this.statusLayerInput.value = config.statusLayer;
@@ -42,15 +41,15 @@ define([
           that.source.innerHTML = item[0].name;
         });
       },
-      _setStatus: function () {
-        var layerSelect = new LayerSelectPopup({map: this.map}),
-          that = this;
-
-        layerSelect.on('ok', function (item) {
-          that.config.statusLayer = item[0].layerInfo.layerObject.layerId;
-          that.config.statusLayerName = item[0].name;
-          that.status.innerHTML = item[0].name;
-        });
-      }
+      // _setStatus: function () {
+      //   var layerSelect = new LayerSelectPopup({map: this.map}),
+      //     that = this;
+      //
+      //   layerSelect.on('ok', function (item) {
+      //     that.config.statusLayer = item[0].layerInfo.layerObject.layerId;
+      //     that.config.statusLayerName = item[0].name;
+      //     that.status.innerHTML = item[0].name;
+      //   });
+      // }
     });
   });
