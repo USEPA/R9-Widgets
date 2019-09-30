@@ -23,8 +23,8 @@ export default declare([BaseWidget], {
   // add additional properties here
   // methods to communication with app container:
   _forecast_datetime: '',
-  postCreate() {
-    this.inherited(arguments);
+  postCreate: function postCreate() {
+    this.inherited(postCreate, arguments);
     console.log('Wind::postCreate');
     this.canvasSupport = this.supports_canvas();
     var vm = this;
