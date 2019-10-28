@@ -14,103 +14,99 @@
 // limitations under the License.
 ///////////////////////////////////////////////////////////////////////////
 
-define(['dojo/_base/html', 'dojo/dom-geometry'],
-  function (html, domGeometry) {
+define(['dojo/_base/html', 'dojo/dom-geometry'], function (html, domGeometry) {
 
-    var mo = {};
+  var mo = {};
 
-    //TODO not sure
-    mo.isLayerEnabledTime = function (layer, layerInfosObj) {
-      var layerInfo = layerInfosObj.getLayerInfoById(layer.id);
-      if (!layerInfo) {
-        return;
-      }
-      //1
-      var layerObjet = layerInfo.layerObject;
-      var isTimeEnabled = layerObjet.timeInfo && layerObjet.timeInfo.timeExtent; //&& !parameterList.layer.timeInfo.hasLiveData;
-      var usesTime = true;
-      //2
-      var originLayer = layerInfo.originOperLayer;
-      if ("undefined" !== typeof originLayer.itemProperties.timeAnimation) {
-        usesTime = false;// arcgis-portal-app-master\src\js\arcgisonline\map\itemData.js Line#205
-      }
-      if (false === originLayer.timeAnimation) {
-        usesTime = false;
-      }
-      if (true === originLayer.timeAnimation) {
-        usesTime = true;
-      }
-      if ("undefined" !== typeof originLayer.itemProperties.timeAnimation &&
-        "undefined" !== typeof originLayer.timeAnimation) {
-        usesTime = true;
-      }
+  //TODO not sure
+  mo.isLayerEnabledTime = function (layer, layerInfosObj) {
+    var layerInfo = layerInfosObj.getLayerInfoById(layer.id);
+    if (!layerInfo) {
+      return;
+    }
+    //1
+    var layerObjet = layerInfo.layerObject;
+    var isTimeEnabled = layerObjet.timeInfo && layerObjet.timeInfo.timeExtent; //&& !parameterList.layer.timeInfo.hasLiveData;
+    var usesTime = true;
+    //2
+    var originLayer = layerInfo.originOperLayer;
+    if ("undefined" !== typeof originLayer.itemProperties.timeAnimation) {
+      usesTime = false; // arcgis-portal-app-master\src\js\arcgisonline\map\itemData.js Line#205
+    }
+    if (false === originLayer.timeAnimation) {
+      usesTime = false;
+    }
+    if (true === originLayer.timeAnimation) {
+      usesTime = true;
+    }
+    if ("undefined" !== typeof originLayer.itemProperties.timeAnimation && "undefined" !== typeof originLayer.timeAnimation) {
+      usesTime = true;
+    }
 
-      return !!(usesTime && isTimeEnabled);
-    };
+    return !!(usesTime && isTimeEnabled);
+  };
 
-    mo.initPositionForTheme = {
-      "DartTheme": {
-        bottom: 140
-      },
-      'LaunchpadTheme': {
-        bottom: 120
-      }
-    };
+  mo.initPositionForTheme = {
+    "DartTheme": {
+      bottom: 140
+    },
+    'LaunchpadTheme': {
+      bottom: 120
+    }
+  };
 
-    mo.isRunInMobile = function () {
-      return window.appInfo.isRunInMobile;
-    };
-    mo.isOutOfScreen = function (map, position) {
-      var containerBox = domGeometry.getMarginBox(map.root);
-      var mapWidth = containerBox.w;
-      var mapHeight = containerBox.h;
+  mo.isRunInMobile = function () {
+    return window.appInfo.isRunInMobile;
+  };
+  mo.isOutOfScreen = function (map, position) {
+    var containerBox = domGeometry.getMarginBox(map.root);
+    var mapWidth = containerBox.w;
+    var mapHeight = containerBox.h;
 
-      if (position &&
-        (position.top >= mapHeight || position.left >= mapWidth)) {
+    if (position && (position.top >= mapHeight || position.left >= mapWidth)) {
 
-        return true;
-      } else {
-        return false;
-      }
-    };
-    mo.initPosition = function(map,domNode,position){
-      var appConfig = window.getAppConfig();
-      var theme;
-      if(appConfig && appConfig.theme && appConfig.theme.name){
-        theme = appConfig.theme.name;
-      }
+      return true;
+    } else {
+      return false;
+    }
+  };
+  mo.initPosition = function (map, domNode, position) {
+    var appConfig = window.getAppConfig();
+    var theme;
+    if (appConfig && appConfig.theme && appConfig.theme.name) {
+      theme = appConfig.theme.name;
+    }
 
-      var top = mo.getInitTop(map, theme);
-      var left = mo.getInitLeft(map, domNode);
-      position.top = top;
-      position.left = left;
-      html.setStyle(domNode, 'top', position.top + 'px');
-      html.setStyle(domNode, 'left', position.left + 'px');
-    };
-    mo.getInitTop = function (map,/*domNode,*/theme) {
-      var top = 0;
-      var containerBox = domGeometry.getMarginBox(map.root);
-      // var sliderContentBox = html.getContentBox(domNode);
-      // var popupHeight = sliderContentBox.h;
-      var popupHeight = 35;//height of mini mode
+    var top = mo.getInitTop(map, theme);
+    var left = mo.getInitLeft(map, domNode);
+    position.top = top;
+    position.left = left;
+    html.setStyle(domNode, 'top', position.top + 'px');
+    html.setStyle(domNode, 'left', position.left + 'px');
+  };
+  mo.getInitTop = function (map, /*domNode,*/theme) {
+    var top = 0;
+    var containerBox = domGeometry.getMarginBox(map.root);
+    // var sliderContentBox = html.getContentBox(domNode);
+    // var popupHeight = sliderContentBox.h;
+    var popupHeight = 35; //height of mini mode
 
-      var marginBottom = mo.initPositionForTheme[theme] ? mo.initPositionForTheme[theme].bottom : 60;
-      top = containerBox.h - marginBottom - popupHeight;
+    var marginBottom = mo.initPositionForTheme[theme] ? mo.initPositionForTheme[theme].bottom : 60;
+    top = containerBox.h - marginBottom - popupHeight;
 
-      return top;
-    };
-    mo.getInitLeft = function (map, domNode/*, theme*/) {
-      var left = 0;
-      var containerBox = domGeometry.getMarginBox(map.root);
-      var sliderContentBox = html.getContentBox(domNode);
+    return top;
+  };
+  mo.getInitLeft = function (map, domNode /*, theme*/) {
+    var left = 0;
+    var containerBox = domGeometry.getMarginBox(map.root);
+    var sliderContentBox = html.getContentBox(domNode);
 
-      var middleOfScreenWidth = containerBox.w / 2;
-      var middleOfPopupWidth = sliderContentBox.w / 2;
-      left = middleOfScreenWidth - middleOfPopupWidth;
+    var middleOfScreenWidth = containerBox.w / 2;
+    var middleOfPopupWidth = sliderContentBox.w / 2;
+    left = middleOfScreenWidth - middleOfPopupWidth;
 
-      return left;
-    };
+    return left;
+  };
 
-
-    return mo;
-  });
+  return mo;
+});

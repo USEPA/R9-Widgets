@@ -1,6 +1,6 @@
 define({
   root: ({
-    _widgetLabel: "Time Slider",
+    _widgetLabel: "Smoke",
     enableTips: "Click to display the time slider.",
     disableTips: "No time-aware layers are visible.",
     timeExtent: "${FROMTIME} to ${ENDTIME}",
