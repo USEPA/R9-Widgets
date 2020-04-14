@@ -523,7 +523,7 @@ function(declare, BaseWidget, lang, dom, domClass, on, domConstruct, TitlePane, 
     },
 
     _toggleLayerVis: function(evt){
-      console.log("holla");
+      console.log("Make layer visible");
       var layerchkBox = evt.target;
       //get reference to the layer
       var layerStructure = LayerStructure.getInstance();
