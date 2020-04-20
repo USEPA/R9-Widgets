@@ -1,17 +1,15 @@
 define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/_base/lang', 'dojo/dom', 'dojo/dom-class', 'dojo/on', 'dojo/dom-construct', 'dijit/TitlePane', 'dijit/form/DropDownButton', 'dijit/DropDownMenu', 'dijit/Menu', 'dijit/MenuItem', 'dijit/MenuSeparator',
   'dijit/CheckedMenuItem','jimu/LayerInfos/LayerInfos', 'jimu/LayerStructure', 'esri/layers/LayerDrawingOptions', 'jimu/dijit/Popup', 'jimu/dijit/RendererChooser', 'jimu/portalUrlUtils', 'jimu/WidgetManager',
-  'dijit/form/HorizontalSlider', 'dijit/form/HorizontalRuleLabels', 'dojo/dom-style'],
+  'dijit/form/HorizontalSlider', 'dijit/form/HorizontalRuleLabels', 'dojo/dom-style', 'esri/request', 'dijit/Dialog'],
 function(declare, BaseWidget, lang, dom, domClass, on, domConstruct, TitlePane, DropDownButton, DropDownMenu, Menu, MenuItem,
          MenuSeparator, CheckedMenuItem, LayerInfos, LayerStructure, LayerDrawingOptions, Popup, RendererChooser, portalUrlUtils,
-         WidgetManager, HorizSlider, HorzRuleLabels, domStyle) {
+         WidgetManager, HorizSlider, HorzRuleLabels, domStyle, esriRequest, Dialog) {
   //To create a widget, you need to derive from BaseWidget.
   return declare([BaseWidget], {
     // DemoWidget code goes here
 
     //please note that this property is be set by the framework when widget is loaded.
     //templateString: template,
-
-
     baseClass: 'jimu-widget-grouped',
 
     postCreate: function() {
@@ -49,6 +47,11 @@ function(declare, BaseWidget, lang, dom, domClass, on, domConstruct, TitlePane, 
         }
       });
 
+      //Dialog to hold metadata from rest endpoint
+      vs.myDialog = new Dialog({
+        title: "Metadata",
+        style: "width: 400px"
+      });
       console.log('startup');
     },
 
@@ -137,6 +140,11 @@ function(declare, BaseWidget, lang, dom, domClass, on, domConstruct, TitlePane, 
       layerInfoNode.getLayerType().then(lang.hitch(layerInfoNode, function(layerType){
         //Set up option for layer types
         var RootLayerOnly = ["zoomto", "transparency", "url"];
+        var KMLFolderOnly = [
+          {
+            "name": "url",
+            "label": "Show item details"
+          }];
         var RootLayerAndFeatureLayer = [
           {
             "name": "zoomto",
@@ -226,6 +234,18 @@ function(declare, BaseWidget, lang, dom, domClass, on, domConstruct, TitlePane, 
 
             index++;
           }
+        }else if(layerType === "KMLFolder"){
+          // var k = 0
+          //
+          // for(var type in KMLFolderOnly){
+          //   var menuItem1 = new MenuItem({
+          //     id: layerInfoNode.id + "_" + k,
+          //     label: KMLFolderOnly[type].label,
+          //     onClick: lang.hitch(layerInfoNode, vs._layerSubMenuClicked)
+          //   });
+          //   menu.addChild(menuItem1);
+          //   k++;
+          // }
         }
 
         var dropbtn = new DropDownButton({
@@ -337,6 +357,9 @@ function(declare, BaseWidget, lang, dom, domClass, on, domConstruct, TitlePane, 
       layerInfoNode.getLayerType().then(lang.hitch(layerInfoNode, function(layerType){
         var url;
         var layerUrl = layerInfoNode.getUrl();
+        // if (!layerUrl){
+        //   layerUrl = layerInfoNode.Url;
+        // }
         var basicItemInfo = layerInfoNode.isItemLayer();
 
         if (basicItemInfo) {
@@ -348,13 +371,57 @@ function(declare, BaseWidget, lang, dom, domClass, on, domConstruct, TitlePane, 
           url = layerUrl + (layerUrl.indexOf("?") > -1 ? "&" : "?") + "SERVICE=WMS&REQUEST=GetCapabilities";
         } else if (layerUrl && layerType === "WFSLayer") {
           url = layerUrl + (layerUrl.indexOf("?") > -1 ? "&" : "?") + "SERVICE=WFS&REQUEST=GetCapabilities";
+        } else if (layerType === 'KMLFolder'){
+          var layerRoot = layerInfoNode.getRootNode();
+          var itemUrl = 'https://epa.maps.arcgis.com/home/item.html?id=' + layerRoot._layerInfo.originOperLayer.itemId;
         } else if (layerUrl) {
           url = layerUrl;
         } else {
           url = '';
         }
 
-        window.open(url, '_blank');
+        //add request to get info about the layer
+        var requestHandle = esriRequest({
+          "url": layerUrl,
+          "content": {
+            "f": "json"
+          },
+          "callbackParamName": "callback"
+        });
+        requestHandle.then(requestSucceeded, requestFailed);
+
+        function requestSucceeded(response){
+          console.log(response)
+          //Set vairable from json request
+
+          var mtitle = (response["name"] != undefined ? response["name"] : response["mapName"]);
+          var mDescription = (response["name"] != undefined ? response["description"] : response["serviceDescription"]);
+          var mCopyright = response["copyrightText"];
+
+          var dialogContent = "<div><b>Description:</b> " + mDescription + "</div></br>"
+              + "<div><b>Copyright:</b> " + mCopyright + "</div></br>";
+
+          if(layerUrl.indexOf("utility.arcgis.com") >= 0){
+
+          }else{
+            dialogContent = dialogContent + "<div>" +'<a class="menu-item-description" target="_blank" href="' +
+                layerUrl + '">' + "See More at the Rest Endpoint" + '</a>' + "</div>";
+          }
+
+          vs.myDialog.set("title", mtitle);
+          vs.myDialog.set("content",dialogContent);
+
+          vs.myDialog.show();
+        }
+        function requestFailed(response, io){
+          console.log(response)
+        }
+
+
+
+
+
+        //window.open(url, '_blank');
       }));
     },
 
