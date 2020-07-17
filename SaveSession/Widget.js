@@ -19,6 +19,7 @@
 define(['dojo/_base/declare',
         'jimu/BaseWidget',
         'dijit/_WidgetsInTemplateMixin',
+        'dijit/form/Button',
         'dojo/_base/lang',
         'dojo/_base/array',
         'dojo/_base/html',
@@ -43,11 +44,12 @@ define(['dojo/_base/declare',
         'jimu/dijit/Message',
         'jimu/LayerInfos/LayerInfos',
         './SimpleTable',
-        'dijit/form/TextBox'
+        'dijit/form/TextBox',
        ],
     function (declare,
         BaseWidget,
         _WidgetsInTemplateMixin,
+        Button,
         lang,
         array,
         html,
@@ -84,6 +86,12 @@ define(['dojo/_base/declare',
 
             // the saved sessions
             sessions: [],
+
+            // function called from AppTutor button - DW
+            saveSessionBtnClicked: function() {
+                //Initiates SaveSession AppTutor section inside "AppTutorConfig.js"
+                initSaveSession();
+            },
 
             postCreate: function () {
                 this.inherited(arguments);
