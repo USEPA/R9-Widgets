@@ -132,10 +132,12 @@ define([
 
             var stateStore = new Memory({
               data: [
+                {name: "Arizona", abbr: "AZ"},
                 {name: "California", abbr: "CA"},
+                {name: "Guam", abbr: "GU"},
                 {name: "Hawaii", abbr: "HI"},
                 {name: "Nevada", abbr: "NV"},
-                {name: "Arizona", abbr: "AZ"}
+
               ],
               idProperty: "abbr"
             });

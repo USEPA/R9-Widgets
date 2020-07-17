@@ -22,17 +22,17 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
       // add additional properties here
 
       //methods to communication with app container:
-      postCreate: function () {
-        this.inherited(arguments);
+      postCreate: function postCreate() {
+        this.inherited(postCreate, arguments);
         console.log('GRPWidget::postCreate');
 
         this.selectionManager = SelectionManager.getInstance();
 
       },
 
-      startup: function () {
+      startup: function startup() {
         var vm = this;
-        vm.inherited(arguments);
+        vm.inherited(startup, arguments);
         console.log('GRPWidget::startup');
 
         // var grpWidgetNode = vm.grpWidgetNode;
@@ -700,15 +700,22 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
           //tabCont.addChild()
         }
 
-        // this will loop through all GRP layers in the map and clear any selections (including booms)
-        function clearAllSelections(grp_configs) {
-          grp_configs.forEach(function (grp_config) {
-            grp_config.layers.forEach(function (layer) {
-              layer.getLayerObject().then(function (layer_object) {
-                vm.selectionManager.clearSelection(layer_object);
-              });
+        // due to issues with dealing with map services this does not loop through all the grp services only ones that
+        // who's extent contains the area clicked.
+        function clearAllSelections(grp_config) {
+          // grp_configs.forEach(function (grp_config) {
+            Object.keys(grp_config.GRP).forEach(function (key) {
+              if (grp_config.GRP[key].layer.hasOwnProperty('type') && grp_config.GRP[key].layer.type === 'Feature Layer') {
+                vm.selectionManager.clearSelection(grp_config.GRP[key].layer);
+              }
             });
-          });
+            // grp_config.layers.forEach(function (layer) {
+            //   layer.getLayerObject().then(function (layer_object) {
+            //     // vm.selectionManager.clearSelection(layer_object);
+            //     vm.map.getLayer(layer_object.id);
+            //   });
+            // });
+          // });
         }
 
         var portalItemsDeferred = new Deferred();
@@ -745,10 +752,12 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
               featureQuery.outFields = ['*'];
               featureQuery.geometry = clickExtent;
 
-              clearAllSelections(vm.grpItems);
+
               dojo.forEach(vm.grpItems, function (item) {
                 if (item.spatialExtent.contains(e.mapPoint)) {
                   configGRPObject(item, function (item) {
+                    vm.currentItem = item;
+                    clearAllSelections(item);
                     var coastalPromise = searchCoastal(item, featureQuery);
                     var inlandPromise = searchInland(item, featureQuery);
 
@@ -765,10 +774,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
             vm.loadingShelter.hide();
           });
 
-
         var epaPortal = new arcgisPortal.Portal("https://epa.maps.arcgis.com");
         epaPortal.signIn().then(function () {
-          epaPortal.queryItems({q: 'tags: "GRP App" type:"Feature Service"', num: 100}).then(function (response) {
+          epaPortal.queryItems({q: 'tags: "GRP App" (type:"Feature Service" OR type:"Map Service")', num: 100}).then(function (response) {
             portalItemsDeferred.resolve(response.results);
           });
         });
@@ -788,7 +796,6 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
       displayBoom: function () {
         console.log("finally made vm");
       },
-
 
       printPDF: function () {
         var printTask = new PrintTask();
@@ -818,6 +825,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dijit/_WidgetsInTemplateMixin'
             });
           }
         });
+      },
+      editGRP: function () {
+        window.open("https://r9.ercloud.org/GRPApp/app/" + this.currentItem.item.id, '_blank');
       }
       // onMinimize: function(){
       //   console.log('GRPWidget::onMinimize');

@@ -59,8 +59,8 @@ define([
             //event
             //reset-query-source
 
-            postCreate: function() {
-                this.inherited(arguments);
+            postCreate: function postCreate() {
+                this.inherited(postCreate, arguments);
 
                 this.exactMatch = new CheckBox({
                     checked: false,
@@ -149,8 +149,8 @@ define([
                 return json;
             },
 
-            destroy: function() {
-                this.inherited(arguments);
+            destroy: function destroy() {
+                this.inherited(destroy, arguments);
                 if (this.fieldsPopup) {
                     this.fieldsPopup.close();
                     this.fieldsPopup = null;

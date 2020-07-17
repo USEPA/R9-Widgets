@@ -21,10 +21,10 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
       // add additional properties here
 
       //methods to communication with app container:
-      postCreate: function () {
+      postCreate: function postCreate() {
 
 
-        this.inherited(arguments);
+        this.inherited(postCreate, arguments);
         console.log('TierIIIdentify::postCreate');
       },
       featureLayers: [],
@@ -105,22 +105,18 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
             // deal with boolean tables
             if (attributes.SubjectToChemAccidentPreventi_1 === 'T') {
               var row = '<tr><td>Subject to Chemical Accident Prevention: No</td></tr>';
-            }
-            else if (attributes.SubjectToChemAccidentPrevention === 'T') {
+            } else if (attributes.SubjectToChemAccidentPrevention === 'T') {
               var row = '<tr><td>Subject to Chemical Accident Prevention: Yes</td></tr>';
-            }
-            else {
+            } else {
               var row = '<tr><td>Subject to Chemical Accident Prevention: Unknown</td></tr>';
             }
             domConstruct.place(row, "tierii_facility");
 
             if (attributes.SubjectToEmergencyPlanning_Y === 'T') {
               var row = '<tr><td>Subject to Emergency Planning: Yes</td></tr>';
-            }
-            else if (attributes.SubjectToEmergencyPlanning_N === 'T') {
+            } else if (attributes.SubjectToEmergencyPlanning_N === 'T') {
               var row = '<tr><td>Subject to Emergency Planning: No</td></tr>';
-            }
-            else {
+            } else {
               var row = '<tr><td>Subject to Emergency Planning: Unknown</td></tr>';
             }
             domConstruct.place(row, "tierii_facility");
@@ -128,18 +124,16 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
             if (attributes.Manned_Y === 'T') {
               var row = '<tr><td>Manned: Yes</td></tr>' +
                 '<tr><td>Max Occupants: ' + (attributes.MaxNumOccupants ? attributes.MaxNumOccupants : 'Unknown') + '</td></tr>';
-            }
-            else if (attributes.Manned_N === 'T') {
+            } else if (attributes.Manned_N === 'T') {
               var row = '<tr><td>Manned: No</td></tr>';
-            }
-            else {
+            } else {
               var row = '<tr><td>Manned: No</td></tr>';
             }
             domConstruct.place(row, "tierii_facility");
           }
 
           // if contacts are available get them
-          if (service.config.contacts.relationshipId !== 'none' && service.config.contacts.relationshipId !== undefined && service.config.contacts !== undefined) {
+          if (service.config.contacts.relationshipId !== 'none' && service.config.contacts.relationshipId !== undefined && service.config.contacts !== undefined && service.config.state !== 'GU') {
             var contactQuery = new RelationshipQuery();
             // GET CONTACTS
             contactQuery.outFields = ['*'];
@@ -150,36 +144,48 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
             service.facilities.queryRelatedFeatures(contactQuery, function (e) {
               dojo.forEach(e[attributes.OBJECTID].features, function (contact, i) {
 
-                var contactPhonesQuery = new RelationshipQuery();
+                if (service.config.state.abbr !== 'GU') {
+                  var contactPhonesQuery = new RelationshipQuery();
 
-                contactPhonesQuery.outFields = ['*'];
-                // contacts to phone relationship id
-                contactPhonesQuery.relationshipId = service.config.contacts.phones.relationshipId;
-                contactPhonesQuery.objectIds = [contact.attributes.OBJECTID];
+                  contactPhonesQuery.outFields = ['*'];
+                  // contacts to phone relationship id
+                  contactPhonesQuery.relationshipId = service.config.contacts.phones.relationshipId;
+                  contactPhonesQuery.objectIds = [contact.attributes.OBJECTID];
 
-                service.contacts.queryRelatedFeatures(contactPhonesQuery, function (f) {
-                  // these attributes could be different for each state
-                  // the service.config.state object helps you identify which state you are working with
+                  service.contacts.queryRelatedFeatures(contactPhonesQuery, function (f) {
+                    // these attributes could be different for each state
+                    // the service.config.state object helps you identify which state you are working with
+                    var row = domConstruct.toDom('<tr><td style="padding-top: 10px;"><b>' + (contact.attributes.Title ? contact.attributes.Title + ': ' : '') +
+                      (contact.attributes.FirstName ? contact.attributes.FirstName : '') +
+                      ' ' + (contact.attributes.LastName ? contact.attributes.LastName : '') +
+                      (contact.attributes.FirstName && contact.attributes.LastName ? '' : 'Not Reported') + '</b></td></tr>');
+                    domConstruct.place(row, "tierii_contacts");
+
+                    var row = domConstruct.toDom('<tr><td>Email: ' + (contact.attributes.Email ? contact.attributes.Email : 'Not Reported') + '</td></tr>');
+                    domConstruct.place(row, "tierii_contacts");
+
+                    if (f.hasOwnProperty(contact.attributes.OBJECTID)) {
+                      dojo.forEach(f[contact.attributes.OBJECTID].features, function (contact_phone_feature, j) {
+                        var row = domConstruct.toDom('<tr><td>' + (contact_phone_feature.attributes.Type ? contact_phone_feature.attributes.Type + ': ' : '')
+                          + (contact_phone_feature.attributes.Phone ? contact_phone_feature.attributes.Phone : '') + '</td></tr>');
+                        domConstruct.place(row, "tierii_contacts");
+                      });
+                    }
+                    that.loadingShelter.hide();
+                  }, function (e) {
+                    console.log("Error: " + e);
+                  });
+                } else if (service.config.state.abbr === 'GU') {
                   var row = domConstruct.toDom('<tr><td style="padding-top: 10px;"><b>' + (contact.attributes.Title ? contact.attributes.Title + ': ' : '') +
-                    (contact.attributes.FirstName ? contact.attributes.FirstName : '') +
-                    ' ' + (contact.attributes.LastName ? contact.attributes.LastName : '') +
-                    (contact.attributes.FirstName && contact.attributes.LastName ? '' : 'Not Reported') + '</b></td></tr>');
+                    (contact.attributes.Name ? contact.attributes.Name : 'Not Reported') + '</b></td></tr>');
                   domConstruct.place(row, "tierii_contacts");
 
-                  var row = domConstruct.toDom('<tr><td>Email: ' + (contact.attributes.Email ? contact.attributes.Email : 'Not Reported') + '</td></tr>');
+                  var row = domConstruct.toDom('<tr><td>Phone: ' + (contact.attributes.Phone ? contact.attributes.Phone : 'Not Reported') + '</td></tr>');
                   domConstruct.place(row, "tierii_contacts");
 
-                  if (f.hasOwnProperty(contact.attributes.OBJECTID)) {
-                    dojo.forEach(f[contact.attributes.OBJECTID].features, function (contact_phone_feature, j) {
-                      var row = domConstruct.toDom('<tr><td>' + (contact_phone_feature.attributes.Type ? contact_phone_feature.attributes.Type + ': ' : '')
-                        + (contact_phone_feature.attributes.Phone ? contact_phone_feature.attributes.Phone : '') + '</td></tr>');
-                      domConstruct.place(row, "tierii_contacts");
-                    });
-                  }
-                  that.loadingShelter.hide();
-                }, function (e) {
-                  console.log("Error: " + e);
-                });
+                  var row = domConstruct.toDom('<tr><td>24 HR Phone: ' + (contact.attributes.HR24Phone ? contact.attributes.HR24Phone : 'Not Reported') + '</td></tr>');
+                  domConstruct.place(row, "tierii_contacts");
+                }
               });
             }, function (e) {
               console.log("Error: " + e);
@@ -213,7 +219,18 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                 //   );
                 //   domConstruct.place(row, "tierii_chemicals");
                 // }
-                if (service.config.chemicals.locations.relationshipId !== 'none' && service.config.chemicals.locations !== undefined) {
+                if (service.config.state.abbr === 'GU') {
+                  var row = domConstruct.toDom(
+                    '<tr><td style="padding-top: 10px;"><b>' + chemical.attributes.Chemical
+                    + (chemical.attributes.CASCode ? ' (' + chemical.attributes.CASCode + ')' : '') + '</b></td></tr>' +
+                    '<tr><td>Location: ' + (chemical.attributes.StorageLocation ? chemical.attributes.StorageLocation : 'Not Reported') + '</td></tr>' +
+                    '<tr><td>Max Dailly Amount: ' + (chemical.attributes.MaxDailyAmount ? chemical.attributes.MaxDailyAmount : 'Not Reported') + '</td></tr>' +
+                    '<tr><td>Avg Dailly Amount: ' + (chemical.attributes.AvgDailyAmount ? chemical.attributes.AvgDailyAmount : 'Not Reported') + '</td></tr>' +
+                    '<tr><td>Container: ' + (chemical.attributes.ContainerType  ? chemical.attributes.ContainerType  : 'Not Reported') + '</td></tr>'
+                  );
+                  domConstruct.place(row, "tierii_chemicals");
+                  that.loadingShelter.hide();
+                } else if (service.config.chemicals.locations !== undefined && service.config.chemicals.locations.relationshipId !== 'none') {
 
                   var chemicalLocationQuery = new RelationshipQuery();
 
@@ -286,7 +303,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                     if (hazards === null) {
                       hazards = 'Not Reported';
                     }
-                    var row = domConstruct.toDom('<tr id="hazards_'+chemical.attributes.OBJECTID+'"><td>Hazard(s): ' + hazards + '</td></tr>');
+                    var row = domConstruct.toDom('<tr id="hazards_' + chemical.attributes.OBJECTID + '"><td>Hazard(s): ' + hazards + '</td></tr>');
                     domConstruct.place(row, 'tierii_chemicals');
 
                     if (service.config.state.abbr === 'NV') {
@@ -297,7 +314,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                       chemicalHazardsQuery.relationshipId = service.config.chemicals.hazards.relationshipId;
                       chemicalHazardsQuery.objectIds = [chemical.attributes.OBJECTID];
                       service.chemicals.queryRelatedFeatures(chemicalHazardsQuery, function (response) {
-                        var hazardsNode = dojo.byId('hazards_'+chemical.attributes.OBJECTID);
+                        var hazardsNode = dojo.byId('hazards_' + chemical.attributes.OBJECTID);
                         var hazards = [];
                         dojo.forEach(response[chemical.attributes.OBJECTID].features, function (hazard, j) {
                           hazards.push(hazard.attributes.category);
@@ -305,8 +322,6 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                         hazardsNode.innerHTML = '<td>Hazard(s): ' + hazards.join(", ") + '</td>';
                       });
                     }
-
-
 
 
                     dojo.forEach(e[chemical.attributes.OBJECTID].features, function (chemical_location, j) {
