@@ -1,7 +1,7 @@
 # SaveSession-Widget
 The SaveSession Widget for ArcGIS Web AppBuilder enables users to save the current map settings into a session and restore them again later. A saved session includes the extent, visible layers and annotations of the current map. Sessions may be saved and loaded from files so they can be shared with others.
 
-##Using the Widget
+### Using the Widget
 The SaveSession Widget is an in-panel widget that will be displayed in the toolbar of your WebApp Builder application. Click the ![ icon](./help/icon.png) icon display the SaveSession panel. 
 
 ![Configure Icon](./help/SaveSessionPanel.png)
@@ -29,7 +29,7 @@ Hover over the Actions column for a session entry to reveal the actions that can
 
 ![Configure Icon](./help/Action_Edit.png)
 
-**Move Up - Down ** = lets you arrange the entries in the session list in the desired order
+**Move Up - Down** = lets you arrange the entries in the session list in the desired order
 
 **Delete** = click the Delete button to remove the entry from the list
 
@@ -51,7 +51,7 @@ Click the Choose File button and select the file to load. The selected file must
 ![Configure Icon](./help/SessionsLoaded.png)
 
 
-## Adding the Widget to the Web AppBuilder
+### Adding the Widget to the Web AppBuilder
 To add this widget to your ArcGIS WebApp Builder: 
 
 * download the zip file of the widget
@@ -70,7 +70,7 @@ Example:
     	...
     ]
 
-## Configuring the Widget
+### Configuring the Widget
 Using the Web AppBuilder, click the edit icon on the SaveSession widget in the in-panel widgets to display the Configure Dialog.
 
 ![Configure Icon](./help/Configure-icon.png)
@@ -85,12 +85,13 @@ Using the Web AppBuilder, click the edit icon on the SaveSession widget in the i
 
 **Filename for 1 Session** = the file name to use when the Download action is used to save a single session to a file. Include the "{name}" placeholder that will be replaced with the session name at runtime.   
 
-##FAQ
-###The Save to File link does not work?
+### FAQ
+### The Save to File link does not work?
 Visit [http://caniuse.com/#feat=download](http://caniuse.com/#feat=download) to see if your browser supports downloading from data urls. If not, then you'll need to enable the Use Server To Download File option and create a service that returns the session file as an attachment.
 
  *Note that a web service that downloads the session file is not included in the widget. It lives outside the widget on your own web server.*
 
-##Sponsors
-**Thanks to the City of Garland, Texas for sponsoring the initial development of the SaveSession Widget and releasing it to the community.**
- 
+## Authors
+Original widget was downloaded from this GeoNet URL: https://community.esri.com/docs/DOC-7661-savesession-widget
+
+Modified and implemented by David Wood - dwood@innovateteam.com Travis Bock - tbock@innovateteam.com
