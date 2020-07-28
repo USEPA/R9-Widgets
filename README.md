@@ -8,7 +8,9 @@ See individual folder README.md files for specific information about their conte
  
  * [ESI Widget](https://github.com/USEPA/R9-Widgets/blob/master/ESIWidget)
  * [GRP Widget](https://github.com/USEPA/R9-Widgets/blob/master/GRPWidget)
+ * [iStreet Viewer Widget](https://github.com/USEPA/R9-Widgets/blob/master/iStreetViewer)
  * [RMP Identify Widget](https://github.com/USEPA/R9-Widgets/blob/master/RMPIdentify)
+ * [Save Session Widget](https://github.com/USEPA/R9-Widgets/blob/master/saveSession)
  * [Smoke Widget](https://github.com/USEPA/R9-Widgets/blob/master/Smoke)
  * [Tier II Identify Widget](https://github.com/USEPA/R9-Widgets/blob/master/TierIIIdentify)
  * [Wind Widget](https://github.com/USEPA/R9-Widgets/blob/master/Wind)
