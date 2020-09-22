@@ -1,6 +1,5 @@
 define({
 	root: ({
-		configText: "Set config text:",
-    gpNameHeadings: "Group1"
+		configText: "Set config text:"
   })
 });

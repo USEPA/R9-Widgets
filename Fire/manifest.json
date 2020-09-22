@@ -1,8 +1,8 @@
 {
   "name": "Fire",
   "platform": "HTML",
-  "version": "2.11",
-  "wabVersion": "2.11",
+  "version": "2.16",
+  "wabVersion": "2.16",
   "author": "Esri R&D Center Beijing",
   "description": "This is the widget used in developer guide",
   "copyright": "",
