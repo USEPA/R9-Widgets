@@ -36,6 +36,7 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       this.inherited(arguments);
       // this.mapIdNode.innerHTML = 'map id:' + this.map.id;
       console.log('startup');
+      var currentDate = vs._getCurrentDate();
 
       //set up busyIndicator
       vs.busyHandle = busyIndicator.create(vs.fireWidgetFrame);
@@ -48,7 +49,7 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       var query = new Query();
       var queryTask = new QueryTask(vs.perimeterbufferFC.url);
 
-      query.where = "RETRIEVED >= '2020-09-23'";
+      query.where = "RETRIEVED >= " + "'" + currentDate + "'";
       //query.where = "1=1";
       query.outSpatialReference = {wkid:102100};
       query.returnGeometry = true;
@@ -58,6 +59,15 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
         vs.busyHandle.hide();
         domStyle.set(vs.headerInfo, "display", "block");
       });
+    },
+
+    _getCurrentDate: function(){
+      var today = new Date();
+      var dd = String(today.getDate()).padStart(2, '0');
+      var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+      var yyyy = today.getFullYear();
+
+      return yyyy + '-' + mm + '-' + dd;
     },
 
     _QueryFiresResults: function(results){
@@ -106,9 +116,9 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
     },
 
     _updateSummary: function(){
-       var numberOfFires = vs.all_fires.length;
-       var numberOfFiresNode = domConstruct.toDom("<div class='summryNum'>" + numberOfFires + "</div>");
-       domConstruct.place(numberOfFiresNode, vs.totalNumFires, "first");
+       // var numberOfFires = vs.all_fires.length;
+       // var numberOfFiresNode = domConstruct.toDom("<div class='summryNum'>" + numberOfFires + "</div>");
+       // domConstruct.place(numberOfFiresNode, vs.totalNumFires, "first");
       console.log('update summary');
     },
 

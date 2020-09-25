@@ -2,8 +2,9 @@ define({
   root: ({
     _widgetLabel: "Fire",
     _featureAction_ShowVertex: "Show Vertex Count",
-    label1: "last 24 hrs",
-    label2: "This is configurable."
+    label1: "The following incidents have limited information available. A fire is only included in the list below if EPA" +
+      " facilities are located within the 10 mile buffer of the fire perimeter",
+    label2: "Disclaimer:"
   }),
   "ar": 0,
   "cs": 0,
