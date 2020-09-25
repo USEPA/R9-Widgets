@@ -14,9 +14,9 @@
 // limitations under the License.
 ///////////////////////////////////////////////////////////////////////////
 define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct', 'esri/tasks/QueryTask', 'esri/tasks/query',
-        'dijit/ProgressBar', 'esri/layers/FeatureLayer', 'esri/dijit/util/busyIndicator'],
+        'dijit/ProgressBar', 'esri/layers/FeatureLayer', 'esri/dijit/util/busyIndicator', 'dojo/dom-style'],
 function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
-          ProgressBar, FeatureLayer, busyIndicator) {
+          ProgressBar, FeatureLayer, busyIndicator, domStyle) {
   //To create a widget, you need to derive from BaseWidget.
   return declare([BaseWidget], {
     // DemoWidget code goes here
@@ -24,7 +24,7 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
     //please note that this property is be set by the framework when widget is loaded.
     //templateString: template,
 
-    baseClass: 'jimu-widget-demo',
+    baseClass: 'jimu-widget-fire',
 
     postCreate: function() {
       this.inherited(arguments);
@@ -42,7 +42,6 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       vs.busyHandle.show();
 
       //get perimeter buffer feature layer
-       //vs.perimeterbufferFC = new FeatureLayer("https://utility.arcgis.com/usrsvcs/servers/8ab605dafb5e44868271d946dfabfef9/rest/services/R9GIS/FirePerimeterBuffer/FeatureServer/0");
        vs.perimeterbufferFC = new FeatureLayer("https://utility.arcgis.com/usrsvcs/servers/8ab605dafb5e44868271d946dfabfef9/rest/services/R9GIS/FirePerimeterBuffer/FeatureServer/0");
 
       //Query for fires
@@ -57,13 +56,14 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       query.outFields = ["*"];
       queryTask.execute(query, this._QueryFiresResults, vs._QueryfireResultsError).then(function(){
         vs.busyHandle.hide();
+        domStyle.set(vs.headerInfo, "display", "block");
       });
-
     },
 
     _QueryFiresResults: function(results){
       console.log("Query Fire Results");
       vs.all_fires = results.features;
+      vs._updateSummary();
 
       //Loop through fires and add dom objects
       for (var fire in vs.all_fires) {
@@ -73,11 +73,12 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
          var gisAcres = vs.all_fires[fire].attributes.GISAcres ? vs.all_fires[fire].attributes.GISAcres:0;
 
           //Incident Name
-         var layerDivNode = domConstruct.toDom("<div class='layerDiv' id='" + "F" + vs.all_fires[fire].attributes.OBJECTID + "'>" + vs.all_fires[fire].attributes.IncidentName + "  (" + gisAcres.toFixed(2) + " acres)" + "</div>");
-
+         var layerDivNode = domConstruct.toDom("<div class='layerDiv' id='" + "F" + vs.all_fires[fire].attributes.OBJECTID + "'><div class='fireNameTxt'>" + vs.all_fires[fire].attributes.IncidentName + "  (" + gisAcres.toFixed(2) + " acres)" + "</div></div>");
+         var pclabel = percentContained + "% contained";
          //add percent containment bar
          var myProgressBar = new ProgressBar({
            value: percentContained,
+           label: pclabel,
            style: "width: 300px"
          }).placeAt(layerDivNode).startup();
 
@@ -99,7 +100,16 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
 
     _QueryfireResultsError: function(err){
       //Need to write a better error report
+      vs.busyHandle.hide();
+
       console.log('error')
+    },
+
+    _updateSummary: function(){
+       var numberOfFires = vs.all_fires.length;
+       var numberOfFiresNode = domConstruct.toDom("<div class='summryNum'>" + numberOfFires + "</div>");
+       domConstruct.place(numberOfFiresNode, vs.totalNumFires, "first");
+      console.log('update summary');
     },
 
     onOpen: function(){
