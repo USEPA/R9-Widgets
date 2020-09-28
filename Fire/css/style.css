@@ -1,6 +1,6 @@
 
 .jimu-widget-fire .layerDiv{
-  padding: 5px 5px 5px 5px;
+  padding: 10px 5px 10px 5px;
   border-bottom: #333333;
   border-bottom-style: solid;
   border-bottom-width: thin;
@@ -14,6 +14,7 @@
 .jimu-widget-fire .fireNameTxt{
   font-weight: bold;
   font-size: larger;
+  max-width: 250px;
 }
 
 .claro .dijitProgressBar {
@@ -49,12 +50,19 @@
     right: 5px;
 }
 
+.jimu-widget-fire .zoomLink{
+  position: absolute;
+    right: 5px;
+    top: 30px;
+}
+
 .jimu-widget-fire .topInfo {
-  height: 70px;
+  /*height: 70px;*/
   width: 100%;
   border-bottom-style: solid;
   border-bottom-color: #333333;
   border-bottom-width: medium;
+  padding-bottom: 10px;
 }
 
 .jimu-widget-fire .summryNum {
@@ -68,4 +76,11 @@
 .jimu-widget-fire .labelText {
     position: absolute;
     bottom: 0px;
+}
+
+.jimu-widget-fire .discliamerText{
+        font-size: 14px;
+}
+.jimu-widget-fire .acresTxt {
+    font-weight: normal;
 }
