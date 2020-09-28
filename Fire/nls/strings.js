@@ -2,8 +2,9 @@ define({
   root: ({
     _widgetLabel: "Fire",
     _featureAction_ShowVertex: "Show Vertex Count",
-    label1: "The following incidents have limited information available. A fire is only included in the list below if EPA" +
-      " facilities are located within the 10 mile buffer of the fire perimeter",
+    label1: "The fires below have EPA facilities located within a 10 mile buffer of the incident perimeter. Use the Get" +
+      " Report link to see a list of NPL, RMP, Tier II, Drinking Water, and Waste Water facilities associated with each fire. Reports are updated daily" +
+      " at 6 AM Pacific.",
     label2: "Disclaimer:"
   }),
   "ar": 0,
