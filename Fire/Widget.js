@@ -80,28 +80,29 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       for (var fire in vs.all_fires) {
 
          //Acres and PercentContained
-         var percentContained = vs.all_fires[fire].attributes.PercentContained ? vs.all_fires[fire].attributes.PercentContained:0;
-         var dailyAcres = vs.all_fires[fire].attributes.DailyAcres ? vs.all_fires[fire].attributes.DailyAcres:0;
+         var percentContained = vs.all_fires[fire].attributes.PercentContained ? vs.all_fires[fire].attributes.PercentContained:"No Data";
+         var dailyAcres = vs.all_fires[fire].attributes.DailyAcres ? vs.all_fires[fire].attributes.DailyAcres: 0;
 
           //Incident Name with acres
          var layerDivNode = domConstruct.toDom("<div class='layerDiv' id='" + "F" + vs.all_fires[fire].attributes.OBJECTID +
            "'><div class='fireNameTxt'>" + vs.all_fires[fire].attributes.IncidentName + "</div><div class='acresTxt'>  (" +
            parseFloat(dailyAcres).toLocaleString('en') + " acres)</div>" + "</div>");
 
-         //onclick event for zooming/panning to buffer feature
-         // on(layerDivNode, "click", vs._onClickFireName);
-
          //add percent containment bar
-         var pclabel = Math.round(percentContained) + "% contained";
+          var pclabel;
+          var pcValue;
+         if(percentContained == "No Data") {
+           pclabel = "No Data";
+           pcValue = 0;
+         }else{
+           pclabel = Math.round(percentContained) + "% contained";
+           pcValue = Math.round(percentContained);
+         }
          var myProgressBar = new ProgressBar({
-           value: Math.round(percentContained),
+           value: pcValue,
            label: pclabel,
            style: "width: 300px"
          }).placeAt(layerDivNode).startup();
-
-         //Add zommto link
-         // var zoomToNode = domConstruct.toDom("<div class='zoomLink'><a >" + "Zoom to" + "</a></div>");
-         // domConstruct.place(zoomToNode, layerDivNode,);
 
          domConstruct.place(layerDivNode, vs.fireList);
 
