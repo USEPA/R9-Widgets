@@ -7,6 +7,7 @@ These widgets are generated using https://github.com/Esri/generator-esri-appbuil
 See individual folder README.md files for specific information about their contents:
  
  * [ESI Widget](https://github.com/USEPA/R9-Widgets/blob/master/ESIWidget)
+ * [Fire](https://github.com/USEPA/R9-Widgets/blob/master/Fire)
  * [GRP Widget](https://github.com/USEPA/R9-Widgets/blob/master/GRPWidget)
  * [iStreet Viewer Widget](https://github.com/USEPA/R9-Widgets/blob/master/iStreetViewer)
  * [RMP Identify Widget](https://github.com/USEPA/R9-Widgets/blob/master/RMPIdentify)
