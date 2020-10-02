@@ -29,13 +29,13 @@ function(declare, BaseWidgetSetting) {
     },
 
     setConfig: function(config){
-      this.textNode.value = config.configText;
+      this.urlNode.value = config.firesService;
     },
 
     getConfig: function(){
       //WAB will get config object through this method
       return {
-        configText: this.textNode.value
+        firesService: this.urlNode.value
       };
     }
   });

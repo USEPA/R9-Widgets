@@ -98,10 +98,21 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
            pclabel = Math.round(percentContained) + "% contained";
            pcValue = Math.round(percentContained);
          }
+         //size of bar
+         var barWidth;
+         if(dailyAcres < 200000){
+           barWidth = '100px';
+         }else if(dailyAcres >= 200000 || dailyAcres < 300000){
+           barWidth = '150px';
+         }else if(dailyAcres >= 400000 || dailyAcres < 500000){
+           barWidth = '225px';
+         }else if(dailyAcres > 500000){
+           barWidth = '300px';
+         }
          var myProgressBar = new ProgressBar({
            value: pcValue,
            label: pclabel,
-           style: "width: 300px"
+           style: "width: "+ barWidth
          }).placeAt(layerDivNode).startup();
 
          domConstruct.place(layerDivNode, vs.fireList);
