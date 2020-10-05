@@ -100,13 +100,13 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
          }
          //size of bar
          var barWidth;
-         if(dailyAcres < 200000){
+         if(dailyAcres < 10000){
            barWidth = '100px';
-         }else if(dailyAcres >= 200000 || dailyAcres < 300000){
+         }else if(dailyAcres >= 10000 && dailyAcres < 30000){
            barWidth = '150px';
-         }else if(dailyAcres >= 400000 || dailyAcres < 500000){
+         }else if(dailyAcres >= 30000 && dailyAcres < 100000){
            barWidth = '225px';
-         }else if(dailyAcres > 500000){
+         }else if(dailyAcres > 100000){
            barWidth = '300px';
          }
          var myProgressBar = new ProgressBar({
