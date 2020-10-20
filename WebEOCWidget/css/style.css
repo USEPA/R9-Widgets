@@ -1,0 +1,10 @@
+.web-eoc-widget h3 {
+  font-size: 1.2em;
+}
+.web-eoc-widget h3, p {
+  margin-top: 0;
+}
+#widgets_WebEOCWidget_Widget_22_panel {
+  width: 600px !important;
+}
+/* add additional custom styles */
