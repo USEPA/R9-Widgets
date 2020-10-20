@@ -140,7 +140,7 @@ export default declare([BaseWidget], {
     var selectedGraphic = new Graphic(logEntry.geometry, this.symbol);
     this.graphicsLayer.add(selectedGraphic);
     this.loadingShelter.show();
-    fetch(`${this.config.authProxyUrl}/${logEntry.attributes.nrcnumber}`, {
+    fetch(`${this.config.proxyUrl}/${logEntry.attributes.nrcnumber}`, {
       headers: {'Content-Type': 'application/json', 'Authorization': this.token}
     })
       .then(response => response.text())

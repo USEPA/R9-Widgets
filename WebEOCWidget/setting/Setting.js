@@ -10,14 +10,14 @@ export default declare([BaseWidgetSetting], {
   },
 
   setConfig (config) {
-    this.authProxyUrl.value = config.authProxyUrl;
+    this.proxyUrl.value = config.proxyUrl;
     this.serviceUrl.value = config.serviceUrl;
   },
 
   getConfig () {
     // WAB will get config object through this method
     return {
-      authProxyUrl: this.authProxyUrl.value,
+      proxyUrl: this.proxyUrl.value,
       serviceUrl: this.serviceUrl.value
     };
   }
