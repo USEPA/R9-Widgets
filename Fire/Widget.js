@@ -82,12 +82,21 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
          //Acres and PercentContained
          var percentContained = vs.all_fires[fire].attributes.PercentContained ? vs.all_fires[fire].attributes.PercentContained:"No Data";
          var dailyAcres = vs.all_fires[fire].attributes.DailyAcres ? vs.all_fires[fire].attributes.DailyAcres: 0;
+         var gisAcres = vs.all_fires[fire].attributes.GISAcres ? vs.all_fires[fire].attributes.GISAcres: 0;
          var incidentName = vs.all_fires[fire].attributes.IncidentName.toUpperCase();
+
+         //If dailyAcres is 0 then look at GISAcres
+         var reportingAcres
+         if (dailyAcres == 0) {
+           reportingAcres = gisAcres;
+         }else {
+           reportingAcres = dailyAcres;
+         }
 
           //Incident Name with acres
          var layerDivNode = domConstruct.toDom("<div class='layerDiv' id='" + "F" + vs.all_fires[fire].attributes.OBJECTID +
            "'><div class='fireNameTxt'>" + incidentName + "</div><div class='acresTxt'>  (" +
-           parseFloat(dailyAcres).toLocaleString('en') + " acres)</div>" + "</div>");
+           parseFloat(reportingAcres).toLocaleString('en') + " acres)</div>" + "</div>");
 
          //add percent containment bar
           var pclabel;
