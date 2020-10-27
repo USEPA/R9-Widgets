@@ -102,9 +102,6 @@ export default declare([BaseWidget], {
     });
   },
   startup: function startup() {
-    var layerStructure = LayerStructure.getInstance();
-    layerStructure.getWebmapLayerNodes().find(x => x.id.toLowerCase().includes('webeoc')).show();
-
     // var facilities = layerInfosObject.getLayerInfoById(that.config.layerId);
     // that.facilities = new FeatureLayer(facilities.layerObject.url);
     // that.facilities.on('load', function (e) {
@@ -150,9 +147,12 @@ export default declare([BaseWidget], {
       });
   },
   onOpen: function onOpen() {
-    // this.turnOnEOCLayer();
+    // turn on webeoc layer
+    var layerStructure = LayerStructure.getInstance();
+    layerStructure.getWebmapLayerNodes().find(x => x.id.toLowerCase().includes('webeoc')).show();
     this.map.setInfoWindowOnClick(false);
     this.mapIdNode.innerHTML = 'Select Web EOC point to view the log';
+    
     this.clickHandler.resume();
     console.log('WebEOCWidget::onOpen');
   },
