@@ -125,7 +125,7 @@ export default declare([BaseWidget], {
     this.clickHandler.resume();
 
     if (sessionStorage.getItem('esriJSAPIOAuth')) {
-      this.token = JSON.parse(sessionStorage.getItem('esriJSAPIOAuth'))['/'].token;
+      this.token = JSON.parse(sessionStorage.getItem('esriJSAPIOAuth'))['/']["https://epa.maps.arcgis.com"].token;
     } else if (allCookies.wab_auth) {
       this.token = JSON.parse(decodeURIComponent(allCookies.wab_auth)).token;
     }
