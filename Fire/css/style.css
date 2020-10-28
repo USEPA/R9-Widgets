@@ -106,3 +106,42 @@
 .jimu-widget-fire .acresTxt {
     font-weight: normal;
 }
+
+.jimu-widget-fire .search-button{
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  top: -2px;
+  right: 29px;
+  background-image: url("../images/search_normal.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+}
+.jimu-widget-fire .search-button:focus{
+  /*outline: 2px solid #24B5CC !important;*/
+}
+
+.jimu-widget-fire .search-button:hover{
+  background-image: url("../images/search_hover.svg");
+}
+
+.jimu-widget-fire .report-button{
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  top: -2px;
+  right: 2px;
+  background-image: url("../images/operation_normal.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+}
+.jimu-widget-fire .report-button:focus{
+  /*outline: 2px solid #24B5CC !important;*/
+}
+
+.jimu-widget-fire .report-button:hover{
+  background-image: url("../images/operation_hover.svg");
+}
+

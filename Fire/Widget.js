@@ -15,10 +15,10 @@
 ///////////////////////////////////////////////////////////////////////////
 define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct', 'esri/tasks/QueryTask', 'esri/tasks/query',
         'dijit/ProgressBar', 'esri/layers/FeatureLayer', 'esri/dijit/util/busyIndicator', 'dojo/dom-style', 'dojo/on',
-        'esri/geometry/Extent'],
+        'esri/geometry/Extent', 'dijit/form/Button'],
 function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
           ProgressBar, FeatureLayer, busyIndicator, domStyle, on,
-         Extent) {
+         Extent, Button) {
   //To create a widget, you need to derive from BaseWidget.
   return declare([BaseWidget], {
     // DemoWidget code goes here
@@ -137,9 +137,16 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       console.log('Attachment Query Results');
       var objectIDString = "F" + results[0].objectId;
       var fireDiv = dom.byId(objectIDString);
-      var reportNode = domConstruct.toDom("<div class='attLink'><a href='" + results[0].url + "'>" + "Get Report" + "</a><div id='" + "z" + fireDiv.id + "'><a href='#' title='Zoom To'>" + "Zoom To" + "</a></div></div>");
+      // var reportNode = domConstruct.toDom("<div class='attLink'><a href='" + results[0].url + "'>" + "Get Report" + "</a><div id='" + "z" + fireDiv.id + "'><a href='#' title='Zoom To'>" + "Zoom To" + "</a></div></div>");
+      // domConstruct.place(reportNode, fireDiv, "first");
+
+      var reportNode = domConstruct.toDom("<div class='attLink'><div id='" + "r" + fireDiv.id + "' class='report-button' alt='Zoom To'></div><div class='search-button' id='" + "z" + fireDiv.id + "'></div></div>");
       domConstruct.place(reportNode, fireDiv, "first");
+
       on(dom.byId("z"+ fireDiv.id), "click", vs._onClickFireName);
+      on(dom.byId("r"+ fireDiv.id), "click", function (e) {
+        window.open(results[0].url, "_top");
+      });
     },
 
     _QueryfireResultsError: function(err){
