@@ -1,8 +1,12 @@
 .wind {
   left: 150px;
   top: 50px;
-  padding: 5px;
-
-}
+  padding: 5px; }
+  .wind h3 {
+    font-size: 1.2em; }
+  .wind h3, .wind p {
+    margin-top: 0; }
 
 /* add additional custom styles */
+
+/*# sourceMappingURL=style.css.map */
