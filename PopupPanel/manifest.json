@@ -1,0 +1,18 @@
+{
+  "name": "PopupPanel",
+  "platform": "HTML",
+  "version": "2.17",
+  "wabVersion": "2.17",
+  "author": "Robert J. Scheitlin",
+  "description": "Display popup content in a panel instead of on the map in a InfoWindow.",
+  "copyright": "2020",
+  "license": "http://www.apache.org/licenses/LICENSE-2.0",
+  "properties": {
+    "inPanel": true,
+    "hasLocale": true,
+    "hasStyle": true,
+    "hasConfig": true,
+    "hasUIFile": true,
+    "supportMultiInstance": false
+  }
+}

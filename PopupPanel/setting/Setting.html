@@ -1,0 +1,50 @@
+<div style="width:100%;">
+  <table class="setting-table input-table" cellspacing="0">
+    <tbody>
+      <tr>
+        <td class="first">
+          <div class="cb" data-dojo-type="jimu/dijit/CheckBox" data-dojo-attach-point="closeonstart"
+            data-dojo-props="label:'${nls.closeonstart}'"></div>
+        </td>
+        <td class="third">
+          <div class="help-icon"></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="first">
+          <div class="cb" data-dojo-type="jimu/dijit/CheckBox" data-dojo-attach-point="closeonclear"
+            data-dojo-props="label:'${nls.closeonclear}'"></div>
+        </td>
+        <td class="third">
+          <div class="help-icon"></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="first">
+          <div class="cb" data-dojo-type="jimu/dijit/CheckBox" data-dojo-attach-point="allowexport"
+            data-dojo-props="label:'${nls.allowexport}'"></div>
+        </td>
+        <td class="third">
+          <div class="help-icon"></div>
+        </td>
+      </tr>
+      <tr>
+        <div class="corner-section">
+          <span class="position-text">${nls.menuPosition}</span>
+          <div class="position-items">
+            <div class="position-item jimu-float-leading jimu-leading-margin2" data-dojo-attach-point="topNode">
+              <div class="position-top position-item-image"></div>
+              <div data-dojo-type="jimu/dijit/RadioBtn" data-dojo-props="group:'menupos'"></div>
+              <label>${nls.topPos}</label>
+            </div>
+            <div class="position-item jimu-float-leading jimu-leading-margin2" data-dojo-attach-point="bottomNode">
+              <div class="position-bottom position-item-image"></div>
+              <div data-dojo-type="jimu/dijit/RadioBtn" data-dojo-props="group:'menupos'"></div>
+              <label>${nls.bottomPos}</label>
+            </div>
+          </div>
+        </div>
+      </tr>
+    </tbody>
+  </table>
+</div>

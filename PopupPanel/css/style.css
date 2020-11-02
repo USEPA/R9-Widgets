@@ -1,0 +1,58 @@
+.popupheader {
+  text-align: center;
+  height: 30px;
+  border-bottom: solid 1px #ccc;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select:none;
+  user-select:none;
+  -o-user-select:none;
+}
+
+.esriViewPopup {
+  padding-bottom: 12px;
+}
+
+.clear {
+  float:right;
+  margin:0 10px
+}
+
+.titleButton.prev.light{
+  background-position: -30px -0px;
+  width: 9px;
+  height: 17px;
+}
+
+.titleButton.next.light{
+  background-position: -15px 0px;
+  width: 9px;
+  height: 17px;
+}
+
+.titleButton.prev {
+  background-position: -57px -20px;
+  width: 9px;
+  height: 17px;
+}
+
+.titleButton.next {
+  background-position: -41px 0px;
+  width: 9px;
+  height: 17px;
+}
+
+.titleButton {
+  float: right;
+  cursor: pointer;
+  background: transparent url("//js.arcgis.com/3.27/esri/dijit/images/popup.png") no-repeat scroll 0% 0%;
+  margin:0 4px
+}
+
+.esriPopup .actionsPane {
+  background-color: inherit;
+}
+
+.myPopupHidden {
+  display: none;
+}
