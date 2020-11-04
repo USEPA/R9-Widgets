@@ -25,7 +25,7 @@ class Widget implements IWidget {
   public config: IConfig;
   public myvar: any = {'variableone'};
   public myvari: any = {};
-
+  //new comment for fun
   private map: EsriMap;
 
   private postCreate(args: any): void {
