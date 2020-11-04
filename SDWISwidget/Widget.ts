@@ -25,7 +25,6 @@ class Widget implements IWidget {
   public config: IConfig;
   public myvar: any = {'variableone'};
   public myvari: any = {};
-  //new change
 
   private map: EsriMap;
 
