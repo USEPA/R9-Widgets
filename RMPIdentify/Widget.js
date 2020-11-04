@@ -13,8 +13,6 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
     //To create a widget, you need to derive from BaseWidget.
     return declare([BaseWidget], {
 
-      // Custom widget code goes here
-
       baseClass: 'rmp-identify',
       // this property is set by the framework when widget is loaded.
       // name: 'RMPIdentify',
