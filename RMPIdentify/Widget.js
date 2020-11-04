@@ -3,12 +3,12 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
     'esri/Color', 'esri/dijit/util/busyIndicator', 'esri/geometry/Extent', 'dojox/grid/DataGrid',
     'dojo/data/ItemFileWriteStore', 'dijit/tree/ForestStoreModel', 'dijit/Tree', 'dojo/on', 'jimu/dijit/LoadingShelter',
     'dojo/_base/declare', 'dojo/_base/array', 'jimu/LayerInfos/LayerInfos', 'jimu/BaseWidget', 'dojo/number', 'dojo/date/stamp',
-    'dijit/Dialog', 'dojo/Deferred', 'dojo/promise/all'],
+    'dijit/Dialog', 'dojo/Deferred', 'dojo/promise/all', 'jimu/LayerStructure'],
   function (Graphic, FeatureLayer, GraphicsLayer, RelationshipQuery, domConstruct,
             Query, PictureMarkerSymbol, SimpleLineSymbol,
             Color, busyIndicator, Extent, DataGrid,
             ItemFileWriteStore, ForestStoreModel, Tree, on, LoadingShelter,
-            declare, array, LayerInfos, BaseWidget, number, stamp, Dialog, Deferred, all) {
+            declare, array, LayerInfos, BaseWidget, number, stamp, Dialog, Deferred, all, LayerStructure) {
 
     //To create a widget, you need to derive from BaseWidget.
     return declare([BaseWidget], {
@@ -22,9 +22,11 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
 
       //methods to communication with app container:
       postCreate: function postCreate() {
-
-
         this.inherited(postCreate, arguments);
+        var layerStructure = LayerStructure.getInstance();
+        var rmp_parent_layer_id = this.config.layerId.split('_')[0].toLowerCase();
+        this.rmpLayer = layerStructure.getWebmapLayerNodes().find(x => x.id.toLowerCase().includes(rmp_parent_layer_id))
+          .getSubNodes().find(x => x.id.toLowerCase().includes(this.config.layerId.toLowerCase()));
         console.log('RMPIdentify::postCreate');
       },
       featureLayers: [],
@@ -156,6 +158,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
       },
       onOpen: function () {
         this.loadingShelter.show();
+        this.rmpLayer.show();
         console.log('RMPIdentify::onOpen');
         this.map.setInfoWindowOnClick(false);
         var that = this;
@@ -208,7 +211,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
       },
       onClose: function () {
         console.log('RMPIdentify::onClose');
-
+        this.rmpLayer.hide();
         // clean up on close
         this.clickHandler.pause();
         this.graphicLayer.clear();
