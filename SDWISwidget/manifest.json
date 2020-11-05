@@ -6,7 +6,7 @@
   "version": "0.0.1",
   "wabVersion": "2.17",
   "author": "Lisa",
-  "description": "A custom Web AppBuilder widget.",
+  "description": "Widget for displaying SDWIS specific information.",
   "copyright": "",
   "license": "ISC",
   "properties": {
