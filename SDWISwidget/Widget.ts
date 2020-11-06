@@ -6,6 +6,8 @@ import declare from './support/declareDecorator';
 
 // esri imports:
 import EsriMap from 'esri/map';
+import FeatureLayer from 'esri/layers/FeatureLayer';
+  //import FeatureSet from 'esri/tasks/support/FeatureSet';
 
 // dojo imports:
 // import on from 'dojo/on';
@@ -14,6 +16,7 @@ import IConfig from './config';
 
 interface IWidget {
   baseClass: string;
+  itemID: string;  //established itemID type
   config?: IConfig;
   myvar: any;
   myvari: any;
