@@ -127,11 +127,9 @@ class Widget implements IWidget {
             grid.destroy();
           }
 
-          var layout = [{
-            'name': 'Facility ID',
-            'field': 'FacilityID',
-            'width': '100%'
-          }];
+          var layout = [
+            {'name': 'Facility Name', 'field': 'FacilityName', 'width': '100%'}
+          ];
 
           grid = new DataGrid({
             id: 'grid',
@@ -158,10 +156,12 @@ class Widget implements IWidget {
     });
   };
 
-  private loadFacility(facility: any) {
-    this.myNode.innerHTML = facility.attributes.FacilityName;
+  private loadFacility(facility: any)
+      let myNode = ```Facility Name: ${facility.attributes.FacilityName}</br>
+                Facility PWS: ${facility.attributes.Fac_PWS_Name}</br>```
+
     this.loadingShelter.hide();
-  }
+
 // ,
 
   private onClose(): void {
