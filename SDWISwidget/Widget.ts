@@ -156,9 +156,13 @@ class Widget implements IWidget {
     });
   };
 
-  private loadFacility(facility: any)
-      let myNode = ```Facility Name: ${facility.attributes.FacilityName}</br>
+  private loadFacility(facility: any){
+    this.myNode.innerHTML = myHTML;
+      let myHTML ```Facility Name: ${facility.attributes.FacilityName}</br>
                 Facility PWS: ${facility.attributes.Fac_PWS_Name}</br>```
+
+
+  }
 
     this.loadingShelter.hide();
 
