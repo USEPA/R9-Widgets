@@ -27,8 +27,9 @@ import IConfig from './config';
 
 interface IWidget {
   baseClass: string;
+  itemID: string;  //established itemID type
   config?: IConfig;
-  // myvar: any;
+  // myvar: any;myvari: any;
 }
 
 @declare(BaseWidget)
@@ -38,7 +39,6 @@ class Widget implements IWidget {
   // public myvar: any = {'variableone'};
   // public myvari: any = {};
   private inherited: any;
-
   private map: EsriMap;
   private featureLayer: FeatureLayer;
   private myNode: any;
