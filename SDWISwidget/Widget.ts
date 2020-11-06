@@ -27,7 +27,7 @@ import IConfig from './config';
 
 interface IWidget {
   baseClass: string;
-  itemID: string;  //established itemID type
+  // itemID: string;  //established itemID type
   config?: IConfig;
   // myvar: any;myvari: any;
 }
@@ -102,15 +102,17 @@ class Widget implements IWidget {
           this.loadFacility(features[0]); // this.loadRMPs(featureSet.features[0]);
           // noneFound.push(false);
         } else if (features.length > 1) {
-          this.myNode.innerHTML = "<h3>Multiple log entries found</h3><br/><h5>Select one to continue</h5>" + '<div id="gridDiv" style="width:100%;"></div>';
+          this.myNode.innerHTML = "<h3>Multiple facilities found</h3><br/><h5>Select one to continue</h5>" +
+            '<div id="gridDiv" style="width:100%;"></div>';
 
           var data: any = {
-            identifier: 'objectid',
+            identifier: 'OBJECTID',
             items: []
           };
           features.forEach((feature: any) => {
-            // var attrs = dojo.mixin({}, feature.attributes);
-            data.items.push(feature.attributes);
+            // @ts-ignore
+            var attrs = dojo.mixin({}, feature.attributes);
+            data.items.push(attrs);
           });
           // @ts-ignore
           var store = new ItemFileWriteStore({
@@ -142,7 +144,7 @@ class Widget implements IWidget {
           grid.on('RowClick', (e: any) => {
             var rowItem = grid.getItem(e.rowIndex);
             var facility = features.filter(feature => {
-              return feature.attributes.objectid === rowItem.objectid[0];
+              return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
             });
             this.loadFacility(facility[0]);
           });
