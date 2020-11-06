@@ -76,7 +76,7 @@ class Widget implements IWidget {
     query.where = '1=1';
     console.log('SDWISwidget::onOpen');
     this.featureLayer.queryCount(query, (count: number) => {
-      this.myNode.innerHTML = `There are current <b>${count}</b> facilities in the sdwis service.`;
+      this.myNode.innerHTML = `There are current <b>${count}</b> facilities in the SDWIS feature service.`;
       this.loadingShelter.hide();
     })
     this.clickHandler.resume();
@@ -130,9 +130,6 @@ class Widget implements IWidget {
           var layout = [{
             'name': 'Facility Name',
             'field': 'FacilityName',
-            'width': '100%',
-            'name': 'PWS Name'
-            'field':'Fac_PWS_Name',
             'width': '100%'
           }];
 
