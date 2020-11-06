@@ -130,6 +130,9 @@ class Widget implements IWidget {
           var layout = [{
             'name': 'Facility Name',
             'field': 'FacilityName',
+            'width': '100%',
+            'name': 'PWS Name'
+            'field':'Fac_PWS_Name',
             'width': '100%'
           }];
 
