@@ -156,23 +156,18 @@ class Widget implements IWidget {
     });
   };
 
-  private loadFacility(facility: any){
-    this.myNode.innerHTML = myHTML;
-      let myHTML ```Facility Name: ${facility.attributes.FacilityName}</br>
-                Facility PWS: ${facility.attributes.Fac_PWS_Name}</br>```
-
-
-  }
-
+  private loadFacility(facility: any) {
+    this.myNode.innerHTML = `<b>Facility Name:</b>` + facility.attributes.FacilityName + '</br>' + `PWS ID:` + facility.attributes.Fac_PWSID + '</br>'
+      + `PWS Name:` + facility.attributes.Fac_PWS_Name;
     this.loadingShelter.hide();
-
+  }
 // ,
 
   private onClose(): void {
     console.log('SDWISwidget::onClose');
     var self: any = this;
     this.clickHandler.pause();
-  };
+  }
   // private onMinimize(): void {
   //   console.log('SDWISwidget::onMinimize');
   // };
