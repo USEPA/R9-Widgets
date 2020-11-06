@@ -157,8 +157,10 @@ class Widget implements IWidget {
   };
 
   private loadFacility(facility: any) {
-    this.myNode.innerHTML = `<b>Facility Name:</b>` + facility.attributes.FacilityName + '</br>' + `PWS ID:` + facility.attributes.Fac_PWSID + '</br>'
-      + `PWS Name:` + facility.attributes.Fac_PWS_Name;
+    this.myNode.innerHTML = `<b>PWS ID:</b>` + ` `+  facility.attributes.Fac_PWSID + '</br>' + `<b>PWS Name:</b>` + ` `+ facility.attributes.Fac_PWS_Name + '</br>'
+           + `<b><u>Water System Facility Information</u></b>` + '</br>' +
+      `<b>Facility Name:</b>` + ` `+  facility.attributes.FacilityName + '</br>' + `<b>Facility Type:</b>` + ` `+  facility.attributes.Fac_Type + '</br>'
+      + `<b>Source Type:</b>` + ` `+  facility.attributes.Fac_SourceType ;
     this.loadingShelter.hide();
   }
 // ,
