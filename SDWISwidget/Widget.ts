@@ -157,10 +157,16 @@ class Widget implements IWidget {
   };
 
   private loadFacility(facility: any) {
-    this.myNode.innerHTML = `<b>PWS ID:</b>` + ` `+  facility.attributes.Fac_PWSID + '</br>' + `<b>PWS Name:</b>` + ` `+ facility.attributes.Fac_PWS_Name + '</br>'
-           + `<b><u>Water System Facility Information</u></b>` + '</br>' +
-      `<b>Facility Name:</b>` + ` `+  facility.attributes.FacilityName + '</br>' + `<b>Facility Type:</b>` + ` `+  facility.attributes.Fac_Type + '</br>'
-      + `<b>Source Type:</b>` + ` `+  facility.attributes.Fac_SourceType ;
+    this.myNode.innerHTML = `<b>PWS ID:</b>` + ` `+  facility.attributes.Fac_PWSID + '</br>' + `<b>PWS Name:</b>` + ` `+ facility.attributes.Fac_PWS_Name + '</br>'+
+      `<p style="text-align: center;">&nbsp;</p> <table style="height: 98px; background-color: #ffffce; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%">
+        <tbody><tr><td style="text-align: center; width: 287px;"><strong>Point of Contact:</strong></td></tr><tr style="text-align: center;">`+`<td style="width: 287px;">`+facility.attributes.Fac_PWS_Name+`, TITLE</td>
+        </tr><tr style="text-align: center;"><td style="width: 287px;">PHONE - EMAIL</td></tr><tr style="text-align: center;">
+        <td style="width: 287px;">ADDRESS</td></tr></tbody></table><p>&nbsp;</p>`+`</br>`+
+      `<b><p style="text-align: center;">Additional PWS Details</p></b>`+ `</br>`+ `<hr />`+`</br>`+ `<b>City Served:</b>` + `</br>`+ `<b>County Served:</b>`+ `</br>`+`<b>State:</b>`+ `</br>`+`<b>Tribe Name:</b>` +`</br>`+ `<b>PWS Population Served Category:</b>`+`</br>`+`<b>Is the PWS a School or Daycare?</b>`+`</br>`+`<b>PWS Owner Type:</b>`+`</br>`+ `<b>Is PWS Wholesaler to Another PWS?</b>`+`</br>` +`<b>PWS Source Water Type:</b>`+`</br>`+`<p style="text-align: center;">&nbsp;</p> <table style="height: 98px; background-color: #ffcccb; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%">
+        <tbody><tr><td style="text-align: center; width: 287px;"><strong>Regulatory Agency</strong></td></tr><tr style="text-align: center;">`+`<td style="width: 287px;">Name of Regulatory Agency</td>
+        </tr><tr style="text-align: center;"><td style="width: 287px;">PHONE - EMAIL</td></tr><tr style="text-align: center;">
+        <td style="width: 287px;">ADDRESS</td></tr></tbody></table><p>&nbsp;</p>`+`</br>`+
+      `<b><p style="text-align: center;">Water System Facility Information</p></b>` + '</br>' + `<hr />`+`</br>`+ `<b>Facility Name:</b>` + ` `+  facility.attributes.FacilityName + '</br>' + `<b>Facility Type:</b>` + ` `+  facility.attributes.Fac_Type + '</br>' + `<b>Source Type:</b>` + ` `+  facility.attributes.Fac_SourceType +`</br>`+ `<b>Source Treated:</b>`+ ` `+ facility.attributes.FacSourceTrtStatus + `</br>`+ `<b>Facility Availability:</b>`+ ` `+ facility.attributes.Fac_Availability +`</br>` + `<b>Last Updated:</b>` +` `+ facility.attributes.Last_Reported +`</br>`+`<b>Source Purchased?</b>`+` `+`Query for PWSID_SELLER = Yes or No ` +`</br>`+'<b>PWS Purchased From:</b>'+ ` `+ facility.attributes.PWSID_SELLER + `</br>` + `<b>Purchased Water Treated:</b>`+` `+ facility.attributes.SELLERTRTCODE+`</br>` + `<p style="text-align: center;">&nbsp;</p>`+`</br>`  +`<p style="text-align: center;"><a href="https://echo.epa.gov/detailed-facility-report?fid=AZ0409053&sys=SDWIS">ECHO DFR (PWS Level)</a></p>` ;
     this.loadingShelter.hide();
   }
 // ,
