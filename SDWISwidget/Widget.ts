@@ -76,7 +76,7 @@ class Widget implements IWidget {
     query.where = '1=1';
     console.log('SDWISwidget::onOpen');
     this.featureLayer.queryCount(query, (count: number) => {
-      this.myNode.innerHTML = `There are current <b>${count}</b> facilities in the SDWIS feature service.`;
+      this.myNode.innerHTML = `There are currently <b>${count}</b> facilities in the SDWIS feature service.` +`</br><h5 style="text-decoration: underline;">Safe Drinking Water Information System (SDWIS)</h5>` +`</br></br>`+ `The data reflected here is fed directly from the National SDWIS Database and updated on a quarterly basis.`+`</br></br>`+`Detailed information about the SDWIS Federal Reporting Services can be found <a href="https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-information-system-sdwis-federal-reporting"target="_blank">here.</a>`;
       this.loadingShelter.hide();
     })
     this.clickHandler.resume();
