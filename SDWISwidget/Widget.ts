@@ -11,10 +11,12 @@ import EsriMap from 'esri/map';
 import FeatureLayer from 'esri/layers/FeatureLayer';
 import Query from 'esri/tasks/query';
 import GraphicsLayer from 'esri/layers/GraphicsLayer';
+import RelationshipQuery from 'esri/tasks/RelationshipQuery';
 
 // jimu
 // @ts-ignore
 import LoadingShelter from 'jimu/dijit/LoadingShelter';
+
 
 // dojo imports:
 import on from 'dojo/on';
@@ -24,6 +26,7 @@ import ItemFileWriteStore from 'dojo/data/ItemFileWriteStore';
 import DataGrid from 'dojox/grid/DataGrid';
 
 import IConfig from './config';
+import Table = WebAssembly.Table;
 
 interface IWidget {
   baseClass: string;
@@ -41,6 +44,8 @@ class Widget implements IWidget {
   private inherited: any;
   private map: EsriMap;
   private featureLayer: FeatureLayer;
+  private featureLayerPWS: FeatureLayer;
+  //private featureTable: Table;
   private myNode: any;
   private clickHandler: any;
   private loadingShelter: LoadingShelter;
@@ -66,6 +71,10 @@ class Widget implements IWidget {
     this.featureLayer = new FeatureLayer(
       'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/SDWIS_Base/FeatureServer/0',
       {outFields: ['*']});
+    this.featureLayerPWS = new FeatureLayer(
+      'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/SDWIS_Base/FeatureServer/1',
+      {outFields: ['*']});
+
     this.clickHandler = this._clickHandler();
   };
 
@@ -76,7 +85,7 @@ class Widget implements IWidget {
     query.where = '1=1';
     console.log('SDWISwidget::onOpen');
     this.featureLayer.queryCount(query, (count: number) => {
-      this.myNode.innerHTML = `There are currently <b>${count}</b> facilities in the SDWIS feature service.` +`</br><h5 style="text-decoration: underline;">Safe Drinking Water Information System (SDWIS)</h5>` +`</br></br>`+ `The data reflected here is fed directly from the National SDWIS Database and updated on a quarterly basis.`+`</br></br>`+`Detailed information about the SDWIS Federal Reporting Services can be found <a href="https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-information-system-sdwis-federal-reporting"target="_blank">here.</a>`;
+      this.myNode.innerHTML = `There are currently <b>${count}</b> facilities in the SDWIS feature service.` +`</br><h5 style="text-decoration: underline;">Safe Drinking Water Information System (SDWIS)</h5>` +`</br></br>`+ `The data reflected here is fed directly from the National SDWIS Database and updated on a quarterly basis. The <a href="https://epa.maps.arcgis.com/home/item.html?id=ee7f7ce068f14016985e244d6247b58c"target="_blank">GeoPlatform service</a> provides information on facilities, public water systems, primacy agencies, and tribal entities.`+`</br></br>`+`Detailed information about the SDWIS Federal Reporting Services can be found <a href="https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-information-system-sdwis-federal-reporting"target="_blank">here.</a>`;
       this.loadingShelter.hide();
     })
     this.clickHandler.resume();
@@ -101,6 +110,7 @@ class Widget implements IWidget {
         if (features.length === 1) {
           this.loadFacility(features[0]); // this.loadRMPs(featureSet.features[0]);
           // noneFound.push(false);
+
         } else if (features.length > 1) {
           this.myNode.innerHTML = "<h3>Multiple facilities found</h3><br/><h5>Select one to continue</h5>" +
             '<div id="gridDiv" style="width:100%;"></div>';
@@ -144,6 +154,7 @@ class Widget implements IWidget {
             var facility = features.filter(feature => {
               return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
             });
+
             this.loadFacility(facility[0]);
           });
           grid.startup();
