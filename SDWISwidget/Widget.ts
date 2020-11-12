@@ -46,6 +46,7 @@ class Widget implements IWidget {
   private map: EsriMap;
   private featureLayer: FeatureLayer;
   private featureLayerPWS: FeatureLayer;
+  private featureLayerTable: FeatureLayer;
   private myNode: any;
   private clickHandler: any;
   private loadingShelter: LoadingShelter;
@@ -74,6 +75,9 @@ class Widget implements IWidget {
       {outFields: ['*']});
     this.featureLayerPWS = new FeatureLayer(
       'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/SDWIS_Base/FeatureServer/1',
+      {outFields: ['*']});
+     this.featureLayerTable = new FeatureLayer(
+      'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/SDWIS_Base/FeatureServer/3',
       {outFields: ['*']});
 
 
