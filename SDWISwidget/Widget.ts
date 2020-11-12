@@ -11,7 +11,7 @@ import EsriMap from 'esri/map';
 import FeatureLayer from 'esri/layers/FeatureLayer';
 import Query from 'esri/tasks/query';
 import GraphicsLayer from 'esri/layers/GraphicsLayer';
-import RelationshipQuery from 'esri/tasks/RelationshipQuery';
+
 
 // jimu
 // @ts-ignore
@@ -21,12 +21,15 @@ import LoadingShelter from 'jimu/dijit/LoadingShelter';
 // dojo imports:
 import on from 'dojo/on';
 import ItemFileWriteStore from 'dojo/data/ItemFileWriteStore';
-// import dijit from 'dijit';
+
+
+
 // @ts-ignore
 import DataGrid from 'dojox/grid/DataGrid';
 
 import IConfig from './config';
 import Table = WebAssembly.Table;
+import FeatureTable from 'esri/dijit/FeatureTable';
 
 interface IWidget {
   baseClass: string;
@@ -39,18 +42,16 @@ interface IWidget {
 class Widget implements IWidget {
   public baseClass: string = 'sdwiswidget';
   public config: IConfig;
-  // public myvar: any = {'variableone'};
-  // public myvari: any = {};
   private inherited: any;
   private map: EsriMap;
   private featureLayer: FeatureLayer;
   private featureLayerPWS: FeatureLayer;
-  //private featureTable: Table;
   private myNode: any;
   private clickHandler: any;
   private loadingShelter: LoadingShelter;
   private graphicsLayer: GraphicsLayer;
   private domNode: any;
+  public  Table: any
 
   private postCreate(args: any): void {
     this.inherited(arguments);
@@ -74,6 +75,8 @@ class Widget implements IWidget {
     this.featureLayerPWS = new FeatureLayer(
       'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/SDWIS_Base/FeatureServer/1',
       {outFields: ['*']});
+
+
 
     this.clickHandler = this._clickHandler();
   };
@@ -154,6 +157,7 @@ class Widget implements IWidget {
             var facility = features.filter(feature => {
               return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
             });
+
 
             this.loadFacility(facility[0]);
           });
