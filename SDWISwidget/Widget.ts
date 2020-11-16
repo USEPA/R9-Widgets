@@ -167,7 +167,7 @@ class Widget implements IWidget {
             var facility = features.filter(feature => {
               return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
             var facilityPWS = features.filter(feature =>  {
-              return feature.attributes.PWS_ID === rowItem.attributes.Fac_PWSID[0];
+              return feature.attributes.PWSID === rowItem.attributes.Fac_PWSID[0];
             })
             });
 
@@ -190,7 +190,8 @@ class Widget implements IWidget {
         <tbody><tr><td style="text-align: center; width: 287px;"><strong>Point of Contact:</strong></td></tr><tr style="text-align: center;">`+`<td style="width: 287px;">`+facility.attributes.Fac_PWS_Name+`, TITLE</td>
         </tr><tr style="text-align: center;"><td style="width: 287px;">PHONE - EMAIL</td></tr><tr style="text-align: center;">
         <td style="width: 287px;">ADDRESS</td></tr></tbody></table><p>&nbsp;</p>`+`</br>`+
-      `<b><p style="text-align: center;">Additional PWS Details</p></b>`+ `</br>`+ `<hr />`+`</br>`+ `<b>City Served:</b>` +` PWSfacility.attributes.City_Served`+ `</br>`+ `<b>County Served:</b>`+` PWS Attribute`+ `</br>`+`<b>State:</b>`+` PWS Attribute`+ `</br>`+`<b>Tribe Name:</b>`+` PWS Attribute`+ `</br>`+ `<b>PWS Population Served Category:</b>`+` PWS Attribute`+`</br>`+`<b>Is the PWS a School or Daycare?</b>`+` PWS Attribute`+`</br>`+`<b>PWS Owner Type:</b>`+` PWS Attribute`+`</br>`+ `<b>Is PWS Wholesaler to Another PWS?</b>`+` PWS Attribute`+`</br>` +`<b>PWS Source Water Type:</b>`+` PWS Attribute`+`</br>`+`<p style="text-align: center;">&nbsp;</p> <table style="height: 98px; background-color: #ffcccb; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%">
+      `<b><p style="text-align: center;">Additional PWS Details</p></b>`+ `</br>`+ `<hr />`+`</br>`+ `<b>City Served:</b>` +` facilityPWS.attributes.City`+ `</br>`+ `<b>County Served:</b>`+` facilityPWS.attributes.County`+ `</br>`+`<b>State:</b>`+` facilityPWS.attributes.State`+ `</br>`+`<b>Tribe Name:</b>`+` facilityPWS.attributes.Tribe`+ `</br>`+ `<b>PWS Population Served Category:</b>`+` facilityPWS.attributes.PWS_PopCat`+`</br>`+`<b>Is the PWS a School or Daycare?</b>`+` facilityPWS.attributes.PWS_SchoolorDaycare`+`</br>`+`<b>PWS Owner Type:</b>`+` facilityPWS.attributes.PWS_OwnerType`+`</br>`+ `<b>Is PWS Wholesaler to Another PWS?</b>`+` facilityPWS.attributes.PWS_Wholesale`+`</br>` +`<b>PWS Source Water Type:</b>`+` facilityPWS.attributes.PWS_WSourceType`+`</br>`+`<p style="text-align: center;">&nbsp;</p> <table style="height: 98px; background-color: #ffcccb; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%">
+
         <tbody><tr><td style="text-align: center; width: 287px;"><strong>Regulatory Agency</strong></td></tr><tr style="text-align: center;">`+`<td style="width: 287px;">Name of Regulatory Agency (Primacy Agency Table)</td>
         </tr><tr style="text-align: center;"><td style="width: 287px;">PHONE - EMAIL</td></tr><tr style="text-align: center;">
         <td style="width: 287px;">ADDRESS</td></tr></tbody></table><p>&nbsp;</p>`+`</br>`+
