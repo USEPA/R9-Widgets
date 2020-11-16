@@ -30,6 +30,7 @@ import DataGrid from 'dojox/grid/DataGrid';
 import IConfig from './config';
 import Table = WebAssembly.Table;
 import FeatureTable from 'esri/dijit/FeatureTable';
+import RelationshipQuery from "esri/tasks/RelationshipQuery";
 
 interface IWidget {
   baseClass: string;
@@ -107,15 +108,20 @@ class Widget implements IWidget {
       this.myNode.innerHTML = '';
       // this.graphicLayer.clear();
       var pixelWidth = this.map.extent.getWidth() / this.map.width;
-      var toleraceInMapCoords = 10 * pixelWidth;
-      var clickExtent = new Extent(e.mapPoint.x - toleraceInMapCoords, e.mapPoint.y - toleraceInMapCoords, e.mapPoint.x + toleraceInMapCoords, e.mapPoint.y + toleraceInMapCoords, this.map.spatialReference);
+      var toleranceInMapCoords = 10 * pixelWidth;
+      var clickExtent = new Extent(e.mapPoint.x - toleranceInMapCoords, e.mapPoint.y - toleranceInMapCoords, e.mapPoint.x + toleranceInMapCoords, e.mapPoint.y + toleranceInMapCoords, this.map.spatialReference);
       var featureQuery = new Query();
       featureQuery.outFields = ['*'];
       featureQuery.geometry = clickExtent;
+      //var selectionSymbol = new SimpleMarketSymbol().setColor("red");
+
       // featureQuery.orderByFields = ['dateofreport DESC'];
       this.featureLayer.selectFeatures(featureQuery, FeatureLayer.SELECTION_NEW, (features: any[]) => {
         if (features.length === 1) {
-          this.loadFacility(features[0]); // this.loadRMPs(featureSet.features[0]);
+          this.loadFacility(features[0]);
+          //this.featureLayerPWS.setSelectionSymbol(selectionSymbol);
+          //this.featureLayerPWS = mode:
+          // this.loadRMPs(featureSet.features[0]);
           // noneFound.push(false);
 
         } else if (features.length > 1) {
@@ -160,6 +166,9 @@ class Widget implements IWidget {
             var rowItem = grid.getItem(e.rowIndex);
             var facility = features.filter(feature => {
               return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
+            var facilityPWS = features.filter(feature =>  {
+              return feature.attributes.PWS_ID === rowItem.attributes.Fac_PWSID[0];
+            })
             });
 
 
@@ -181,7 +190,7 @@ class Widget implements IWidget {
         <tbody><tr><td style="text-align: center; width: 287px;"><strong>Point of Contact:</strong></td></tr><tr style="text-align: center;">`+`<td style="width: 287px;">`+facility.attributes.Fac_PWS_Name+`, TITLE</td>
         </tr><tr style="text-align: center;"><td style="width: 287px;">PHONE - EMAIL</td></tr><tr style="text-align: center;">
         <td style="width: 287px;">ADDRESS</td></tr></tbody></table><p>&nbsp;</p>`+`</br>`+
-      `<b><p style="text-align: center;">Additional PWS Details</p></b>`+ `</br>`+ `<hr />`+`</br>`+ `<b>City Served:</b>` +` PWS Attribute`+ `</br>`+ `<b>County Served:</b>`+` PWS Attribute`+ `</br>`+`<b>State:</b>`+` PWS Attribute`+ `</br>`+`<b>Tribe Name:</b>`+` PWS Attribute`+ `</br>`+ `<b>PWS Population Served Category:</b>`+` PWS Attribute`+`</br>`+`<b>Is the PWS a School or Daycare?</b>`+` PWS Attribute`+`</br>`+`<b>PWS Owner Type:</b>`+` PWS Attribute`+`</br>`+ `<b>Is PWS Wholesaler to Another PWS?</b>`+` PWS Attribute`+`</br>` +`<b>PWS Source Water Type:</b>`+` PWS Attribute`+`</br>`+`<p style="text-align: center;">&nbsp;</p> <table style="height: 98px; background-color: #ffcccb; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%">
+      `<b><p style="text-align: center;">Additional PWS Details</p></b>`+ `</br>`+ `<hr />`+`</br>`+ `<b>City Served:</b>` +` PWSfacility.attributes.City_Served`+ `</br>`+ `<b>County Served:</b>`+` PWS Attribute`+ `</br>`+`<b>State:</b>`+` PWS Attribute`+ `</br>`+`<b>Tribe Name:</b>`+` PWS Attribute`+ `</br>`+ `<b>PWS Population Served Category:</b>`+` PWS Attribute`+`</br>`+`<b>Is the PWS a School or Daycare?</b>`+` PWS Attribute`+`</br>`+`<b>PWS Owner Type:</b>`+` PWS Attribute`+`</br>`+ `<b>Is PWS Wholesaler to Another PWS?</b>`+` PWS Attribute`+`</br>` +`<b>PWS Source Water Type:</b>`+` PWS Attribute`+`</br>`+`<p style="text-align: center;">&nbsp;</p> <table style="height: 98px; background-color: #ffcccb; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%">
         <tbody><tr><td style="text-align: center; width: 287px;"><strong>Regulatory Agency</strong></td></tr><tr style="text-align: center;">`+`<td style="width: 287px;">Name of Regulatory Agency (Primacy Agency Table)</td>
         </tr><tr style="text-align: center;"><td style="width: 287px;">PHONE - EMAIL</td></tr><tr style="text-align: center;">
         <td style="width: 287px;">ADDRESS</td></tr></tbody></table><p>&nbsp;</p>`+`</br>`+
