@@ -11,7 +11,8 @@ import EsriMap from 'esri/map';
 import FeatureLayer from 'esri/layers/FeatureLayer';
 import Query from 'esri/tasks/query';
 import GraphicsLayer from 'esri/layers/GraphicsLayer';
-
+import FeatureSet from "esri/tasks/FeatureSet";
+import CodedValueDomain from "esri/layers/CodedValueDomain";
 
 // jimu
 // @ts-ignore
@@ -21,7 +22,7 @@ import LoadingShelter from 'jimu/dijit/LoadingShelter';
 // dojo imports:
 import on from 'dojo/on';
 import ItemFileWriteStore from 'dojo/data/ItemFileWriteStore';
-
+import domConstruct from "dojo/dom-construct";
 
 
 // @ts-ignore
@@ -31,6 +32,7 @@ import IConfig from './config';
 import Table = WebAssembly.Table;
 import FeatureTable from 'esri/dijit/FeatureTable';
 import RelationshipQuery from "esri/tasks/RelationshipQuery";
+import dom from "dojo/dom";
 
 interface IWidget {
   baseClass: string;
@@ -49,6 +51,7 @@ class Widget implements IWidget {
   private featureLayerPWS: FeatureLayer;
   private featureLayerTable: FeatureLayer;
   private myNode: any;
+  private pwsinfo: any;
   private clickHandler: any;
   private loadingShelter: LoadingShelter;
   private graphicsLayer: GraphicsLayer;
@@ -183,20 +186,35 @@ class Widget implements IWidget {
   };
 
   private loadFacility(facility: any) {
+    const facilitytype = this.featureLayer.getDomain('Fac_Type')["getName"](facility.attributes.Fac_Type);
+    const sourcetype = this.featureLayer.getDomain('Fac_SourceType')["getName"](facility.attributes.Fac_SourceType);
+    //const
     this.myNode.innerHTML = `<b>PWS ID:</b>` + ` `+  facility.attributes.Fac_PWSID + '</br>' + `<b>PWS Name:</b>` + ` `+ facility.attributes.Fac_PWS_Name + '</br>'+
       `<p style="text-align: center;">&nbsp;</p> <table style="height: 98px; background-color: #ffffce; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%">
         <tbody><tr><td style="text-align: center; width: 287px;"><strong>Point of Contact:</strong></td></tr><tr style="text-align: center;">`+`<td style="width: 287px;">`+facility.attributes.Fac_PWS_Name+`, TITLE</td>
         </tr><tr style="text-align: center;"><td style="width: 287px;">PHONE - EMAIL</td></tr><tr style="text-align: center;">
         <td style="width: 287px;">ADDRESS</td></tr></tbody></table><p>&nbsp;</p>`+`</br>`+
-      `<b><p style="text-align: center;">Additional PWS Details</p></b>`+ `</br>`+ `<hr />`+`</br>`+ `<b>City Served:</b>` +` facilityPWS.attributes.City`+ `</br>`+ `<b>County Served:</b>`+` facilityPWS.attributes.County`+ `</br>`+`<b>State:</b>`+` facilityPWS.attributes.State`+ `</br>`+`<b>Tribe Name:</b>`+` facilityPWS.attributes.Tribe`+ `</br>`+ `<b>PWS Population Served Category:</b>`+` facilityPWS.attributes.PWS_PopCat`+`</br>`+`<b>Is the PWS a School or Daycare?</b>`+` facilityPWS.attributes.PWS_SchoolorDaycare`+`</br>`+`<b>PWS Owner Type:</b>`+` facilityPWS.attributes.PWS_OwnerType`+`</br>`+ `<b>Is PWS Wholesaler to Another PWS?</b>`+` facilityPWS.attributes.PWS_Wholesale`+`</br>` +`<b>PWS Source Water Type:</b>`+` facilityPWS.attributes.PWS_WSourceType`+`</br>`+`<p style="text-align: center;">&nbsp;</p> <table style="height: 98px; background-color: #ffcccb; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%">
+      `<table style="height: 98px; background-color: #ffcccb; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%"> <div id="pwsinfo"></div>
         <tbody><tr><td style="text-align: center; width: 287px;"><strong>Regulatory Agency</strong></td></tr><tr style="text-align: center;">`+`<td style="width: 287px;">Name of Regulatory Agency (Primacy Agency Table)</td>
         </tr><tr style="text-align: center;"><td style="width: 287px;">PHONE - EMAIL</td></tr><tr style="text-align: center;">
         <td style="width: 287px;">ADDRESS</td></tr></tbody></table><p>&nbsp;</p>`+`</br>`+
-      `<b><p style="text-align: center;">Water System Facility Information</p></b>` + '</br>' + `<hr />`+`</br>`+ `<b>Facility Name:</b>` + ` `+  facility.attributes.FacilityName + '</br>' + `<b>Facility Type:</b>` + ` `+  facility.attributes.Fac_Type + '</br>' + `<b>Source Type:</b>` + ` `+  facility.attributes.Fac_SourceType +`</br>`+ `<b>Source Treated:</b>`+ ` `+ facility.attributes.FacSourceTrtStatus + `</br>`+ `<b>Facility Availability:</b>`+ ` `+ facility.attributes.Fac_Availability +`</br>` + `<b>Last Updated:</b>` +` `+ facility.attributes.Last_Reported +`</br>`+`<b>Source Purchased?</b>`+` `+`Query for PWSID_SELLER = Yes or No ` +`</br>`+'<b>PWS Purchased From:</b>'+ ` `+ facility.attributes.PWSID_SELLER + `</br>` + `<b>Purchased Water Treated:</b>`+` `+ facility.attributes.SELLERTRTCODE+`</br>` + `<p style="text-align: center;">&nbsp;</p>`+`</br>`  +`<p style="text-align: center;"><a href="https://echo.epa.gov/detailed-facility-report?fid=${facility.attributes.Fac_PWSID}" target="_blank">ECHO DFR (PWS Level)</a></p>` ;
+      `<b><p style="text-align: center;">Water System Facility Information</p></b>` + '</br>' + `<hr />`+`</br>`+ `<b>Facility Name:</b>` + ` `+  facility.attributes.FacilityName + '</br>' + `<b>Facility Type:</b>` + ` `+ facilitytype + '</br>' + `<b>Source Type:</b>` + ` `+  sourcetype +`</br>`+ `<b>Source Treated:</b>`+ ` `+ facility.attributes.FacSourceTrtStatus + `</br>`+ `<b>Facility Availability:</b>`+ ` `+ facility.attributes.Fac_Availability +`</br>` + `<b>Last Updated:</b>` +` `+ facility.attributes.Last_Reported +`</br>`+`<b>Source Purchased?</b>`+` `+`Query for PWSID_SELLER = Yes or No ` +`</br>`+'<b>PWS Purchased From:</b>'+ ` `+ facility.attributes.PWSID_SELLER + `</br>` + `<b>Purchased Water Treated:</b>`+` `+ facility.attributes.SELLERTRTCODE+`</br>` + `<p style="text-align: center;">&nbsp;</p>`+`</br>`  +`<p style="text-align: center;"><a href="https://echo.epa.gov/detailed-facility-report?fid=${facility.attributes.Fac_PWSID}" target="_blank">ECHO DFR (PWS Level)</a></p>` ;
     this.loadingShelter.hide();
+    this.loadFacilityPWS(facility.attributes.Fac_PWSID)
   }
 // ,
+  private loadFacilityPWS(PWS_ID: any) {
+    var query = new Query();
+    query.outFields = ['*'];
+    query.where = `PWSID='${PWS_ID}'`;
+    this.featureLayerPWS.queryFeatures(query, (featureSet: FeatureSet) => {
+      const facilityPWS = featureSet.features[0];
+   var pws = `<b><p style="text-align: center;">Additional PWS Details</p></b>`+ `</br>`+ `<hr />`+`</br>`+ `<b>City Served:</b>` +` ${facilityPWS.attributes.City}`+ `</br>`+ `<b>County Served:</b>`+` ${facilityPWS.attributes.County}`+ `</br>`+`<b>State:</b>`+` ${facilityPWS.attributes.State}`+ `</br>`+`<b>Tribe Name:</b>`+` ${facilityPWS.attributes.Tribe}`+ `</br>`+ `<b>PWS Population Served Category:</b>`+` ${facilityPWS.attributes.PWS_PopCat}`+`</br>`+`<b>Is the PWS a School or Daycare?</b>`+` ${facilityPWS.attributes.PWS_SchoolorDaycare}`+`</br>`+`<b>PWS Owner Type:</b>`+` ${facilityPWS.attributes.PWS_OwnerType}`+`</br>`+ `<b>Is PWS Wholesaler to Another PWS?</b>`+` ${facilityPWS.attributes.PWS_Wholesale}`+`</br>` +`<b>PWS Source Water Type:</b>`+` ${facilityPWS.attributes.PWS_WSourceType}`+`</br>`+`<p style="text-align: center;">&nbsp;</p>`
+    domConstruct.place(pws, 'pwsinfo')
+      });
 
+
+  }
   private onClose(): void {
     console.log('SDWISwidget::onClose');
     var self: any = this;
