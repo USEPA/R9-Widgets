@@ -196,13 +196,13 @@ class Widget implements IWidget {
 
     this.myNode.innerHTML = `<b>PWS ID:</b>` + ` `+  facility.attributes.Fac_PWSID + '</br>' + `<b>PWS Name:</b>` + ` `+ facility.attributes.Fac_PWS_Name + '</br>'+
       `<p style="text-align: center;">&nbsp;</p> <table style="height: 98px; background-color: #ffffce; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%">
-        <tbody><tr><td style="text-align: center; width: 287px;"><strong>Point of Contact:</strong></td></tr>`+`</br>`+`<div id="admincontacts"></div>`+`</br></tbody></table><p>&nbsp;</p>`+`</br>`+
-      `<div id="pwsinfo"></div>`+`<table style="height: 98px; background-color: #ffcccb; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%"><tbody><tr><td style="text-align: center; width: 287px;"><strong><p style="text-align: center;">Regulatory Agency</strong></p></td></tr>`+`</br>`+`<div id="tableinfo"></div></tbody></table><p>&nbsp;</p></br>
+        <tbody><tr><td style="text-align: center; width: 287px;"><strong><u>PWS Contact Information</u></strong>`+`<div id="admincontacts"></div></td></tr>`+`</br></tbody></table><p>&nbsp;</p>`+`</br>`+
+      `<div id="pwsinfo"></div>`+`<table style="height: 98px; background-color: #ffcccb; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%"><tbody><tr><td style="text-align: center; width: 287px;"><strong><p style="text-align: center;"><u>Regulatory Agency</u></strong></p></td></tr>`+`</br>`+`<div id="tableinfo"></div></tbody></table><p>&nbsp;</p></br>
       <b><p style="text-align: center;">Water System Facility Information</p></b>` + '</br>' + `<hr />`+`</br>`+ `<b>Facility Name:</b>` + ` `+  facility.attributes.FacilityName + '</br>' + `<b>Facility Type:</b>` + ` `+ facilitytype + '</br>' + `<b>Source Type:</b>` + ` `+  sourcetype +`</br>`+ `<b>Source Treated:</b>`+ ` `+ facility.attributes.FacSourceTrtStatus + `</br>`+ `<b>Facility Availability:</b>`+ ` `+ availability +`</br>` + `<b>Last Updated:</b>` +` `+ facility.attributes.Last_Reported +`</br>`+`<b>Source Purchased? </b>`+` `+`Query for PWSID_SELLER = Yes or No ` +`</br>`+'<b>PWS Purchased From:</b>'+ ` `+ facility.attributes.PWSID_SELLER + `</br>` + `<b>Purchased Water Treated:</b>`+` `+ sellertreated +`</br>` + `<p style="text-align: center;">&nbsp;</p>`+`</br>`  +`<p style="text-align: center;"><a href="https://echo.epa.gov/detailed-facility-report?fid=${facility.attributes.Fac_PWSID}" target="_blank">ECHO DFR (PWS Level)</a></p>` ;
     this.loadingShelter.hide();
     this.loadFacilityPWS(facility.attributes.Fac_PWSID);
     this.loadFacilityTable(facility.attributes.PACode);
-    this.loadFacilityAdmin(facility.attributes.PWSID);
+    this.loadFacilityAdmin(facility.attributes.Fac_PWSID);
   }
 // , Pulls in PWS information from PWS points layer
   private loadFacilityPWS(PWS_ID: any) {
@@ -227,12 +227,12 @@ class Widget implements IWidget {
       });
   }
   //pulls information from Admin Contact table for the Point of Contact section (yellow)
-  private loadFacilityAdmin(PWS_ID: any) {
+  private loadFacilityAdmin(pwsid: any) {
     var query = new Query();
-    query.where = `pwsid='${PWS_ID}'`;
+    query.where = `PWSID='${pwsid}'`;
     this.featureLayerAdmin.queryFeatures(query, (featureSet: FeatureSet) => {
       const facilityAdmin = featureSet.features[0];
-      var admin = `<tr style="text-align: center;">` + `<td style="width: 287px;">facilityAdmin.attributes.pws_name</td></tr><tr style="text-align: center;"><td style="width: 287px;">Phone: ${facilityAdmin.attributes.phone_number}</td></tr><tr style="text-align: center;"><td style="width: 287px;">Email: ${facilityAdmin.attributes.email_addr}</td></tr><tr style="text-align: center;"><td style="width: 287px;">Address: ${facilityAdmin.attributes.address_line1}</td></tr>` + `<tr style="text-align: center;"><td style="width: 287px;">${facilityAdmin.attributes.address}tr><tr style="text-align: center;"><td style="width: 287px;">${facilityAdmin.attributes.city_name}</td></tr>`
+      var admin = `</br>`+`<p style="text-align: center;">`+`<b>POC Name: </b>${facilityAdmin.attributes.org_name}`+`</br>`+`<b>Phone: </b> ${facilityAdmin.attributes.phone_number}`+`</br>`+`<b>Email: </b> ${facilityAdmin.attributes.email_addr}`+`</br>`+`<b>Address: </b> ${facilityAdmin.attributes.address_line1}`+`</br>`+`${facilityAdmin.attributes.city_name}`+`, `+`${facilityAdmin.attributes.state_code}`+`, `+`${facilityAdmin.attributes.zip_code}`
       domConstruct.place(admin, 'admincontacts')
     });
   }
