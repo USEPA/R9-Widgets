@@ -60,6 +60,7 @@ class Widget implements IWidget {
   private graphicsLayer: GraphicsLayer;
   private domNode: any;
   public  Table: any
+  private supportsAdvancedQueries: any;
 
   private postCreate(args: any): void {
     this.inherited(arguments);
@@ -80,6 +81,7 @@ class Widget implements IWidget {
     this.featureLayer = new FeatureLayer(
       'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/SDWIS_Base/FeatureServer/0',
       {outFields: ['*']});
+    this.supportsAdvancedQueries = true
     this.featureLayerPWS = new FeatureLayer(
       'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/SDWIS_Base/FeatureServer/1',
       {outFields: ['*']});
@@ -188,7 +190,7 @@ class Widget implements IWidget {
     });
   };
 
-  private loadFacility(facility: any) {
+    private loadFacility(facility: any) {
     const facilitytype = this.featureLayer.getDomain('Fac_Type')["getName"](facility.attributes.Fac_Type);
     const sourcetype = this.featureLayer.getDomain('Fac_SourceType')["getName"](facility.attributes.Fac_SourceType);
     const availability = this.featureLayer.getDomain('Fac_Availability')["getName"](facility.attributes.Fac_Availability);
@@ -196,9 +198,9 @@ class Widget implements IWidget {
 
     this.myNode.innerHTML = `<b>PWS ID:</b>` + ` `+  facility.attributes.Fac_PWSID + '</br>' + `<b>PWS Name:</b>` + ` `+ facility.attributes.Fac_PWS_Name + '</br>'+
       `<p style="text-align: center;">&nbsp;</p> <table style="height: 98px; background-color: #ffffce; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%">
-        <tbody><tr><td style="text-align: center; width: 287px;"><strong><u>PWS Contact Information</u></strong>`+`<div id="admincontacts"></div></td></tr>`+`</br></tbody></table><p>&nbsp;</p>`+`</br>`+
+        <tbody><tr><td style="text-align: center; width: 287px;"><b><u>PWS Contact Information</u></b>`+`<div id="admincontacts"></div></td></tr>`+`</br></tbody></table><p>&nbsp;</p>`+`</br>`+
       `<div id="pwsinfo"></div>`+`<table style="height: 98px; background-color: #ffcccb; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%"><tbody><tr><td style="text-align: center; width: 287px;"><strong><p style="text-align: center;"><u>Regulatory Agency</u></strong></p></td></tr>`+`</br>`+`<div id="tableinfo"></div></tbody></table><p>&nbsp;</p></br>
-      <b><p style="text-align: center;">Water System Facility Information</p></b>` + '</br>' + `<hr />`+`</br>`+ `<b>Facility Name:</b>` + ` `+  facility.attributes.FacilityName + '</br>' + `<b>Facility Type:</b>` + ` `+ facilitytype + '</br>' + `<b>Source Type:</b>` + ` `+  sourcetype +`</br>`+ `<b>Source Treated:</b>`+ ` `+ facility.attributes.FacSourceTrtStatus + `</br>`+ `<b>Facility Availability:</b>`+ ` `+ availability +`</br>` + `<b>Last Updated:</b>` +` `+ facility.attributes.Last_Reported +`</br>`+`<b>Source Purchased? </b>`+` `+`Query for PWSID_SELLER = Yes or No ` +`</br>`+'<b>PWS Purchased From:</b>'+ ` `+ facility.attributes.PWSID_SELLER + `</br>` + `<b>Purchased Water Treated:</b>`+` `+ sellertreated +`</br>` + `<p style="text-align: center;">&nbsp;</p>`+`</br>`  +`<p style="text-align: center;"><a href="https://echo.epa.gov/detailed-facility-report?fid=${facility.attributes.Fac_PWSID}" target="_blank">ECHO DFR (PWS Level)</a></p>` ;
+      <b><p style="text-align: center;">Water System Facility Information</p></b>` + '</br>' + `<hr />`+`</br>`+ `<b>Facility Name:</b>` + ` `+  facility.attributes.FacilityName + '</br>' + `<b>Facility Type:</b>` + ` `+ facilitytype + '</br>' + `<b>Source Type:</b>` + ` `+  sourcetype +`</br>`+ `<b>Source Treated:</b>`+ ` `+ facility.attributes.FacSourceTrtStatus + `</br>`+ `<b>Facility Availability:</b>`+ ` `+ availability +`</br>` + `<b>Last Updated:</b>` +` `+ facility.attributes.Last_Reported +`</br>`+'<b>PWS Purchased From: </b>'+ facility.attributes.PWSID_SELLER + `</br>` + `<b>Purchased Water Treated:</b>`+` `+ sellertreated +`</br>` + `<p style="text-align: center;">&nbsp;</p>`+`</br>`  +`<p style="text-align: center;"><a href="https://echo.epa.gov/detailed-facility-report?fid=${facility.attributes.Fac_PWSID}" target="_blank">ECHO DFR (PWS Level)</a></p>` ;
     this.loadingShelter.hide();
     this.loadFacilityPWS(facility.attributes.Fac_PWSID);
     this.loadFacilityTable(facility.attributes.PACode);
@@ -211,18 +213,26 @@ class Widget implements IWidget {
     query.where = `PWSID='${PWS_ID}'`;
     this.featureLayerPWS.queryFeatures(query, (featureSet: FeatureSet) => {
       const facilityPWS = featureSet.features[0];
-   var pws = `<b><p style="text-align: center;">Additional PWS Details</p></b>`+ `</br>`+ `<hr />`+`</br>`+ `<b>City Served:</b>` +` ${facilityPWS.attributes.City}`+ `</br>`+ `<b>County Served:</b>`+` ${facilityPWS.attributes.County}`+ `</br>`+`<b>State:</b>`+` ${facilityPWS.attributes.State}`+ `</br>`+`<b>Tribe Name:</b>`+` ${facilityPWS.attributes.Tribe}`+ `</br>`+ `<b>PWS Population Served Category:</b>`+` ${facilityPWS.attributes.PWS_PopCat}`+`</br>`+`<b>Is the PWS a School or Daycare?</b>`+` ${facilityPWS.attributes.PWS_SchoolorDaycare}`+`</br>`+`<b>PWS Owner Type:</b>`+` ${facilityPWS.attributes.PWS_OwnerType}`+`</br>`+ `<b>Is PWS Wholesaler to Another PWS?</b>`+` ${facilityPWS.attributes.PWS_Wholesale}`+`</br>` +`<b>PWS Source Water Type:</b>`+` ${facilityPWS.attributes.PWS_WSourceType}`+`</br>`+`<p style="text-align: center;">&nbsp;</p>`
+      const tribe = this.featureLayerPWS.getDomain('Tribe')["getName"](facilityPWS.attributes.Tribe);
+      const popserved = this.featureLayerPWS.getDomain('PWS_PopCat')["getName"](facilityPWS.attributes.PWS_PopCat);
+      const school = this.featureLayerPWS.getDomain('PWS_SchoolorDaycare')["getName"](facilityPWS.attributes.PWS_SchoolorDaycare);
+      const ownertype = this.featureLayerPWS.getDomain('PWS_OwnerType')["getName"](facilityPWS.attributes.PWS_OwnerType);
+      const wholesale = this.featureLayerPWS.getDomain('PWS_Wholesale')["getName"](facilityPWS.attributes.PWS_Wholesale);
+      const watertype = this.featureLayerPWS.getDomain('PWS_WSourceType')["getName"](facilityPWS.attributes.PWS_WSourceType);
+   var pws = `<b><p style="text-align: center;">Additional PWS Details</p></b>`+ `</br>`+ `<hr />`+`</br>`+ `<b>City Served: </b>` +`${facilityPWS.attributes.City}`+ `</br>`+ `<b>County Served: </b>`+` ${facilityPWS.attributes.County}`+ `</br>`+`<b>State: </b>`+` ${facilityPWS.attributes.State}`+ `</br>`+`<b>Tribe Name: </b>`+ tribe + `</br>`+ `<b>PWS Population Served Category: </b>`+ popserved +`</br>`+`<b>Is the PWS a School or Daycare? </b>`+ school +`</br>`+`<b>PWS Owner Type: </b>`+ ownertype +`</br>`+ `<b>Is PWS Wholesaler to Another PWS? </b>`+ wholesale +`</br>` +`<b>PWS Source Water Type: </b>`+ watertype +`</br>`+`<p style="text-align: center;">&nbsp;</p>`
     domConstruct.place(pws, 'pwsinfo')
       });
   }
-  //pulls information from Primacy Agency table for the Regulatory section (red)
+  //pulls information from Primacy Agency table for the Regulatory section (red) //Still working on this section
   private loadFacilityTable(PACode: any) {
     var query = new Query();
     query.outFields = ['*'];
-    query.where =`PWS_AgencyCode='${PACode}'`;
+    query.where = `Fac_PWSID='${PACode}'`;
+    //query.text = 'Fac_PWSID';
+    //query.where =`PWS_AgencyCode='${PACode}'`;
     this.featureLayerTable.queryFeatures(query, (featureSet: FeatureSet) => {
       const facilityTable = featureSet.features[0];
-   var table = `<tr style="text-align: center;"><td style="width: 287px;">${facilityTable.attributes.regAuthority}</td></tr>`+`</br>`+`<tr style="text-align: center;"><td style="width: 287px;">${facilityTable.attributes.Phone_Number} - ${facilityTable.attributes.Email}</td></tr>`+`</br>`+`<tr style="text-align: center;"><td style="width: 287px;">${facilityTable.attributes.Mailing_Address}</td></tr>`
+   var table = `<p style="text-align: center;">${facilityTable.attributes.regAuthority}</p>`+`</br>`+`<b>Phone: </b>`+` ${facilityTable.attributes.Phone_Number}`+`<b>Email: </b>`+`${facilityTable.attributes.Email}`+`</br>`+`<b>Website: </b>`+`${facilityTable.attributes.Website}`+`</br>`+`<b>Address: </b>${facilityTable.attributes.Mailing_Address}`+`</br>`+`<p style="text-align: center;">&nbsp;</p>`
       domConstruct.place(table, 'tableinfo')
       });
   }
