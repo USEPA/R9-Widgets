@@ -219,7 +219,8 @@ class Widget implements IWidget {
       const ownertype = this.featureLayerPWS.getDomain('PWS_OwnerType')["getName"](facilityPWS.attributes.PWS_OwnerType);
       const wholesale = this.featureLayerPWS.getDomain('PWS_Wholesale')["getName"](facilityPWS.attributes.PWS_Wholesale);
       const watertype = this.featureLayerPWS.getDomain('PWS_WSourceType')["getName"](facilityPWS.attributes.PWS_WSourceType);
-   var pws = `<b><p style="text-align: center;">Additional PWS Details</p></b>`+ `</br>`+ `<hr />`+`</br>`+ `<b>City Served: </b>` +`${facilityPWS.attributes.City}`+ `</br>`+ `<b>County Served: </b>`+` ${facilityPWS.attributes.County}`+ `</br>`+`<b>State: </b>`+` ${facilityPWS.attributes.State}`+ `</br>`+`<b>Tribe Name: </b>`+ tribe + `</br>`+ `<b>PWS Population Served Category: </b>`+ popserved +`</br>`+`<b>Is the PWS a School or Daycare? </b>`+ school +`</br>`+`<b>PWS Owner Type: </b>`+ ownertype +`</br>`+ `<b>Is PWS Wholesaler to Another PWS? </b>`+ wholesale +`</br>` +`<b>PWS Source Water Type: </b>`+ watertype +`</br>`+`<p style="text-align: center;">&nbsp;</p>`
+      const state = this.featureLayerPWS.getDomain('PWS_AgencyCode')["getName"](facilityPWS.attributes.PWS_AgencyCode);
+   var pws = `<b><p style="text-align: center;">Public Water System Details</p></b>`+ `</br>`+ `<hr />`+`</br>`+ `<b>City Served: </b>` +`${facilityPWS.attributes.City}`+ `</br>`+ `<b>County Served: </b>`+` ${facilityPWS.attributes.County}`+ `</br>`+`<b>State: </b>`+ state + `</br>`+`<b>Tribe Name: </b>`+ tribe + `</br>`+ `<b>PWS Population Served Category: </b>`+ popserved +`</br>`+`<b>Is the PWS a School or Daycare? </b>`+ school +`</br>`+`<b>PWS Owner Type: </b>`+ ownertype +`</br>`+ `<b>Is PWS Wholesaler to Another PWS? </b>`+ wholesale +`</br>` +`<b>PWS Source Water Type: </b>`+ watertype +`</br>`+`<p style="text-align: center;">&nbsp;</p>`
     domConstruct.place(pws, 'pwsinfo')
       });
   }
