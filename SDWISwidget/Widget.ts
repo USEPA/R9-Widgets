@@ -199,7 +199,7 @@ class Widget implements IWidget {
     this.myNode.innerHTML = `<b>PWS ID:</b>` + ` `+  facility.attributes.Fac_PWSID + '</br>' + `<b>PWS Name:</b>` + ` `+ facility.attributes.Fac_PWS_Name + '</br>'+
       `<p style="text-align: center;">&nbsp;</p> <table style="height: 98px; background-color: #ffffce; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%">
         <tbody><tr><td style="text-align: center; width: 287px;"><b><u>PWS Contact Information</u></b>`+`<div id="admincontacts"></div></td></tr>`+`</br></tbody></table><p>&nbsp;</p>`+`</br>`+
-      `<div id="pwsinfo"></div>`+`<table style="height: 98px; background-color: #ffcccb; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%"><tbody><tr><td style="text-align: center; width: 287px;"><strong><p style="text-align: center;"><u>Regulatory Agency</u></strong></p></td></tr>`+`</br>`+`<div id="tableinfo"></div></tbody></table><p>&nbsp;</p></br>
+      `<div id="pwsinfo"></div>`+`<table style="height: 98px; background-color: #ffcccb; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%"><tbody><tr><td style="text-align: center; width: 287px;"><strong><p style="text-align: center;"><u>Regulatory Agency</u></strong></p></td></tr>`+`</br>`+`<div id="tableinfo"></div>`+`</tbody></table><p>&nbsp;</p></br>
       <b><p style="text-align: center;">Water System Facility Information</p></b>` + '</br>' + `<hr />`+`</br>`+ `<b>Facility Name:</b>` + ` `+  facility.attributes.FacilityName + '</br>' + `<b>Facility Type:</b>` + ` `+ facilitytype + '</br>' + `<b>Source Type:</b>` + ` `+  sourcetype +`</br>`+ `<b>Source Treated:</b>`+ ` `+ facility.attributes.FacSourceTrtStatus + `</br>`+ `<b>Facility Availability:</b>`+ ` `+ availability +`</br>` + `<b>Last Updated:</b>` +` `+ facility.attributes.Last_Reported +`</br>`+'<b>PWS Purchased From: </b>'+ facility.attributes.PWSID_SELLER + `</br>` + `<b>Purchased Water Treated:</b>`+` `+ sellertreated +`</br>` + `<p style="text-align: center;">&nbsp;</p>`+`</br>`  +`<p style="text-align: center;"><a href="https://echo.epa.gov/detailed-facility-report?fid=${facility.attributes.Fac_PWSID}" target="_blank">ECHO DFR (PWS Level)</a></p>` ;
     this.loadingShelter.hide();
     this.loadFacilityPWS(facility.attributes.Fac_PWSID);
@@ -224,15 +224,13 @@ class Widget implements IWidget {
       });
   }
   //pulls information from Primacy Agency table for the Regulatory section (red) //Still working on this section
-  private loadFacilityTable(PACode: any) {
+  private loadFacilityTable(PAcode: any) {
     var query = new Query();
     query.outFields = ['*'];
-    query.where = `Fac_PWSID='${PACode}'`;
-    //query.text = 'Fac_PWSID';
-    //query.where =`PWS_AgencyCode='${PACode}'`;
+    query.where = `PACode='${PAcode}'`;
     this.featureLayerTable.queryFeatures(query, (featureSet: FeatureSet) => {
       const facilityTable = featureSet.features[0];
-   var table = `<p style="text-align: center;">${facilityTable.attributes.regAuthority}</p>`+`</br>`+`<b>Phone: </b>`+` ${facilityTable.attributes.Phone_Number}`+`<b>Email: </b>`+`${facilityTable.attributes.Email}`+`</br>`+`<b>Website: </b>`+`${facilityTable.attributes.Website}`+`</br>`+`<b>Address: </b>${facilityTable.attributes.Mailing_Address}`+`</br>`+`<p style="text-align: center;">&nbsp;</p>`
+   var table = `</br>`+ `<p style="text-align: center;">${facilityTable.attributes.regAuthority}</p>`+`</br>`+`<b>Phone: </b>`+` ${facilityTable.attributes.Phone_Number}`+`<b>Email: </b>`+`${facilityTable.attributes.Email}`+`</br>`+`<b>Website: </b>`+`${facilityTable.attributes.Website}`+`</br>`+`<b>Address: </b>${facilityTable.attributes.Mailing_Address}`
       domConstruct.place(table, 'tableinfo')
       });
   }
