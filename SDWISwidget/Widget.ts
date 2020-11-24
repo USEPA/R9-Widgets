@@ -230,7 +230,7 @@ class Widget implements IWidget {
     query.where = `PACode='${PAcode}'`;
     this.featureLayerTable.queryFeatures(query, (featureSet: FeatureSet) => {
       const facilityTable = featureSet.features[0];
-   var table = `</br>`+ `<p style="text-align: center;">${facilityTable.attributes.RegAuthority}</p>`+`</br>`+`<p style="text-align: left;"><b><p style=" "Phone: </b>`+` ${facilityTable.attributes.Phone_Number}`+`</br>`+`<b>Email: </b>`+`${facilityTable.attributes.Email}`+`</br>`+`<b>Website: </b>`+`${facilityTable.attributes.Website}`+`</br>`+`<b>Address: </b>`+`${facilityTable.attributes.Mailing_Address}</p>`
+   var table = `</br>`+ `<p style="text-align: center;">${facilityTable.attributes.RegAuthority}</p>`+`</br>`+`<p style="text-align: left;"><b>Phone: </b>`+` ${facilityTable.attributes.Phone_Number}`+`</br>`+`<b>Email: </b>`+`${facilityTable.attributes.Email}`+`</br>`+`<b>Website: </b>`+`${facilityTable.attributes.Website}`+`</br>`+`<b>Address: </b>`+`${facilityTable.attributes.Mailing_Address}</p>`
       domConstruct.place(table, 'tableinfo')
       });
   }
