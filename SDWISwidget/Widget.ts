@@ -230,7 +230,7 @@ class Widget implements IWidget {
     query.where = `PACode='${PAcode}'`;
     this.featureLayerTable.queryFeatures(query, (featureSet: FeatureSet) => {
       const facilityTable = featureSet.features[0];
-   var table = `</br>`+ `<p style="text-align: center;">${facilityTable.attributes.RegAuthority}</p>`+`</br>`+`<p style="text-align: left;"><b>Phone: </b>`+` ${facilityTable.attributes.Phone_Number}`+`</br>`+`<b>Email: </b>`+`${facilityTable.attributes.Email}`+`</br>`+`<b>Website: </b>`+`${facilityTable.attributes.Website}`+`</br>`+`<b>Address: </b>`+`${facilityTable.attributes.Mailing_Address}</p>`
+   var table = `</br>`+ `<p style="text-align: center;">${facilityTable.attributes.RegAuthority}</p>`+`</br>`+`<p style="text-align: left;"><b>Phone: </b>`+` ${facilityTable.attributes.Phone_Number}`+`</br>`+`<b>Email: </b>`+`<a href="mailto:${facilityTable.attributes.Email}">${facilityTable.attributes.PrimaryContactName}</a> `+`</br>`+`<b>Website: </b>`+`<a href="${facilityTable.attributes.Website}" target="_blank">Click Here for Website</a>`+`</br>`+`<b>Address: </b>`+`${facilityTable.attributes.Mailing_Address}</p>`
       domConstruct.place(table, 'tableinfo')
       });
   }
@@ -240,7 +240,7 @@ class Widget implements IWidget {
     query.where = `PWSID='${pwsid}'`;
     this.featureLayerAdmin.queryFeatures(query, (featureSet: FeatureSet) => {
       const facilityAdmin = featureSet.features[0];
-      var admin = `</br>`+`<p style="text-align: left;">`+`<b>POC Name: </b>${facilityAdmin.attributes.org_name}`+`</br>`+`<b>Phone: </b> ${facilityAdmin.attributes.phone_number}`+`</br>`+`<b>Email: </b> ${facilityAdmin.attributes.email_addr}`+`</br>`+`<b>Address: </b> ${facilityAdmin.attributes.address_line1}`+`</br>`+`${facilityAdmin.attributes.city_name}`+`, `+`${facilityAdmin.attributes.state_code}`+`, `+`${facilityAdmin.attributes.zip_code}`
+      var admin = `</br>`+`<p style="text-align: left;">`+`<b>POC Name: </b>${facilityAdmin.attributes.org_name}`+`</br>`+`<b>Phone: </b> ${facilityAdmin.attributes.phone_number}`+`</br>`+`<b>Email: </b> <a href="mailto:${facilityAdmin.attributes.email_addr}">${facilityAdmin.attributes.email_addr}</a>`+`</br>`+`<b>Address: </b> ${facilityAdmin.attributes.address_line1}`+`</br>`+`${facilityAdmin.attributes.city_name}`+`, `+`${facilityAdmin.attributes.state_code}`+`, `+`${facilityAdmin.attributes.zip_code}`
       domConstruct.place(admin, 'admincontacts')
     });
   }
