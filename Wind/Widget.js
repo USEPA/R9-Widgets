@@ -12,6 +12,9 @@ import PanelManager from 'jimu/PanelManager';
 import domConstruct from "dojo/dom-construct";
 import WidgetManager from 'jimu/WidgetManager';
 import string from 'dojo/string';
+import lang from 'dojo/_base/lang';
+import ModelMenu from './ModelMenu';
+import hrrr_wind from 'dojo/text!./current_wind_hrrr.json';
 
 // To create a widget, you need to derive from BaseWidget.
 export default declare([BaseWidget], {
@@ -42,7 +45,8 @@ export default declare([BaseWidget], {
       });
       vm.layersRequest.then(
         function (response) {
-          vm.data = response;
+          // vm.data = response;
+          vm.data = hrrr_wind;
           vm._forecast_datetime = moment(response[0].header.refTime)
             .add(response[0].header.forecastTime, 'hours').format('ll hA');
           vm.windy = new Windy({canvas: vm.rasterLayer._element, data: response});
@@ -139,7 +143,8 @@ export default declare([BaseWidget], {
   },
   _getIconNode() {
     this.buttonNode = query("div[data-widget-name='Wind']")[0];
-    var parentWid = html.getAttr(this.buttonNode, 'widgetId');
+    // var parentWid = html.getAttr(this.buttonNode, 'widgetId');
+    var parentWid = html.getAttr(this.buttonNode, 'settingId');
     this.buttonWidg = registry.byId(parentWid);
     this.buttonWidg._showLoading = function () {
     };
@@ -209,6 +214,41 @@ export default declare([BaseWidget], {
       current_max += 0.1;
     });
     return legend_html;
+  },
+  _initModelMenu: function () {
+    if (!this.modelMenu) {
+      this.modelMenuNode = html.create('div', { "class": "jimu-float-trailing" }, this.sliderContent);
+
+      this.modelMenu = new ModelMenu({ nls: this.nls }, this.modelMenuNode);
+      this.modelMenuSelectedHanlder = this.own(on(this.modelMenu, 'selected', lang.hitch(this, function (rateStr) {
+        if (this.timeSlider && rateStr) {
+          this._LAST_SPEED_RATE = rateStr;
+          var rate = parseFloat(rateStr);
+          this.timeSlider.setThumbMovingRate(2000 / rate);
+        }
+      })));
+
+      this.modelMenuOpenHanlder = this.own(on(this.modelMenu, 'open', lang.hitch(this, function () {
+        this._clearMiniModeTimer();
+      })));
+
+      this.modelMenuCloseHanlder = this.own(on(this.modelMenu, 'close', lang.hitch(this, function () {
+        this._setMiniModeTimer();
+      })));
+
+      if (this._LAST_SPEED_RATE) {
+        this.modelMenu.setModel(this._LAST_SPEED_RATE);//keep model when auto refresh
+      }
+    }
+  },
+  _destroyModelMenu: function () {
+    if(this.modelMenu && this.modelMenu.destroy){
+      this.modelMenu.destroy();
+    }
+    this.modelMenu = null;
+    this.modelMenuSelectedHanlder = null;
+    this.modelMenuOpenHanlder = null;
+    this.modelMenuCloseHanlder = null;
   }
 });
 
