@@ -1,26 +1,27 @@
 <div class="model-container jimu-float-trailing" data-dojo-attach-point="modelContainerNode">
-	<div class="model-label" data-dojo-attach-point="modelLabelNode" tabindex="0" role="button">1x</div>
-	<div class="model-menu hide" data-dojo-attach-point="modelMenu" data-dojo-attach-event="click:_onSelectModelItem">
-		<!--<div class="model-menu-item item-label jimu-ellipsis" title="${nls.modelLabel}">${nls.modelLabel}</div>-->
-		<div class="model-menu-item" data-model="0.25" data-dojo-attach-point="item025" tabindex="0">
-			<span data-dojo-attach-point="x025"></span>
+<!--	<div class="model-label" data-dojo-attach-point="modelLabelNode" tabindex="0" role="button"></div>-->
+	<div class="model-menu" data-dojo-attach-point="modelMenu" data-dojo-attach-event="click:_onSelectModelItem">
+		<div class="model-menu-item item-label jimu-ellipsis" title="WindModelMenuLabel">Wind Model</div>
+
+		<div class="model-menu-item" data-model="HRRR" data-dojo-attach-point="modelHRRR" tabindex="0">
+			<span data-dojo-attach-point="mHRRR"></span>
 			<div class="jimu-float-trailing check hide"></div>
 		</div>
-		<div class="model-menu-item" data-model="0.5" data-dojo-attach-point="item05" tabindex="0">
-			<span data-dojo-attach-point="x05"></span>
+		<div class="model-menu-item" data-model="NAM" data-dojo-attach-point="modelNAM" tabindex="0">
+			<span data-dojo-attach-point="mNAM"></span>
 			<div class="jimu-float-trailing check hide"></div>
 		</div>
-		<div class="model-menu-item" data-model="1" data-dojo-attach-point="item1" tabindex="0">
-			<span data-dojo-attach-point="x1"></span>
+		<div class="model-menu-item" data-model="GFS" data-dojo-attach-point="modelGFS" tabindex="0">
+			<span data-dojo-attach-point="mGFS"></span>
 			<div class="jimu-float-trailing check hide"></div>
 		</div>
-		<div class="model-menu-item" data-model="1.5" data-dojo-attach-point="item15" tabindex="0">
-			<span data-dojo-attach-point="x15"></span>
-			<div class="jimu-float-trailing check hide"></div>
-		</div>
-		<div class="model-menu-item" data-model="2" data-dojo-attach-point="item2" tabindex="0">
-			<span data-dojo-attach-point="x2"></span>
-			<div class="jimu-float-trailing check hide"></div>
-		</div>
+<!--		<div class="model-menu-item" data-model="1.5" data-dojo-attach-point="item15" tabindex="0">-->
+<!--			<span data-dojo-attach-point="x15"></span>-->
+<!--			<div class="jimu-float-trailing check hide"></div>-->
+<!--		</div>-->
+<!--		<div class="model-menu-item" data-model="2" data-dojo-attach-point="item2" tabindex="0">-->
+<!--			<span data-dojo-attach-point="x2"></span>-->
+<!--			<div class="jimu-float-trailing check hide"></div>-->
+<!--		</div>-->
 	</div>
 </div>

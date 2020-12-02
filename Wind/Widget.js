@@ -93,7 +93,7 @@ export default declare([BaseWidget], {
         vm.redraw();
       })
     ];
-    // vm._initModelMenu();
+    vm._initWindModelMenu();
   },
   onClose() {
     console.log('Wind::onClose');
@@ -145,8 +145,8 @@ export default declare([BaseWidget], {
   },
   _getIconNode() {
     this.buttonNode = query("div[data-widget-name='Wind']")[0];
-    // var parentWid = html.getAttr(this.buttonNode, 'widgetId');
-    var parentWid = html.getAttr(this.buttonNode, 'settingId');
+    var parentWid = html.getAttr(this.buttonNode, 'widgetId');
+    // var parentWid = html.getAttr(this.buttonNode, 'settingId');
     this.buttonWidg = registry.byId(parentWid);
     this.buttonWidg._showLoading = function () {
     };
@@ -217,31 +217,32 @@ export default declare([BaseWidget], {
     });
     return legend_html;
   },
-  _initModelMenu: function () {
-    console.log('_initModelMenu');
-    if (!this.modelMenu) {
-      this.modelMenuNode = html.create('div', { "class": "jimu-float-trailing" }, this.modelContent);
-
-      this.modelMenu = new ModelMenu(this.modelMenuNode);
-      this.modelMenuSelectedHanlder = this.own(on(this.modelMenu, 'selected', lang.hitch(this, function (rateStr) {
-        if (this.timeSlider && rateStr) {
-          this._LAST_SPEED_RATE = rateStr;
-          var rate = parseFloat(rateStr);
-          this.timeSlider.setThumbMovingRate(2000 / rate);
-        }
+  _initWindModelMenu: function () {
+    const vm = this;
+    console.log('_initWindModelMenu');
+    if (!vm.modelMenu) {
+      vm.modelMenuNode = html.create('div', { "class": "jimu-float-trailing" }, vm.modelContent);
+      vm.modelMenu = new ModelMenu({nls:'test'}, vm.modelMenuNode);
+      this.modelMenuSelectedHanlder = this.own(on(this.modelMenu, 'selected', lang.hitch(this, function (modelStr) {
+        console.log(modelStr + ' selected from Widget.js');
+        // if (this.timeSlider && modelStr) {
+        //   this._LAST_SPEED_RATE = modelStr;
+        //   var rate = parseFloat(modelStr);
+        //   this.timeSlider.setThumbMovingRate(2000 / rate);
+        // }
       })));
-
-      this.modelMenuOpenHanlder = this.own(on(this.modelMenu, 'open', lang.hitch(this, function () {
-        this._clearMiniModeTimer();
-      })));
-
-      this.modelMenuCloseHanlder = this.own(on(this.modelMenu, 'close', lang.hitch(this, function () {
-        this._setMiniModeTimer();
-      })));
-
-      if (this._LAST_SPEED_RATE) {
-        this.modelMenu.setModel(this._LAST_SPEED_RATE);//keep model when auto refresh
-      }
+      //
+      // this.modelMenuOpenHanlder = this.own(on(this.modelMenu, 'open', lang.hitch(this, function () {
+      //   this._clearMiniModeTimer();
+      // })));
+      //
+      // this.modelMenuCloseHanlder = this.own(on(this.modelMenu, 'close', lang.hitch(this, function () {
+      //   this._setMiniModeTimer();
+      // })));
+      //
+      // if (this._LAST_SPEED_RATE) {
+      //   this.modelMenu.setModel(this._LAST_SPEED_RATE);//keep model when auto refresh
+      // }
     }
   }
   // _destroyModelMenu: function () {
