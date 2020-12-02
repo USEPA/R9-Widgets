@@ -13,6 +13,7 @@ import domConstruct from "dojo/dom-construct";
 import WidgetManager from 'jimu/WidgetManager';
 import string from 'dojo/string';
 import lang from 'dojo/_base/lang';
+import on from 'dojo/on';
 import ModelMenu from './ModelMenu';
 import hrrr_wind from 'dojo/text!./current_wind_hrrr.json';
 
@@ -45,8 +46,8 @@ export default declare([BaseWidget], {
       });
       vm.layersRequest.then(
         function (response) {
-          // vm.data = response;
-          vm.data = hrrr_wind;
+          response = JSON.parse(hrrr_wind);
+          vm.data = response;
           vm._forecast_datetime = moment(response[0].header.refTime)
             .add(response[0].header.forecastTime, 'hours').format('ll hA');
           vm.windy = new Windy({canvas: vm.rasterLayer._element, data: response});
@@ -92,6 +93,7 @@ export default declare([BaseWidget], {
         vm.redraw();
       })
     ];
+    // vm._initModelMenu();
   },
   onClose() {
     console.log('Wind::onClose');
@@ -216,10 +218,11 @@ export default declare([BaseWidget], {
     return legend_html;
   },
   _initModelMenu: function () {
+    console.log('_initModelMenu');
     if (!this.modelMenu) {
-      this.modelMenuNode = html.create('div', { "class": "jimu-float-trailing" }, this.sliderContent);
+      this.modelMenuNode = html.create('div', { "class": "jimu-float-trailing" }, this.modelContent);
 
-      this.modelMenu = new ModelMenu({ nls: this.nls }, this.modelMenuNode);
+      this.modelMenu = new ModelMenu(this.modelMenuNode);
       this.modelMenuSelectedHanlder = this.own(on(this.modelMenu, 'selected', lang.hitch(this, function (rateStr) {
         if (this.timeSlider && rateStr) {
           this._LAST_SPEED_RATE = rateStr;
@@ -240,15 +243,15 @@ export default declare([BaseWidget], {
         this.modelMenu.setModel(this._LAST_SPEED_RATE);//keep model when auto refresh
       }
     }
-  },
-  _destroyModelMenu: function () {
-    if(this.modelMenu && this.modelMenu.destroy){
-      this.modelMenu.destroy();
-    }
-    this.modelMenu = null;
-    this.modelMenuSelectedHanlder = null;
-    this.modelMenuOpenHanlder = null;
-    this.modelMenuCloseHanlder = null;
   }
+  // _destroyModelMenu: function () {
+  //   if(this.modelMenu && this.modelMenu.destroy){
+  //     this.modelMenu.destroy();
+  //   }
+  //   this.modelMenu = null;
+  //   this.modelMenuSelectedHanlder = null;
+  //   this.modelMenuOpenHanlder = null;
+  //   this.modelMenuCloseHanlder = null;
+  // }
 });
 
