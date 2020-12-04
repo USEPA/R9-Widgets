@@ -96,6 +96,7 @@
   justify-content: center; }
 
 .jimu-widget-windmenu .layer-labels {
+  padding-left: 10px;
   opacity: 0.8;
   font-family: AvenirNext-Regular;
   color: #FFFFFF; }
@@ -105,8 +106,8 @@
   /*max-width: 657px;*/
   margin: auto;
   bottom: 20px;
-  width: 100%;
-  height: 32px;
+  width: 90%;
+  height: 0px;
   opacity: 1;
   transition: opacity 0.5s ease;
   -moz-transition: opacity 0.5s ease;
@@ -119,7 +120,7 @@
   width: 28px;
   cursor: pointer;
   margin: 0 20px;
-  bottom: -20px; }
+  bottom: 18px; }
 
 .jimu-widget-windmenu .model-menu {
   width: 90px;
