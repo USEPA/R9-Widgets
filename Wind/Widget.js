@@ -133,6 +133,7 @@ export default declare([BaseWidget], {
     //   vm._hideLoading();
     // }
     vm._setWindModel(vm._model);
+    vm._setPopupPosition();
     vm.showWindMenu();
     vm._hideLoading();
     vm.listeners = [
@@ -436,21 +437,6 @@ export default declare([BaseWidget], {
   },
   showWindMenu: function() {
     html.setStyle(this.noWindContentNode, 'display', 'none');
-
-    // this.createTimeSlider().then(lang.hitch(this, function() {
-    //   if("undefined" === typeof this.timeSlider){
-    //     this._showNoTimeLayer();
-    //     return;
-    //   }
-    //
-    //   this.timeProcesser.setTimeSlider(this.timeSlider);
-    //   this.layerProcesser.setTimeSlider(this.timeSlider);
-    //   this._updateTimeSliderUI();
-
-      // //restore playBtn state
-      // if (this.playBtn && html.hasClass(this.playBtn, "pause")) {
-      //   html.removeClass(this.playBtn, "pause");
-      // }
       //styles
       html.setStyle(this.domNode, 'display', 'block');
       html.setStyle(this.windContentNode, 'display', 'block');
@@ -481,6 +467,38 @@ export default declare([BaseWidget], {
     // }));
     this.dragHandler = this.labelContainer;
     this.makeMoveable(this.dragHandler);
+  },
+  _setPopupPosition: function (isRunInMobile) {
+    console.log('_setPopupPosition');
+    if(!isRunInMobile){
+      //height
+      if (this.config.showLabels){
+        html.setStyle(this.domNode, 'height','92px');
+      } else {
+        html.setStyle(this.domNode, 'height','72px');
+      }
+
+      //do not initPosition it, if moved by drag
+      // if (!this._draged) {
+      //   utils.initPosition(this.map, this.domNode, this.position);
+      // }
+      utils.initPosition(this.map, this.domNode, this.position);
+
+      if (!this._moving && this.position &&
+        this.position.left && this.position.top) {
+        html.setStyle(this.domNode, 'top', this.position.top + 'px');
+        html.setStyle(this.domNode, 'left', this.position.left + 'px');
+      }
+    } else {
+      //height
+      if (this.config.showLabels){
+        html.setStyle(this.domNode, 'height','128px');
+      } else {
+        html.setStyle(this.domNode, 'height','108px');
+      }
+    }
+
+    // this._setUI(isRunInMobile);
   },
   // _destroyModelMenu: function () {
   //   if(this.modelMenu && this.modelMenu.destroy){
