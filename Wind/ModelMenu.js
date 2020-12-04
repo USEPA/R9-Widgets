@@ -77,13 +77,13 @@ define(['dojo/_base/declare',
         // this.own(on(this.domNode, 'click', lang.hitch(this, this._closeModelMenu)));
         this._checks = query(".check", this.modelMenu);
 
-        this.setModel("HRRR");//init display
+        // default
+        this.setModel("GFS");//init display
       },
 
       _onSelectModelItem: function(evt) {
         console.log(evt);
         array.map(this._checks, lang.hitch(this, function (check) {
-          console.log(check);
           html.addClass(check, 'hide');
         }));
 
@@ -123,9 +123,9 @@ define(['dojo/_base/declare',
           } case "GFS": {
             item = this.modelGFS; break;
           }
-          default: {
-            item = this.modelHRRR;
-          }
+          // default: {
+          //   item = this.modelHRRR;
+          // }
         }
         if (item) {
           on.emit(item, 'click', { cancelable: false, bubbles: true });

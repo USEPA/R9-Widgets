@@ -16,6 +16,8 @@ import lang from 'dojo/_base/lang';
 import on from 'dojo/on';
 import ModelMenu from './ModelMenu';
 import hrrr_wind from 'dojo/text!./current_wind_hrrr.json';
+import gfs_wind from 'dojo/text!./current_wind_gfs.json';
+import nam_wind from 'dojo/text!./current_wind_nam.json';
 
 // To create a widget, you need to derive from BaseWidget.
 export default declare([BaseWidget], {
@@ -27,6 +29,7 @@ export default declare([BaseWidget], {
   // add additional properties here
   // methods to communication with app container:
   _forecast_datetime: '',
+  _model: 'GFS',
   postCreate: function postCreate() {
     this.inherited(postCreate, arguments);
     console.log('Wind::postCreate');
@@ -44,16 +47,52 @@ export default declare([BaseWidget], {
         content: {},
         handleAs: "json"
       });
+      // HRRR
+      vm.layersRequest_hrrr = esriRequest({
+        url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind_hrrr.json',
+        content: {},
+        handleAs: "json"
+      });
+      vm.layersRequest_hrrr.then(
+        function(response){
+          vm.data_hrrr = response;
+        }
+      );
+      //NAM
+      vm.layersRequest_nam = esriRequest({
+        url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind_nam.json',
+        content: {},
+        handleAs: "json"
+      });
+      vm.layersRequest_nam.then(
+        function(response){
+          vm.data_nam = response;
+        }
+      );
+      // GFS
+      vm.layersRequest_gfs = esriRequest({
+        url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind_gfs.json',
+        content: {},
+        handleAs: "json"
+      });
+      vm.layersRequest_gfs.then(
+        function(response){
+          vm.data_gfs = response;
+        }
+      );
+      //todo - testing... - remove
       vm.layersRequest.then(
         function (response) {
-          response = JSON.parse(hrrr_wind);
-          vm.data = response;
-          vm._forecast_datetime = moment(response[0].header.refTime)
-            .add(response[0].header.forecastTime, 'hours').format('ll hA');
-          vm.windy = new Windy({canvas: vm.rasterLayer._element, data: response});
-          vm.redraw();
-          vm._hideLoading();
           vm._getLegend();
+          // vm._setWindModel(vm._model); -----------------
+          // vm.data = response;
+          //
+          // vm._forecast_datetime = moment(response[0].header.refTime)
+          //   .add(response[0].header.forecastTime, 'hours').format('ll hA');
+          // vm.windy = new Windy({canvas: vm.rasterLayer._element, data: response});
+          // vm.redraw();
+          vm._hideLoading();
+
         }, function (error) {
           console.log("Error: ", error.message);
         });
@@ -69,15 +108,20 @@ export default declare([BaseWidget], {
   onOpen() {
     var vm = this;
     console.log('Wind::onOpen');
-    this._showLoading();
+    vm._showLoading();
     dojo.setStyle(this.buttonNode, 'border', 'solid 1px white');
-    this.map.addLayer(this.rasterLayer);
-    if (vm.layersRequest.isResolved()) {
-      vm.windy = new Windy({canvas: vm.rasterLayer._element, data: vm.data});
-      vm.redraw();
-      vm._addToLegend();
-      vm._hideLoading();
-    }
+
+    // this.map.addLayer(this.rasterLayer);
+    // if (vm.layersRequest.isResolved()) {
+    //   vm.windy = new Windy({canvas: vm.rasterLayer._element, data: vm.data});
+    //   vm.redraw();
+    //   vm._addToLegend();
+    //
+    //   vm._hideLoading();
+    // }
+    vm._setWindModel(vm._model);
+    vm._initWindModelMenu();
+    vm._hideLoading();
     vm.listeners = [
       vm.map.on("extent-change", function () {
         vm.redraw();
@@ -90,10 +134,11 @@ export default declare([BaseWidget], {
         vm._addToLegend();
       }),
       vm.map.on("pan-start", function () {
+        console.log('pan-start');
         vm.redraw();
       })
     ];
-    vm._initWindModelMenu();
+
   },
   onClose() {
     console.log('Wind::onClose');
@@ -125,8 +170,9 @@ export default declare([BaseWidget], {
     return !!document.createElement("canvas").getContext;
   },
   redraw: function () {
-    if (this.state === 'opened') {
-      var vm = this;
+    console.log('redraw');
+    var vm = this;
+    if (this.state === 'opened' || this.state === 'active') {
       vm.rasterLayer._element.width = vm.map.width;
       vm.rasterLayer._element.height = vm.map.height;
 
@@ -208,7 +254,7 @@ export default declare([BaseWidget], {
       '<div style="width: 15px; height: 15px; background-color: ${color};"></div></td><td>${speed}</td></tr>';
     var legend_html = '';
     var current_max = 0;
-    this.windy.colorStyles.forEach(function (color, i) {
+    vm.windy.colorStyles.forEach(function (color, i) {
       var previous_max = Math.round(current_max * 10) / 10;
       current_max = Math.round(vm.windy.colorStyles.maxSpeedForIndex(i) * 3.6 * 10)/10;
       var speed = previous_max !== current_max + 0.1 ? previous_max + ' - ' + current_max : current_max + '+ ';
@@ -223,27 +269,69 @@ export default declare([BaseWidget], {
     if (!vm.modelMenu) {
       vm.modelMenuNode = html.create('div', { "class": "jimu-float-trailing" }, vm.modelContent);
       vm.modelMenu = new ModelMenu({nls:'test'}, vm.modelMenuNode);
-      this.modelMenuSelectedHanlder = this.own(on(this.modelMenu, 'selected', lang.hitch(this, function (modelStr) {
+      vm.modelMenuSelectedHanlder = this.own(on(this.modelMenu, 'selected', lang.hitch(this, function (modelStr) {
         console.log(modelStr + ' selected from Widget.js');
+        vm._setWindModel(modelStr);
         // if (this.timeSlider && modelStr) {
         //   this._LAST_SPEED_RATE = modelStr;
         //   var rate = parseFloat(modelStr);
         //   this.timeSlider.setThumbMovingRate(2000 / rate);
         // }
       })));
-      //
-      // this.modelMenuOpenHanlder = this.own(on(this.modelMenu, 'open', lang.hitch(this, function () {
-      //   this._clearMiniModeTimer();
-      // })));
-      //
-      // this.modelMenuCloseHanlder = this.own(on(this.modelMenu, 'close', lang.hitch(this, function () {
-      //   this._setMiniModeTimer();
-      // })));
-      //
-      // if (this._LAST_SPEED_RATE) {
-      //   this.modelMenu.setModel(this._LAST_SPEED_RATE);//keep model when auto refresh
-      // }
     }
+  },
+
+  _setWindModel(windModelStr) {
+    const vm = this;
+    vm._showLoading();
+    // if (vm._model === windModelStr) {
+    //   console.log('no model change');
+    //   return;
+    // }
+    vm._model = windModelStr;
+    //  HRRR, NAM, GFS
+    if (windModelStr === 'HRRR') {
+      if (vm.layersRequest_hrrr.isResolved()) {
+        vm.data = vm.data_hrrr;
+      }
+      //todo - remove hardcoded
+      vm.data = JSON.parse(hrrr_wind);
+
+    } else if (windModelStr === 'NAM') {
+      if (vm.layersRequest_nam.isResolved()) {
+        vm.data = vm.data_nam;
+      }
+      //todo - remove hard coded
+      vm.data = JSON.parse(nam_wind);
+
+    } else if (windModelStr === 'GFS') {
+      //todo - gfs doesn't work....!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      if (vm.layersRequest_gfs.isResolved()) {
+        vm.data = vm.data_gfs;
+      }
+      //todo - remove hardcoded
+      vm.data = JSON.parse(gfs_wind);
+    }
+      //todo - update legend
+
+    vm._forecast_datetime = moment(vm.data[0].header.refTime)
+      .add(vm.data[0].header.forecastTime, 'hours').format('ll hA');
+    const modelType = vm._model === 'GFS'?'global':'conus';
+    this.map.removeLayer(this.rasterLayer);
+    vm.rasterLayer = new RasterLayer(null, {
+      opacity: 0.9,
+      id: 'Current Wind Forecast'
+    });
+
+    vm.map.addLayer(vm.rasterLayer);
+    vm.windy = new Windy({canvas: vm.rasterLayer._element, data: vm.data, modType: modelType});
+
+
+    vm.redraw();
+    vm._hideLoading();
+    // vm._addToLegend();
+
+
   }
   // _destroyModelMenu: function () {
   //   if(this.modelMenu && this.modelMenu.destroy){
