@@ -14,10 +14,14 @@ import WidgetManager from 'jimu/WidgetManager';
 import string from 'dojo/string';
 import lang from 'dojo/_base/lang';
 import on from 'dojo/on';
+import domGeometry from 'dojo/dom-geometry';
+import Move from 'dojo/dnd/move';
+import utils from './utils';
 import ModelMenu from './ModelMenu';
 import hrrr_wind from 'dojo/text!./current_wind_hrrr.json';
 import gfs_wind from 'dojo/text!./current_wind_gfs.json';
 import nam_wind from 'dojo/text!./current_wind_nam.json';
+import baseFx from 'dojo/_base/fx';
 
 // To create a widget, you need to derive from BaseWidget.
 export default declare([BaseWidget], {
@@ -101,10 +105,19 @@ export default declare([BaseWidget], {
     }
 
   },
-  // startup() {
-  //   this.inherited(arguments);
-  //   console.log('Wind::startup');
-  // },
+  startup() {
+    this.inherited(arguments);
+    console.log('Wind::startup');
+
+    //close btn
+    this.own(on(this.closeBtn, 'click', lang.hitch(this, this._closeHandler)));
+    //toggle mini-mode(desktop)
+    this.own(on(this.domNode, 'mouseover', lang.hitch(this, function () {
+      // if (!utils.isRunInMobile()) {
+        this._clearMiniModeTimer();
+      // }
+    })));
+  },
   onOpen() {
     var vm = this;
     console.log('Wind::onOpen');
@@ -120,7 +133,7 @@ export default declare([BaseWidget], {
     //   vm._hideLoading();
     // }
     vm._setWindModel(vm._model);
-    vm._initWindModelMenu();
+    vm.showWindMenu();
     vm._hideLoading();
     vm.listeners = [
       vm.map.on("extent-change", function () {
@@ -278,6 +291,17 @@ export default declare([BaseWidget], {
         //   this.timeSlider.setThumbMovingRate(2000 / rate);
         // }
       })));
+      // this.modelMenuOpenHandler = this.own(on(this.modelMenu, 'open', lang.hitch(this, function () {
+      // this._clearMiniModeTimer();
+      // })));
+      //
+      // this.modelMenuCloseHanlder = this.own(on(this.speedMenu, 'close', lang.hitch(this, function () {
+      //   this._setMiniModeTimer();
+      // })));
+      //
+      // if (this._LAST_SPEED_RATE) {
+      //   this.speedMenu.setSpeed(this._LAST_SPEED_RATE);//keep speed when auto refresh
+      // }
     }
   },
 
@@ -316,6 +340,7 @@ export default declare([BaseWidget], {
 
     vm._forecast_datetime = moment(vm.data[0].header.refTime)
       .add(vm.data[0].header.forecastTime, 'hours').format('ll hA');
+    console.log(vm._forecast_datetime);
     const modelType = vm._model === 'GFS'?'global':'conus';
     this.map.removeLayer(this.rasterLayer);
     vm.rasterLayer = new RasterLayer(null, {
@@ -325,14 +350,138 @@ export default declare([BaseWidget], {
 
     vm.map.addLayer(vm.rasterLayer);
     vm.windy = new Windy({canvas: vm.rasterLayer._element, data: vm.data, modType: modelType});
-
-
     vm.redraw();
     vm._hideLoading();
     // vm._addToLegend();
 
+    vm.windExtentLabelNode.innerText = 'Forecast for '+vm._forecast_datetime;
+  },
 
-  }
+  _closeHandler: function(){
+    WidgetManager.getInstance().closeWidget(this);
+  },
+    //miniModeTimer
+  _clearMiniModeTimer: function () {
+    html.removeClass(this.domNode, 'mini-mode');
+    // this._adaptResponsive({ refreshMoveable:false });
+    if (this._miniModeTimer) {
+      clearTimeout(this._miniModeTimer);
+    }
+  },
+  _setMiniModeTimer: function () {
+    var time = utils.isRunInMobile() ? 5000 : 2000;
+    this._miniModeTimer = setTimeout(lang.hitch(this, function () {
+      // if (false === this.a11y_shownBy508) {
+        html.addClass(this.domNode, 'mini-mode');
+        // this._adaptResponsive();
+      // }
+    }), time);
+  },
+
+  //moveable
+  makeMoveable: function (handleNode) {
+    this.disableMoveable();
+    var containerBox = domGeometry.getMarginBox(this.map.root);
+    //containerBox.l = containerBox.l - width + tolerance;
+    //containerBox.w = containerBox.w + 2 * (width - tolerance);
+    this.moveable = new Move.boxConstrainedMoveable(this.domNode, {
+      box: containerBox,
+      handle: handleNode || this.handleNode,
+      within: true
+    });
+    this.own(on(this.moveable, 'MoveStart', lang.hitch(this, this.onMoveStart)));
+    this.own(on(this.moveable, 'Moving', lang.hitch(this, this.onMoving)));
+    this.own(on(this.moveable, 'MoveStop', lang.hitch(this, this.onMoveStop)));
+  },
+  disableMoveable: function () {
+    if (this.moveable) {
+      this.dragHandler = null;
+      this.moveable.destroy();
+      this.moveable = null;
+    }
+  },
+  onMoveStart: function (mover) {
+    var containerBox = domGeometry.getMarginBox(this.map.root),
+      domBox = domGeometry.getMarginBox(this.domNode);
+    if (window.isRTL) {
+      var rightPx = html.getStyle(mover.node, 'right');
+      html.setStyle(mover.node, 'left', (containerBox.w - domBox.w - parseInt(rightPx, 10)) + 'px');
+      html.setStyle(mover.node, 'right', '');
+    }
+    //move flag
+    if (!this._draged) {
+      this._draged = true;
+    }
+  },
+  onMoving: function (/*mover*/) {
+    //html.setStyle(mover.node, 'opacity', 0.9);
+    this._moving = true;
+  },
+  onMoveStop: function (mover) {
+    if (mover && mover.node) {
+      html.setStyle(mover.node, 'opacity', 1);
+      var panelBox = domGeometry.getMarginBox(mover.node);
+      this.position.left = panelBox.l;
+      this.position.top = panelBox.t;
+      utils.getMarginPosition(this.map, this.domNode, this.position);
+
+      // save move data
+      setTimeout(lang.hitch(this, function () {
+        this._moving = false;
+      }), 10);
+    }
+  },
+  _onHandleClick: function(evt) {
+    evt.stopPropagation();
+  },
+  showWindMenu: function() {
+    html.setStyle(this.noWindContentNode, 'display', 'none');
+
+    // this.createTimeSlider().then(lang.hitch(this, function() {
+    //   if("undefined" === typeof this.timeSlider){
+    //     this._showNoTimeLayer();
+    //     return;
+    //   }
+    //
+    //   this.timeProcesser.setTimeSlider(this.timeSlider);
+    //   this.layerProcesser.setTimeSlider(this.timeSlider);
+    //   this._updateTimeSliderUI();
+
+      // //restore playBtn state
+      // if (this.playBtn && html.hasClass(this.playBtn, "pause")) {
+      //   html.removeClass(this.playBtn, "pause");
+      // }
+      //styles
+      html.setStyle(this.domNode, 'display', 'block');
+      html.setStyle(this.windContentNode, 'display', 'block');
+      html.addClass(this.domNode, 'show-time-slider');
+      this._initWindModelMenu();
+
+      baseFx.animateProperty({
+        node: this.windContentNode,
+        properties: {
+          opacity: {
+            start: 0,
+            end: 1
+          }
+        },
+        onEnd: lang.hitch(this, function() {
+          this._showed = true;
+          //auto play when open
+          // if (false !== this.config.autoPlay &&
+          //   false === html.hasClass(this.playBtn, "pause")) {
+          //   on.emit(this.playBtn, 'click', { cancelable: false, bubbles: true });
+          // }
+          // this._adaptResponsive();
+        }),
+        duration: 500
+      }).play();
+
+    //   this.a11y_init();
+    // }));
+    this.dragHandler = this.labelContainer;
+    this.makeMoveable(this.dragHandler);
+  },
   // _destroyModelMenu: function () {
   //   if(this.modelMenu && this.modelMenu.destroy){
   //     this.modelMenu.destroy();

@@ -49,7 +49,6 @@ define(['dojo/_base/declare',
 
       postCreate: function() {
         this.inherited(arguments);
-        //init model meun
         this._initModelMenu();
       },
 
@@ -62,7 +61,10 @@ define(['dojo/_base/declare',
       },
 
       _initModelMenu: function(){
-        this._showModelMenu();
+
+        // this._showModelMenu();
+
+
         // this.a11y_init();
         // this.a11y_initEvents();
 
@@ -74,11 +76,16 @@ define(['dojo/_base/declare',
           // this.a11y_setAriaLabel(dom.parentElement || dom.parentNode, str);
         }));
 
-        // this.own(on(this.domNode, 'click', lang.hitch(this, this._closeModelMenu)));
+        this.own(on(this.domNode, 'click', lang.hitch(this, this._closeModelMenu)));
         this._checks = query(".check", this.modelMenu);
 
         // default
         this.setModel("GFS");//init display
+              //btn
+
+        this.own(on(this.modelLabelNode, 'click', lang.hitch(this, function (evt) {
+          this._onModelLabelClick(evt);
+        })));
       },
 
       _onSelectModelItem: function(evt) {
@@ -102,7 +109,7 @@ define(['dojo/_base/declare',
           if (check) {
             html.removeClass(check, 'hide');
           }
-          // this.modelLabelNode.innerHTML = jimuUtils.sanitizeHTML(optionItem.innerText);
+          this.modelLabelNode.innerHTML = jimuUtils.sanitizeHTML(optionItem.innerText);
 
           this._model = modelStr;
           console.log(this._model);
@@ -133,45 +140,45 @@ define(['dojo/_base/declare',
       },
 
       // //model menu
-      // _setMenuPosition: function() {
-      //   console.log('setposition');
-      //   var sPosition = html.position(this.modelLabelNode);
-      //   if (sPosition.y - this.menuBox.h - 2 < 0) {
-      //     html.setStyle(this.modelMenu, {
-      //       top: '27px',
-      //       right: '100px',
-      //       bottom: 'auto'
-      //     });
-      //   }
-      //
-      //   var layoutBox = html.getMarginBox(this.domNode);
-      //   if (window.isRTL) {
-      //     if (sPosition.x - this.menuBox.w < 0) {
-      //       html.setStyle(this.modelMenu, {
-      //         left: 0
-      //       });
-      //     }
-      //   } else {
-      //     if (sPosition.x + this.menuBox.w > layoutBox.w) {
-      //       html.setStyle(this.modelMenu, {
-      //         right: 0
-      //       });
-      //     }
-      //   }
-      // },
-      //
-      // _onModelLabelClick: function(evt) {
-      //   console.log(evt);
-      //
-      //   evt.stopPropagation();
-      //   evt.preventDefault();
-      //   if(html.hasClass(this.modelMenu, "hide")){
-      //     this._setMenuPosition();
-      //     this._showModelMenu();
-      //   } else {
-      //     this._closeModelMenu();
-      //   }
-      // },
+      _setMenuPosition: function() {
+        console.log('setposition');
+        var sPosition = html.position(this.modelLabelNode);
+        if (sPosition.y - this.menuBox.h - 2 < 0) {
+          html.setStyle(this.modelMenu, {
+            top: '27px',
+            right: '100px',
+            bottom: 'auto'
+          });
+        }
+
+        var layoutBox = html.getMarginBox(this.domNode);
+        if (window.isRTL) {
+          if (sPosition.x - this.menuBox.w < 0) {
+            html.setStyle(this.modelMenu, {
+              left: 0
+            });
+          }
+        } else {
+          if (sPosition.x + this.menuBox.w > layoutBox.w) {
+            html.setStyle(this.modelMenu, {
+              right: 0
+            });
+          }
+        }
+      },
+
+      _onModelLabelClick: function(evt) {
+        console.log(evt);
+
+        evt.stopPropagation();
+        evt.preventDefault();
+        if(html.hasClass(this.modelMenu, "hide")){
+          this._setMenuPosition();
+          this._showModelMenu();
+        } else {
+          this._closeModelMenu();
+        }
+      },
 
       _showModelMenu: function() {
         html.removeClass(this.modelMenu, "hide");
