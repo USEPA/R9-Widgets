@@ -17,7 +17,7 @@
 	background: rgba(0,0,0,0.55);
 	border-radius: 3px;
 	padding: 0 14px;
-	width: 200px !important;
+	width: 220px !important;
 	z-index: 102 !important;
 	/*top:auto !important;
 	bottom:20px !important;
@@ -109,7 +109,7 @@
 }
 
 .jimu-widget-windmenu .layer-labels{
-  padding-left: 10px;
+  padding-left: 20px;
 	opacity: 0.8;
 	font-family: AvenirNext-Regular;
 	color: #FFFFFF;
@@ -121,7 +121,7 @@
 	/*max-width: 657px;*/
 	margin: auto;
 	bottom: 20px;
-	width: 90%;
+	width: 80%;
 	height: 0px;
 	opacity: 1;
 	transition: opacity 0.5s ease;

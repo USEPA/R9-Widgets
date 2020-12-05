@@ -62,12 +62,6 @@ define(['dojo/_base/declare',
 
       _initModelMenu: function(){
 
-        // this._showModelMenu();
-
-
-        // this.a11y_init();
-        // this.a11y_initEvents();
-
         Object.keys(this._modelList).forEach(lang.hitch(this, function (key) {
           var dom = this[key];
           var str = jimuUtils.localizeNumber(this._modelList[key]);
@@ -80,8 +74,7 @@ define(['dojo/_base/declare',
         this._checks = query(".check", this.modelMenu);
 
         // default
-        this.setModel("GFS");//init display
-              //btn
+        this.setModel("HRRR");//init display
 
         this.own(on(this.modelLabelNode, 'click', lang.hitch(this, function (evt) {
           this._onModelLabelClick(evt);
@@ -89,7 +82,7 @@ define(['dojo/_base/declare',
       },
 
       _onSelectModelItem: function(evt) {
-        console.log(evt);
+        // console.log(evt);
         array.map(this._checks, lang.hitch(this, function (check) {
           html.addClass(check, 'hide');
         }));
@@ -112,7 +105,7 @@ define(['dojo/_base/declare',
           this.modelLabelNode.innerHTML = jimuUtils.sanitizeHTML(optionItem.innerText);
 
           this._model = modelStr;
-          console.log(this._model);
+          // console.log(this._model);
           this.emit("selected", modelStr);
         }
       },
@@ -141,7 +134,6 @@ define(['dojo/_base/declare',
 
       // //model menu
       _setMenuPosition: function() {
-        console.log('setposition');
         var sPosition = html.position(this.modelLabelNode);
         if (sPosition.y - this.menuBox.h - 2 < 0) {
           html.setStyle(this.modelMenu, {
@@ -168,8 +160,6 @@ define(['dojo/_base/declare',
       },
 
       _onModelLabelClick: function(evt) {
-        console.log(evt);
-
         evt.stopPropagation();
         evt.preventDefault();
         if(html.hasClass(this.modelMenu, "hide")){
@@ -188,13 +178,10 @@ define(['dojo/_base/declare',
       },
 
       _closeModelMenu: function() {
-        console.log('_closeModelMenu');
         html.addClass(this.modelMenu, "hide");
         this.emit("close");
       }
-
     });
-
     // clazz.extend(a11y);//for a11y
     return clazz;
   });

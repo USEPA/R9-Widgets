@@ -18,9 +18,9 @@ import domGeometry from 'dojo/dom-geometry';
 import Move from 'dojo/dnd/move';
 import utils from './utils';
 import ModelMenu from './ModelMenu';
-import hrrr_wind from 'dojo/text!./current_wind_hrrr.json';
-import gfs_wind from 'dojo/text!./current_wind_gfs.json';
-import nam_wind from 'dojo/text!./current_wind_nam.json';
+// import hrrr_wind from 'dojo/text!./current_wind_hrrr.json';
+// import gfs_wind from 'dojo/text!./current_wind_gfs.json';
+// import nam_wind from 'dojo/text!./current_wind_nam.json';
 import baseFx from 'dojo/_base/fx';
 
 // To create a widget, you need to derive from BaseWidget.
@@ -33,7 +33,7 @@ export default declare([BaseWidget], {
   // add additional properties here
   // methods to communication with app container:
   _forecast_datetime: '',
-  _model: 'GFS',
+  _model: 'HRRR',
   postCreate: function postCreate() {
     this.inherited(postCreate, arguments);
     console.log('Wind::postCreate');
@@ -57,49 +57,29 @@ export default declare([BaseWidget], {
         content: {},
         handleAs: "json"
       });
-      vm.layersRequest_hrrr.then(
-        function(response){
-          vm.data_hrrr = response;
-        }
-      );
+      // vm.layersRequest_hrrr.then(
+      //   function(response){
+      //     vm.data_hrrr = response;
+      //   }
+      // );
       //NAM
       vm.layersRequest_nam = esriRequest({
         url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind_nam.json',
         content: {},
         handleAs: "json"
       });
-      vm.layersRequest_nam.then(
-        function(response){
-          vm.data_nam = response;
-        }
-      );
+      // vm.layersRequest_nam.then(
+      //   function(response){
+      //     vm.data_nam = response;
+      //   }
+      // );
       // GFS
       vm.layersRequest_gfs = esriRequest({
         url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind_gfs.json',
         content: {},
         handleAs: "json"
       });
-      vm.layersRequest_gfs.then(
-        function(response){
-          vm.data_gfs = response;
-        }
-      );
-      //todo - testing... - remove
-      vm.layersRequest.then(
-        function (response) {
-          vm._getLegend();
-          // vm._setWindModel(vm._model); -----------------
-          // vm.data = response;
-          //
-          // vm._forecast_datetime = moment(response[0].header.refTime)
-          //   .add(response[0].header.forecastTime, 'hours').format('ll hA');
-          // vm.windy = new Windy({canvas: vm.rasterLayer._element, data: response});
-          // vm.redraw();
-          vm._hideLoading();
 
-        }, function (error) {
-          console.log("Error: ", error.message);
-        });
     } else {
       dom.byId("mapCanvas").innerHTML = "This browser doesn't support canvas. Visit <a target='_blank' href='http://www.caniuse.com/#search=canvas'>caniuse.com</a> for supported browsers";
     }
@@ -112,11 +92,11 @@ export default declare([BaseWidget], {
     //close btn
     this.own(on(this.closeBtn, 'click', lang.hitch(this, this._closeHandler)));
     //toggle mini-mode(desktop)
-    this.own(on(this.domNode, 'mouseover', lang.hitch(this, function () {
-      // if (!utils.isRunInMobile()) {
-        this._clearMiniModeTimer();
-      // }
-    })));
+    // this.own(on(this.domNode, 'mouseover', lang.hitch(this, function () {
+    //   // if (!utils.isRunInMobile()) {
+    //     this._clearMiniModeTimer();
+    //   // }
+    // })));
   },
   onOpen() {
     var vm = this;
@@ -124,35 +104,27 @@ export default declare([BaseWidget], {
     vm._showLoading();
     dojo.setStyle(this.buttonNode, 'border', 'solid 1px white');
 
-    // this.map.addLayer(this.rasterLayer);
-    // if (vm.layersRequest.isResolved()) {
-    //   vm.windy = new Windy({canvas: vm.rasterLayer._element, data: vm.data});
-    //   vm.redraw();
-    //   vm._addToLegend();
-    //
-    //   vm._hideLoading();
-    // }
     vm._setWindModel(vm._model);
-    vm._setPopupPosition();
+    // vm._setPopupPosition();
     vm.showWindMenu();
-    vm._hideLoading();
+
     vm.listeners = [
       vm.map.on("extent-change", function () {
         vm.redraw();
-        vm._addToLegend();
+        // vm._addToLegend();
       }),
       vm.map.on("resize", function () {
       }),
       vm.map.on("zoom-start", function () {
         vm.redraw();
-        vm._addToLegend();
+        // vm._addToLegend();
       }),
       vm.map.on("pan-start", function () {
         console.log('pan-start');
         vm.redraw();
       })
     ];
-
+    // vm._hideLoading();
   },
   onClose() {
     console.log('Wind::onClose');
@@ -230,7 +202,9 @@ export default declare([BaseWidget], {
     }, 750);
   },
   _getLegend: function () {
+    console.log('-getLegend');
     var vm = this;
+    vm.gettingLegend = true;
     var pm = PanelManager.getInstance();
     var wm = WidgetManager.getInstance();
     var legend = pm.widgetManager.appConfig.widgetPool.widgets.filter(function (item) {
@@ -243,11 +217,18 @@ export default declare([BaseWidget], {
       vm._addToLegend();
     });
   },
+  _removeFromLegend: function () {
+    // console.log('_removeFromLegend');
+    const windLegend = dom.byId("wind_widget_legend");
+    if (windLegend) windLegend.remove();
+  },
   _addToLegend: function () {
+    console.log('_addToLegend');
     var vm = this;
     vm.legend_update_interval = setInterval(function () {
       //   var legendWidget = wm.getWidgetsByName('Legend');
       if (vm._legend.domNode.children.length === 2) {
+        vm._removeFromLegend();
         if ( vm._legend.domNode.innerHTML.indexOf('id="wind_widget_legend"') === -1) {
           vm.wind_legend = domConstruct.toDom('<div style="display: block;" class="esriLegendService" id="wind_widget_legend">' +
             '<table><tbody>' +
@@ -258,6 +239,7 @@ export default declare([BaseWidget], {
             '</tbody></table></div>');
           domConstruct.place(vm.wind_legend, vm._legend.domNode.children[1], 'first');
         }
+        // console.log('clearInterval');
         clearInterval(vm.legend_update_interval);
       }
     }, 200);
@@ -286,23 +268,7 @@ export default declare([BaseWidget], {
       vm.modelMenuSelectedHanlder = this.own(on(this.modelMenu, 'selected', lang.hitch(this, function (modelStr) {
         console.log(modelStr + ' selected from Widget.js');
         vm._setWindModel(modelStr);
-        // if (this.timeSlider && modelStr) {
-        //   this._LAST_SPEED_RATE = modelStr;
-        //   var rate = parseFloat(modelStr);
-        //   this.timeSlider.setThumbMovingRate(2000 / rate);
-        // }
       })));
-      // this.modelMenuOpenHandler = this.own(on(this.modelMenu, 'open', lang.hitch(this, function () {
-      // this._clearMiniModeTimer();
-      // })));
-      //
-      // this.modelMenuCloseHanlder = this.own(on(this.speedMenu, 'close', lang.hitch(this, function () {
-      //   this._setMiniModeTimer();
-      // })));
-      //
-      // if (this._LAST_SPEED_RATE) {
-      //   this.speedMenu.setSpeed(this._LAST_SPEED_RATE);//keep speed when auto refresh
-      // }
     }
   },
 
@@ -316,28 +282,32 @@ export default declare([BaseWidget], {
     vm._model = windModelStr;
     //  HRRR, NAM, GFS
     if (windModelStr === 'HRRR') {
-      if (vm.layersRequest_hrrr.isResolved()) {
-        vm.data = vm.data_hrrr;
-      }
-      //todo - remove hardcoded
-      vm.data = JSON.parse(hrrr_wind);
-
-    } else if (windModelStr === 'NAM') {
-      if (vm.layersRequest_nam.isResolved()) {
-        vm.data = vm.data_nam;
-      }
-      //todo - remove hard coded
-      vm.data = JSON.parse(nam_wind);
-
-    } else if (windModelStr === 'GFS') {
-      //todo - gfs doesn't work....!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      if (vm.layersRequest_gfs.isResolved()) {
-        vm.data = vm.data_gfs;
-      }
-      //todo - remove hardcoded
-      vm.data = JSON.parse(gfs_wind);
+      vm.layersRequest_hrrr.then(
+        function (response) {
+          vm.data = response;
+        }, function (error) {
+          console.log("Error: ", error.message);
+        });
+      // vm.data = JSON.parse(hrrr_wind);
     }
-      //todo - update legend
+    if (windModelStr === 'NAM') {
+      vm.layersRequest_nam.then(
+        function (response) {
+          vm.data = response;
+        }, function (error) {
+          console.log("Error: ", error.message);
+        });
+      // vm.data = JSON.parse(nam_wind);
+    }
+    if (windModelStr === 'GFS') {
+      vm.layersRequest_gfs.then(
+        function (response) {
+          vm.data = response;
+        }, function (error) {
+          console.log("Error: ", error.message);
+        });
+      // vm.data = JSON.parse(gfs_wind);
+    }
 
     vm._forecast_datetime = moment(vm.data[0].header.refTime)
       .add(vm.data[0].header.forecastTime, 'hours').format('ll hA');
@@ -349,35 +319,41 @@ export default declare([BaseWidget], {
       id: 'Current Wind Forecast'
     });
 
+    if (!vm._legend && !vm.gettingLegend) {
+      vm._getLegend();
+    } else if (!vm._legend && vm.gettingLegend){
+      console.log('getting legend');
+    } else {
+      vm._addToLegend();
+    }
     vm.map.addLayer(vm.rasterLayer);
     vm.windy = new Windy({canvas: vm.rasterLayer._element, data: vm.data, modType: modelType});
     vm.redraw();
-    vm._hideLoading();
-    // vm._addToLegend();
-
     vm.windExtentLabelNode.innerText = 'Forecast for '+vm._forecast_datetime;
+    vm._hideLoading();
   },
 
   _closeHandler: function(){
+    console.log('position on close'+this.position);
     WidgetManager.getInstance().closeWidget(this);
   },
-    //miniModeTimer
-  _clearMiniModeTimer: function () {
-    html.removeClass(this.domNode, 'mini-mode');
-    // this._adaptResponsive({ refreshMoveable:false });
-    if (this._miniModeTimer) {
-      clearTimeout(this._miniModeTimer);
-    }
-  },
-  _setMiniModeTimer: function () {
-    var time = utils.isRunInMobile() ? 5000 : 2000;
-    this._miniModeTimer = setTimeout(lang.hitch(this, function () {
-      // if (false === this.a11y_shownBy508) {
-        html.addClass(this.domNode, 'mini-mode');
-        // this._adaptResponsive();
-      // }
-    }), time);
-  },
+  //   //miniModeTimer
+  // _clearMiniModeTimer: function () {
+  //   html.removeClass(this.domNode, 'mini-mode');
+  //   // this._adaptResponsive({ refreshMoveable:false });
+  //   if (this._miniModeTimer) {
+  //     clearTimeout(this._miniModeTimer);
+  //   }
+  // },
+  // _setMiniModeTimer: function () {
+  //   var time = utils.isRunInMobile() ? 5000 : 2000;
+  //   this._miniModeTimer = setTimeout(lang.hitch(this, function () {
+  //     // if (false === this.a11y_shownBy508) {
+  //       html.addClass(this.domNode, 'mini-mode');
+  //       // this._adaptResponsive();
+  //     // }
+  //   }), time);
+  // },
 
   //moveable
   makeMoveable: function (handleNode) {
@@ -430,6 +406,7 @@ export default declare([BaseWidget], {
       setTimeout(lang.hitch(this, function () {
         this._moving = false;
       }), 10);
+      console.log(this.position);
     }
   },
   _onHandleClick: function(evt) {
@@ -479,10 +456,10 @@ export default declare([BaseWidget], {
       }
 
       //do not initPosition it, if moved by drag
-      // if (!this._draged) {
-      //   utils.initPosition(this.map, this.domNode, this.position);
-      // }
-      utils.initPosition(this.map, this.domNode, this.position);
+      if (!this._draged) {
+        utils.initPosition(this.map, this.domNode, this.position);
+      }
+      // utils.initPosition(this.map, this.domNode, this.position);
 
       if (!this._moving && this.position &&
         this.position.left && this.position.top) {
@@ -497,7 +474,6 @@ export default declare([BaseWidget], {
         html.setStyle(this.domNode, 'height','108px');
       }
     }
-
     // this._setUI(isRunInMobile);
   },
   // _destroyModelMenu: function () {
