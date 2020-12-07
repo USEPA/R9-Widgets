@@ -285,6 +285,7 @@ export default declare([BaseWidget], {
       vm.layersRequest_hrrr.then(
         function (response) {
           vm.data = response;
+          vm._updateForecast(response);
         }, function (error) {
           console.log("Error: ", error.message);
         });
@@ -294,6 +295,7 @@ export default declare([BaseWidget], {
       vm.layersRequest_nam.then(
         function (response) {
           vm.data = response;
+          vm._updateForecast(response);
         }, function (error) {
           console.log("Error: ", error.message);
         });
@@ -303,15 +305,13 @@ export default declare([BaseWidget], {
       vm.layersRequest_gfs.then(
         function (response) {
           vm.data = response;
+          vm._updateForecast(response);
         }, function (error) {
           console.log("Error: ", error.message);
         });
       // vm.data = JSON.parse(gfs_wind);
     }
 
-    vm._forecast_datetime = moment(vm.data[0].header.refTime)
-      .add(vm.data[0].header.forecastTime, 'hours').format('ll hA');
-    console.log(vm._forecast_datetime);
     const modelType = vm._model === 'GFS'?'global':'conus';
     this.map.removeLayer(this.rasterLayer);
     vm.rasterLayer = new RasterLayer(null, {
@@ -329,7 +329,7 @@ export default declare([BaseWidget], {
     vm.map.addLayer(vm.rasterLayer);
     vm.windy = new Windy({canvas: vm.rasterLayer._element, data: vm.data, modType: modelType});
     vm.redraw();
-    vm.windExtentLabelNode.innerText = 'Forecast for '+vm._forecast_datetime;
+
     vm._hideLoading();
   },
 
@@ -444,6 +444,13 @@ export default declare([BaseWidget], {
     // }));
     this.dragHandler = this.labelContainer;
     this.makeMoveable(this.dragHandler);
+  },
+  _updateForecast: function (forecastData) {
+    const vm = this;
+    vm._forecast_datetime = moment(forecastData.header.refTime)
+      .add(forecastData.header.forecastTime, 'hours').format('ll hA');
+    vm.windExtentLabelNode.innerText = 'Forecast for '+vm._forecast_datetime;
+    console.log(vm._forecast_datetime);
   },
   _setPopupPosition: function (isRunInMobile) {
     console.log('_setPopupPosition');
