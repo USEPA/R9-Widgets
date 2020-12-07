@@ -105,7 +105,7 @@ export default declare([BaseWidget], {
     dojo.setStyle(this.buttonNode, 'border', 'solid 1px white');
 
     vm._setWindModel(vm._model);
-    // vm._setPopupPosition();
+    vm._setPopupPosition();
     vm.showWindMenu();
 
     vm.listeners = [
@@ -455,11 +455,11 @@ export default declare([BaseWidget], {
         html.setStyle(this.domNode, 'height','72px');
       }
 
-      //do not initPosition it, if moved by drag
-      if (!this._draged) {
-        utils.initPosition(this.map, this.domNode, this.position);
-      }
-      // utils.initPosition(this.map, this.domNode, this.position);
+      // if (!this._draged) {
+      //   utils.initPosition(this.map, this.domNode, this.position);
+      // }
+      //default position at bottom of page
+      utils.initPosition(this.map, this.domNode, this.position);
 
       if (!this._moving && this.position &&
         this.position.left && this.position.top) {
