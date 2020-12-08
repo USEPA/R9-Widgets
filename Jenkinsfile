@@ -8,15 +8,17 @@ node {
       url: 'https://github.com/Innovate-Inc/r9-cop-rwma.git'
     }
     dir('widgets') {
+    configFileProvider([configFile(fileId: 'ebd76eaf-c253-40d8-abbe-145c8ae34e8b', variable: 'LOCAL_ENV')]) {
       git branch:'reset_root_of_master',
       url: 'https://github.com/USEPA/R9-Widgets.git',
       credentialsId: ''
       docker.image('node:lts-alpine').inside {
+        sh 'cp -f $LOCAL_ENV env.js'
         sh 'npm install'
         sh 'npm run build-widgets'
         //sh 'grunt sync'
       }
-
+}
     }
   }
 
