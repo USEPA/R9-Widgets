@@ -11,13 +11,16 @@
     "build-prod": "esri-wab-build ../cop"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9",
+    "babel-core": "^6.26.3",
     "@types/arcgis-js-api": "^3.33.0",
+    "babel-plugin-transform-es2015-modules-simple-amd": "^0.3.0",
+    "babel-preset-es2015-without-strict": "0.0.4",
+    "babel-preset-stage-0": "^6.24.1",
     "bower": "^1.8.8",
     "dojo-typings": "^1.11.11",
     "esri-wab-build": "^1.2.0",
     "grunt": "^1.3.0",
-    "grunt-babel": "^8.0.0",
+    "grunt-babel": "^7.0.0",
     "grunt-cli": "^1.3.2",
     "grunt-contrib-clean": "^2.0.0",
     "grunt-contrib-connect": "^3.0.0",
