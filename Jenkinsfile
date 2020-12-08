@@ -8,9 +8,9 @@ node {
       url: 'https://github.com/Innovate-Inc/r9-cop-rwma.git'
     }
     dir('widgets') {
-      git branch:'reset_root_of_master'
-      url: 'https://github.com/USEPA/R9-Widgets.git'
-      credentialsId: null
+      git branch:'reset_root_of_master',
+      url: 'https://github.com/USEPA/R9-Widgets.git',
+      credentialsId: ''
       docker.image('node:lts-alpine').inside {
         sh 'npm install'
         sh 'npm install grunt-cli'
