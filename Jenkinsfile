@@ -16,6 +16,7 @@ node {
         sh 'cp -f $LOCAL_ENV env.js'
         sh 'npm install'
         sh 'npm run build-widgets'
+        sh 'npm run build-prod'
         //sh 'grunt sync'
       }
 }
