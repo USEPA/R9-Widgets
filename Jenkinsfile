@@ -5,7 +5,7 @@ node {
         git branch: env.BRANCH_NAME,
         credentialsId: 'd68c969d-4750-418f-aec5-9fc2e194fc4f',
         url: 'https://github.com/Innovate-Inc/r9-cop-rwma.git'
-      } catch {
+      } catch(Exception ex) {
         git branch: 'master',
         credentialsId: 'd68c969d-4750-418f-aec5-9fc2e194fc4f',
         url: 'https://github.com/Innovate-Inc/r9-cop-rwma.git'
