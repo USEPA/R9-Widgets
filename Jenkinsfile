@@ -12,11 +12,10 @@ node {
       git branch:'reset_root_of_master',
       url: 'https://github.com/USEPA/R9-Widgets.git',
       credentialsId: ''
-      docker.build("wab-build").inside {
+      docker.image('node:lts').inside {
         sh 'cp -f $LOCAL_ENV env.js'
         sh 'npm install'
         sh 'npm run build-widgets'
-        sh 'npm run build-prod'
         //sh 'grunt sync'
       }
 }
