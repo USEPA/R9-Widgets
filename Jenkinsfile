@@ -10,6 +10,7 @@ node {
     git url: 'https://github.com/USEPA/R9-Widgets.git'
     docker.image('node:14-alpine').inside {
       sh 'npm install'
+      sh 'npm install grunt-cli'
       sh 'grunt sass'
       sh 'grunt ts'
       sh 'grunt copy'
