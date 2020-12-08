@@ -264,7 +264,7 @@ export default declare([BaseWidget], {
     console.log('_initWindModelMenu');
     if (!vm.modelMenu) {
       vm.modelMenuNode = html.create('div', { "class": "jimu-float-trailing" }, vm.modelContent);
-      vm.modelMenu = new ModelMenu({nls:'test'}, vm.modelMenuNode);
+      vm.modelMenu = new ModelMenu({}, vm.modelMenuNode);
       vm.modelMenuSelectedHanlder = this.own(on(this.modelMenu, 'selected', lang.hitch(this, function (modelStr) {
         console.log(modelStr + ' selected from Widget.js');
         vm._setWindModel(modelStr);
