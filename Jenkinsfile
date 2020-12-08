@@ -13,10 +13,7 @@ node {
       credentialsId: ''
       docker.image('node:lts-alpine').inside {
         sh 'npm install'
-        sh 'npm install grunt-cli'
-        sh 'grunt sass'
-        sh 'grunt ts'
-        sh 'grunt copy'
+        sh 'npm run build-widgets'
         //sh 'grunt sync'
       }
 

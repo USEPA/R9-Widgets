@@ -6,6 +6,7 @@
   "author": "",
   "license": "ISC",
   "scripts": {
+    "build-widgets": "grunt build",
     "build": "esri-wab-build C:/Data/WAB2.17/server/apps/5"
   },
   "devDependencies": {
