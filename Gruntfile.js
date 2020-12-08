@@ -4,6 +4,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-babel');
   grunt.loadNpmTasks('grunt-ts');
   grunt.loadNpmTasks('grunt-sass');
   grunt.loadNpmTasks('node-sass');
@@ -30,6 +31,25 @@ module.exports = function (grunt) {
       }
     },
     ts: {'default': {'tsconfig': {'passThrough': true}}},
+    babel: {
+      'options': {'sourceMap': true},
+      'main': {
+        'files': [{
+          'expand': true,
+          'src': [
+            'widgets/*.js',
+            'widgets/**/*.js',
+            'widgets/**/**/*.js',
+            'widgets/!**/**/nls/*.js',
+            'themes/*.js',
+            'themes/**/*.js',
+            'themes/**/**/*.js',
+            'themes/!**/**/nls/*.js'
+          ],
+          'dest': 'dist/'
+        }]
+      }
+    },
     watch: {
       main: {
         files: [
@@ -40,6 +60,7 @@ module.exports = function (grunt) {
           'clean',
           'sass',
           'ts',
+          'babel',
           'copy',
           'sync'
         ],
