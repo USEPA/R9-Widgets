@@ -10,4 +10,6 @@ node {
   }
 
   input(message: "Shall we proceed?")
+
+  cleanWs()
 }
