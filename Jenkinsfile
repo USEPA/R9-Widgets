@@ -1,6 +1,4 @@
 node {
-  properties([disableConcurrentBuilds()])
-
   stage('build') {
     dir('cop') {
       git branch: 'master',
@@ -18,10 +16,14 @@ node {
         sh 'npm run build-widgets'
         //sh 'grunt sync'
       }
-}
+      }
     }
   }
 
+  stage('deploy demo') {
+    sh "cp -r ./cop /var/r9cop/r9widgets/${env.BRANCH_NAME}"
+    sh "sed -i 's/sBrra4vWeP2PZzcb/ZtlpDht9ywRCA4Iq/' /var/r9cop/r9widgets/${env.BRANCH_NAME}/config.json"
+  }
 
   stage('deploy') {
     input(message: "Shall we proceed?")
