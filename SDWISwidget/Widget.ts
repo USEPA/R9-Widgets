@@ -183,7 +183,7 @@ class Widget implements IWidget {
           grid.startup();
           this.loadingShelter.hide(); // noneFound.push(false);
         } else {
-          this.myNode.innerHTML = '<h3>No logs found at this location</h3><br/>';
+          this.myNode.innerHTML = '<h3>No facilities found at this location</h3><br/>';
           this.loadingShelter.hide();
         }
       });
