@@ -9,6 +9,7 @@ node {
         git branch: 'master',
         credentialsId: 'd68c969d-4750-418f-aec5-9fc2e194fc4f',
         url: 'https://github.com/Innovate-Inc/r9-cop-rwma.git'
+        sh "git checkout -b ${env.BRANCH_NAME}"
       }
     }
     dir('widgets') {
@@ -24,6 +25,10 @@ node {
        }
       }
     }
+    dir('cop') {
+      GIT_COMMIT_MSG = sh (script: 'git log -1 --pretty=%B ${GIT_COMMIT}', returnStdout: true).trim()
+      sh "git commit -a -m '${GIT_COMMIT_MSG}'"
+    }
   }
 
   stage('deploy demo') {
@@ -32,8 +37,8 @@ node {
     sh "sed -i 's/sBrra4vWeP2PZzcb/ZtlpDht9ywRCA4Iq/' /var/r9cop/r9widgets/${env.BRANCH_NAME}/config.json"
   }
 
-  stage('deploy') {
-    input(message: "Shall we proceed?")
-  }
+//   stage('deploy') {
+//     input(message: "Shall we proceed?")
+//   }
   cleanWs()
 }
