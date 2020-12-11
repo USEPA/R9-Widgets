@@ -1,8 +1,8 @@
 define({
   root: {
-    _widgetLabel: 'SDWIS Widget',
-    widgetTitle: 'SDWIS Widget',
-    description: 'A custom Web AppBuilder widget.'
+    _widgetLabel: 'Safe Drinking Water',
+    widgetTitle: 'Safe Drinking Water',
+    description: 'A widget showing SDWIS-specific information.'
   }
   // add supported locales below:
   // , "zh-cn": true

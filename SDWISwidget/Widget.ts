@@ -62,6 +62,7 @@ class Widget implements IWidget {
   public  Table: any
   private supportsAdvancedQueries: any;
 
+
   private postCreate(args: any): void {
     this.inherited(arguments);
     console.log('SDWISwidget::postCreate');
@@ -104,7 +105,7 @@ class Widget implements IWidget {
     query.where = '1=1';
     console.log('SDWISwidget::onOpen');
     this.featureLayer.queryCount(query, (count: number) => {
-      this.myNode.innerHTML = `There are currently <b>${count}</b> facilities in the SDWIS feature service.` +`</br><h5 style="text-decoration: underline;">Safe Drinking Water Information System (SDWIS)</h5>` +`</br></br>`+ `The data reflected here is fed directly from the <b>National SDWIS Database</b> and updated on a quarterly basis. The <b><a href="https://epa.maps.arcgis.com/home/item.html?id=ee7f7ce068f14016985e244d6247b58c"target="_blank">GeoPlatform service</a></b> provides information on facilities, public water systems, primacy agencies, and tribal entities.`+`</br></br>`+`Detailed information about the <b>SDWIS Federal Reporting Services</b> can be found <b><a href="https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-information-system-sdwis-federal-reporting"target="_blank">here.</a></b>`;
+      this.myNode.innerHTML = `There are currently <b>${count}</b> facilities in the SDWIS feature service.`+`</br><h5 style="text-decoration: underline;">Safe Drinking Water Information System (SDWIS)</h5></br>The data reflected here is directly from the <b>National SDWIS Database</b> and updated on a quarterly basis. The <b><a href="https://epa.maps.arcgis.com/home/item.html?id=ee7f7ce068f14016985e244d6247b58c"target="_blank">GeoPlatform service</a></b> provides information on facilities, public water systems, primacy agencies, administrative contacts, and tribal entities.`+`</br></br>`+`Detailed information about the <b>SDWIS Federal Reporting Services</b> can be found <b><a href="https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-information-system-sdwis-federal-reporting"target="_blank">here.</a></b></br><h5 style="text-decoration: underline;">Enforcement & Compliance History Online (ECHO)</h5></br>EPA's ECHO website provides details for facilities in your community to asses their compliance with environmental regulations.  The interaction in this widget uses the Public Water System (PWS) ID to search the records.  Check out this <a href="https://echo.epa.gov/"target="_blank">website</a> for more information and guidance. `;
       this.loadingShelter.hide();
     })
     this.clickHandler.resume();
@@ -179,6 +180,7 @@ class Widget implements IWidget {
 
 
             this.loadFacility(facility[0]);
+
           });
           grid.startup();
           this.loadingShelter.hide(); // noneFound.push(false);
@@ -196,10 +198,10 @@ class Widget implements IWidget {
     const availability = this.featureLayer.getDomain('Fac_Availability')["getName"](facility.attributes.Fac_Availability);
     const sellertreated = this.featureLayer.getDomain('SELLERTRTCODE')["getName"](facility.attributes.SELLERTRTCODE);
     const trtstatus = this.featureLayer.getDomain('FacSourceTrtStatus')["getName"](facility.attributes.FacSourceTrtStatus);
-    this.myNode.innerHTML = `<b>PWS ID:</b>` + ` `+  facility.attributes.Fac_PWSID + '</br>' + `<b>PWS Name:</b>` + ` `+ facility.attributes.Fac_PWS_Name + '</br>'+
+    this.myNode.innerHTML = `<h2>Public Water System (PWS)</h2>`+ `<b>Name:</b>` + ` `+ facility.attributes.Fac_PWS_Name +`</br>`+`<b>ID:</b>` + ` `+  facility.attributes.Fac_PWSID + '</br>' +
       `<p style="text-align: center;">&nbsp;</p> <table style="height: 98px; background-color: #ffffce; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%">
-        <tbody><tr><td style="text-align: center; width: 287px;"><b><u>PWS Contact Information</u></b>`+`<div id="admincontacts"></div></td></tr>`+`</br></tbody></table><p>&nbsp;</p>`+`</br>`+`<div id="pwsinfo"></div>`+`<table style="height: 98px; background-color: #ffcccb; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%"><tbody><tr><td style="text-align: center; width: 287px;"><strong><p style="text-align: center;"><u>Regulatory Agency</u></strong>`+`</br>`+`<div id="tableinfo"></div>`+`</tbody></table></p></td></tr><p>&nbsp;</p>`+`</br>
-      <b><p style="text-align: center;">Water System Facility Information</p></b>` + `<hr />`+ `<b>Facility Name:</b>` + ` `+  facility.attributes.FacilityName + '</br>' + `<b>Facility ID: </b>`+facility.attributes.FacilityID+`</br>`+ `<b>Facility Type: </b>` + facilitytype + '</br>' + `<b>Source Type:</b>` + ` `+  sourcetype +`</br>`+ `<b>Source Treated: </b>`+ trtstatus + `</br>`+ `<b>Facility Availability:</b>`+ ` `+ availability +`</br>` + `<b>Last Updated:</b>` +` `+ facility.attributes.Last_Reported +`</br>`+'<b>PWS Purchased From: </b>'+ facility.attributes.PWSID_SELLER + `</br>` + `<b>Purchased Water Treated:</b>`+` `+ sellertreated +`</br>` + `<p style="text-align: center;">&nbsp;</p>`+`</br>`  +`<p style="text-align: center;"><a href="https://echo.epa.gov/detailed-facility-report?fid=${facility.attributes.Fac_PWSID}" target="_blank"><b>ECHO DFR</b> (PWS Level)</a></p> `+` </br> `+` </br>` ;
+        <tbody><tr><td style="text-align: center; width: 287px;"><b><u>Contact Information</u></b>`+`<div id="admincontacts"></div></td></tr>`+`</br></tbody></table><p>&nbsp;</p>`+`</br>`+`<div id="pwsinfo"></div>`+`<p style="text-align: center;"><a href="https://echo.epa.gov/detailed-facility-report?fid=${facility.attributes.Fac_PWSID}" target="_blank"><b>ECHO Detailed System Report</b> </a></p>`+`</br>`+`<table style="height: 98px; background-color: #ffcccb; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%"><tbody><tr><td style="text-align: center; width: 287px;"><strong><p style="text-align: center;"><u>Regulatory Agency</u></strong>`+`</br>`+`<div id="tableinfo"></div>`+`</tbody></table></p></td></tr><p>&nbsp;</p>`+`</br>
+      <b><p style="text-align: center;">Water System Facility Information</p></b>` + `<hr />`+ `<b>Facility Name:</b>` + ` `+  facility.attributes.FacilityName + '</br>' + `<b>Facility ID: </b>`+facility.attributes.FacilityID+`</br>`+ `<b>Facility Type: </b>` + facilitytype + '</br>' + `<b>Source Type:</b>` + ` `+  sourcetype +`</br>`+ `<b>Source Treated: </b>`+ trtstatus + `</br>`+ `<b>Facility Availability:</b>`+ ` `+ availability +`</br>` + `<b>Last Updated:</b>` +` `+ facility.attributes.Last_Reported +`</br>`+'<b>PWS Purchased From: </b>'+ facility.attributes.PWSID_SELLER + `</br>` + `<b>Purchased Water Treated: </b>`+ sellertreated +`</br>`;
     this.loadingShelter.hide();
     this.loadFacilityPWS(facility.attributes.Fac_PWSID);
     this.loadFacilityTable(facility.attributes.PAcode);
@@ -219,6 +221,7 @@ class Widget implements IWidget {
       const wholesale = this.featureLayerPWS.getDomain('PWS_Wholesale')["getName"](facilityPWS.attributes.PWS_Wholesale);
       const watertype = this.featureLayerPWS.getDomain('PWS_WSourceType')["getName"](facilityPWS.attributes.PWS_WSourceType);
       const state = this.featureLayerPWS.getDomain('PWS_AgencyCode')["getName"](facilityPWS.attributes.PWS_AgencyCode);
+
    var pws = `<b><p style="text-align: center;">Public Water System Details</p></b>`+ `<hr/>`+`<b>City Served: </b>` +`${facilityPWS.attributes.City}`+ `</br>`+ `<b>County Served: </b>`+` ${facilityPWS.attributes.County}`+ `</br>`+`<b>State: </b>`+ state + `</br>`+`<b>Tribe Name: </b>`+ tribe + `</br>`+ `<b>PWS Population Served Category: </b>`+ popserved +`</br>`+`<b>Is the PWS a School or Daycare? </b>`+ school +`</br>`+`<b>PWS Owner Type: </b>`+ ownertype +`</br>`+ `<b>Is PWS Wholesaler to Another PWS? </b>`+ wholesale +`</br>` +`<b>PWS Source Water Type: </b>`+ watertype +`</br>`+`<p style="text-align: center;">&nbsp;</p>`
     domConstruct.place(pws, 'pwsinfo')
       });
