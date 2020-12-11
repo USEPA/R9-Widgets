@@ -49,8 +49,7 @@ define(['dojo/_base/declare',
 
         Object.keys(this._modelList).forEach(lang.hitch(this, function (key) {
           var dom = this[key];
-          var str = jimuUtils.localizeNumber(this._modelList[key]);
-          // var str = jimuUtils.this._modelList[key];
+          var str = this._modelList[key];
           dom.innerText = str;
           // this.a11y_setAriaLabel(dom.parentElement || dom.parentNode, str);
         }));

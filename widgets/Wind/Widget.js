@@ -46,11 +46,11 @@ export default declare([BaseWidget], {
         id: 'Current Wind Forecast'
       });
 
-      vm.layersRequest = esriRequest({
-        url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind.json',
-        content: {},
-        handleAs: "json"
-      });
+      // vm.layersRequest = esriRequest({
+      //   url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind.json',
+      //   content: {},
+      //   handleAs: "json"
+      // });
       // HRRR
       vm.layersRequest_hrrr = esriRequest({
         url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind_hrrr.json',
@@ -264,7 +264,7 @@ export default declare([BaseWidget], {
     console.log('_initWindModelMenu');
     if (!vm.modelMenu) {
       vm.modelMenuNode = html.create('div', { "class": "jimu-float-trailing" }, vm.modelContent);
-      vm.modelMenu = new ModelMenu({nls:'test'}, vm.modelMenuNode);
+      vm.modelMenu = new ModelMenu({}, vm.modelMenuNode);
       vm.modelMenuSelectedHanlder = this.own(on(this.modelMenu, 'selected', lang.hitch(this, function (modelStr) {
         console.log(modelStr + ' selected from Widget.js');
         vm._setWindModel(modelStr);
@@ -281,56 +281,33 @@ export default declare([BaseWidget], {
     // }
     vm._model = windModelStr;
     //  HRRR, NAM, GFS
-    if (windModelStr === 'HRRR') {
-      vm.layersRequest_hrrr.then(
-        function (response) {
-          vm.data = response;
-        }, function (error) {
-          console.log("Error: ", error.message);
+    let windPromise = vm._model === 'HRRR'?vm.layersRequest_hrrr: vm._model === 'NAM'?vm.layersRequest_nam:vm.layersRequest_gfs;
+    windPromise.then(
+      function (response) {
+        const modelType = vm._model === 'GFS'?'global':'conus';
+        vm.data = response;
+        vm._updateForecast(response);
+        vm.map.removeLayer(vm.rasterLayer);
+        vm.rasterLayer = new RasterLayer(null, {
+          opacity: 0.9,
+          id: 'Current Wind Forecast'
         });
-      // vm.data = JSON.parse(hrrr_wind);
-    }
-    if (windModelStr === 'NAM') {
-      vm.layersRequest_nam.then(
-        function (response) {
-          vm.data = response;
-        }, function (error) {
-          console.log("Error: ", error.message);
-        });
-      // vm.data = JSON.parse(nam_wind);
-    }
-    if (windModelStr === 'GFS') {
-      vm.layersRequest_gfs.then(
-        function (response) {
-          vm.data = response;
-        }, function (error) {
-          console.log("Error: ", error.message);
-        });
-      // vm.data = JSON.parse(gfs_wind);
-    }
+        vm.map.addLayer(vm.rasterLayer);
+        vm.windy = new Windy({canvas: vm.rasterLayer._element, data: vm.data, modType: modelType});
+        vm.redraw();
+        //legend
+        if (!vm._legend && !vm.gettingLegend) {
+          vm._getLegend();
+        } else if (!vm._legend && vm.gettingLegend){
+          console.log('getting legend');
+        } else {
+          vm._addToLegend();
+        }
+      vm._hideLoading();
+      }, function (error) {
+        console.log("Error: ", error.message);
+      });
 
-    vm._forecast_datetime = moment(vm.data[0].header.refTime)
-      .add(vm.data[0].header.forecastTime, 'hours').format('ll hA');
-    console.log(vm._forecast_datetime);
-    const modelType = vm._model === 'GFS'?'global':'conus';
-    this.map.removeLayer(this.rasterLayer);
-    vm.rasterLayer = new RasterLayer(null, {
-      opacity: 0.9,
-      id: 'Current Wind Forecast'
-    });
-
-    if (!vm._legend && !vm.gettingLegend) {
-      vm._getLegend();
-    } else if (!vm._legend && vm.gettingLegend){
-      console.log('getting legend');
-    } else {
-      vm._addToLegend();
-    }
-    vm.map.addLayer(vm.rasterLayer);
-    vm.windy = new Windy({canvas: vm.rasterLayer._element, data: vm.data, modType: modelType});
-    vm.redraw();
-    vm.windExtentLabelNode.innerText = 'Forecast for '+vm._forecast_datetime;
-    vm._hideLoading();
   },
 
   _closeHandler: function(){
@@ -406,7 +383,7 @@ export default declare([BaseWidget], {
       setTimeout(lang.hitch(this, function () {
         this._moving = false;
       }), 10);
-      console.log(this.position);
+      // console.log(this.position);
     }
   },
   _onHandleClick: function(evt) {
@@ -444,6 +421,13 @@ export default declare([BaseWidget], {
     // }));
     this.dragHandler = this.labelContainer;
     this.makeMoveable(this.dragHandler);
+  },
+  _updateForecast: function (forecastData) {
+    const vm = this;
+    vm._forecast_datetime = moment(forecastData[0].header.refTime)
+      .add(forecastData[0].header.forecastTime, 'hours').format('ll hA');
+    vm.windExtentLabelNode.innerText = 'Forecast for '+vm._forecast_datetime;
+    console.log(vm._forecast_datetime);
   },
   _setPopupPosition: function (isRunInMobile) {
     console.log('_setPopupPosition');
