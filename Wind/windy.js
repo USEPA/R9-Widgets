@@ -85,7 +85,14 @@ define([], function () {
       var builder = createBuilder(data);
 
       var header = builder.header;
-      var λ0 = header.lo1, φ0 = header.la1;  // the grid's origin (e.g., 0.0E, 90.0N)
+      // todo: add multiple scan configurations so we can display different datasets correct
+      // the grid's origin (e.g., 0.0E, 90.0N)
+      // var λ0 = header.lo1, φ0 = header.la1 for gfs
+      // var λ0 = header.lo1, φ0 = header.la2 for hrrr and nam
+      // let λ0 = header.lo1, φ0 = header.la2;
+      var λ0 = header.lo1;
+      //gfs, vs hrrr and nam
+      var φ0 = params.modType==='global'?header.la1: header.la2;
       var Δλ = header.dx, Δφ = header.dy;    // distance between grid points (e.g., 2.5 deg lon, 2.5 deg lat)
       var ni = header.nx, nj = header.ny;    // number of grid points W-E and N-S (e.g., 144 x 73)
       var date = new Date(header.refTime);
@@ -95,17 +102,42 @@ define([], function () {
       // http://www.nco.ncep.noaa.gov/pmb/docs/grib2/grib2_table3-4.shtml
       var grid = [], p = 0;
       var isContinuous = Math.floor(ni * Δλ) >= 360;
-      for (var j = 0; j < nj; j++) {
-        var row = [];
-        for (var i = 0; i < ni; i++, p++) {
-          row[i] = builder.data(p);
+
+      //todo -
+      // for (var j = 0; j < nj; j++) { for gfs
+      // for (var j = nj; j >= 0; j--) { for hrrr, nam
+      // for (var j = nj; j >= 0; j--) {
+      // for (var j = 0; j < nj; j++) {
+      if (params.modType==='global'){
+        //gfs
+        for (let j = 0; j < nj; j++){
+          let row = [];
+          for (let i = 0; i < ni; i++, p++) {
+            row[i] = builder.data(p);
+          }
+          if (isContinuous) {
+            // For wrapped grids, duplicate first column as last column to simplify interpolation logic
+            row.push(row[0]);
+          }
+          grid[j] = row;
         }
-        if (isContinuous) {
-          // For wrapped grids, duplicate first column as last column to simplify interpolation logic
-          row.push(row[0]);
+
+      } else if (params.modType==='conus') {
+        //hrrr and nam
+        for (let j = nj; j >= 0; j--) {
+          let row = [];
+          for (let i = 0; i < ni; i++, p++) {
+            row[i] = builder.data(p);
+          }
+          if (isContinuous) {
+            // For wrapped grids, duplicate first column as last column to simplify interpolation logic
+            row.push(row[0]);
+          }
+          grid[j] = row;
         }
-        grid[j] = row;
+
       }
+
 
       function interpolate(λ, φ) {
         var i = floorMod(λ - λ0, 360) / Δλ;  // calculate longitude index in wrapped range [0, 360)
