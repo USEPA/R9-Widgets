@@ -29,7 +29,10 @@ node {
       GIT_AUTHOR = sh (script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
       GIT_AUTHOR_EMAIL = sh (script: "git log -1 --pretty=format:'%ae'", returnStdout: true).trim()
       GIT_COMMIT_MSG = sh (script: 'git log -1 --pretty=%B ${GIT_COMMIT}', returnStdout: true).trim()
-      sh "git commit --author='${GIT_AUTHOR} <${GIT_AUTHOR_EMAIL}>' -a -m '${GIT_COMMIT_MSG}'"
+      sh "git config user.email '${GIT_AUTHOR_EMAIL}'"
+      sh "git config user.name '${GIT_AUTHOR}'"
+      sh "git commit -a -m '${GIT_COMMIT_MSG}'"
+      sh "git push"
     }
   }
 
