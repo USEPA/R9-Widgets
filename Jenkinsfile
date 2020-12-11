@@ -32,6 +32,7 @@ node {
         GIT_COMMIT_MSG = sh (script: 'git log -1 --pretty=%B ${GIT_COMMIT}', returnStdout: true).trim()
         sh "git config user.email '${GIT_AUTHOR_EMAIL}'"
         sh "git config user.name '${GIT_AUTHOR}'"
+        sh "git add --no-all widgets\*"
         sh "git commit -a -m '${GIT_COMMIT_MSG}'"
         sh 'git config --local credential.helper "!f() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; f"'
         sh "git push -u origin ${env.BRANCH_NAME}"
