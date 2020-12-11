@@ -25,9 +25,6 @@
   overflow: hidden;
   word-wrap: break-word;
 }
-.jimu-loading-shelter .loading-container {
-  width: 0;
-}
 
 table td.quantity {
   text-align: right;
