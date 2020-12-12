@@ -105,8 +105,8 @@ export default declare([BaseWidget], {
     dojo.setStyle(this.buttonNode, 'border', 'solid 1px white');
 
     vm._setWindModel(vm._model);
-    vm._setPopupPosition();
-    vm.showWindMenu();
+
+    // vm.showWindMenu();
 
     vm.listeners = [
       vm.map.on("extent-change", function () {
@@ -124,6 +124,8 @@ export default declare([BaseWidget], {
         vm.redraw();
       })
     ];
+    vm._setPopupPosition();
+    this._initWindModelMenu();
     // vm._hideLoading();
   },
   onClose() {
@@ -158,7 +160,7 @@ export default declare([BaseWidget], {
   redraw: function () {
     console.log('redraw');
     var vm = this;
-    if (this.state === 'opened' || this.state === 'active') {
+    if ((this.state === 'opened' || this.state === 'active') && vm.rasterLayer._element) {
       vm.rasterLayer._element.width = vm.map.width;
       vm.rasterLayer._element.height = vm.map.height;
 
@@ -261,10 +263,13 @@ export default declare([BaseWidget], {
   },
   _initWindModelMenu: function () {
     const vm = this;
+
+
     console.log('_initWindModelMenu');
     if (!vm.modelMenu) {
       vm.modelMenuNode = html.create('div', { "class": "jimu-float-trailing" }, vm.modelContent);
       vm.modelMenu = new ModelMenu({}, vm.modelMenuNode);
+
       vm.modelMenuSelectedHanlder = this.own(on(this.modelMenu, 'selected', lang.hitch(this, function (modelStr) {
         console.log(modelStr + ' selected from Widget.js');
         vm._setWindModel(modelStr);
@@ -294,7 +299,7 @@ export default declare([BaseWidget], {
         });
         vm.map.addLayer(vm.rasterLayer);
         vm.windy = new Windy({canvas: vm.rasterLayer._element, data: vm.data, modType: modelType});
-        vm.redraw();
+
         //legend
         if (!vm._legend && !vm.gettingLegend) {
           vm._getLegend();
@@ -303,7 +308,10 @@ export default declare([BaseWidget], {
         } else {
           vm._addToLegend();
         }
-      vm._hideLoading();
+        vm.redraw();
+        // vm._setPopupPosition();
+        vm.showWindMenu();
+        vm._hideLoading();
       }, function (error) {
         console.log("Error: ", error.message);
       });
@@ -395,7 +403,8 @@ export default declare([BaseWidget], {
       html.setStyle(this.domNode, 'display', 'block');
       html.setStyle(this.windContentNode, 'display', 'block');
       html.addClass(this.domNode, 'show-time-slider');
-      this._initWindModelMenu();
+      html.removeClass(this.domNode, 'hide');
+
 
       baseFx.animateProperty({
         node: this.windContentNode,
@@ -430,13 +439,14 @@ export default declare([BaseWidget], {
     console.log(vm._forecast_datetime);
   },
   _setPopupPosition: function (isRunInMobile) {
+
     console.log('_setPopupPosition');
     if(!isRunInMobile){
       //height
       if (this.config.showLabels){
         html.setStyle(this.domNode, 'height','92px');
       } else {
-        html.setStyle(this.domNode, 'height','72px');
+        html.setStyle(this.domNode, 'height','70px');
       }
 
       // if (!this._draged) {

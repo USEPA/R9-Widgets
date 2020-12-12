@@ -144,6 +144,7 @@ define(['dojo/_base/declare',
       },
 
       _onModelLabelClick: function(evt) {
+        console.log('_onModelLabelClick');
         evt.stopPropagation();
         evt.preventDefault();
         if(html.hasClass(this.modelMenu, "hide")){

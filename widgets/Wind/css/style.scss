@@ -1,14 +1,6 @@
-.wind {
-  left: 150px;
-  top: 50px;
-  padding: 5px; }
-  .wind h3 {
-    font-size: 1.2em; }
-  .wind h3, .wind p {
-    margin-top: 0; }
-
 /* add additional custom styles */
 .jimu-widget-windmenu {
+  display: none;
   position: absolute;
   background: rgba(0, 0, 0, 0.55);
   border-radius: 3px;
@@ -69,7 +61,7 @@
   color: #fff; }
 
 .jimu-widget-windmenu .wind-content {
-  height: 72px; }
+  height: 80px; }
 
 .jimu-widget-windmenu .label-container {
   padding: 10px 15px 10px 10px;
@@ -96,10 +88,18 @@
   justify-content: center; }
 
 .jimu-widget-windmenu .layer-labels {
-  padding-left: 20px;
+  padding: 5px;
   opacity: 0.8;
   font-family: AvenirNext-Regular;
   color: #FFFFFF; }
+
+.jimu-widget-windmenu .layer-labels a {
+  color: inherit;
+  text-decoration: none; }
+
+.jimu-widget-windmenu .layer-labels a:hover {
+  color: cornflowerblue;
+  text-decoration: underline; }
 
 .jimu-widget-windmenu .model-content {
   position: absolute;
@@ -119,14 +119,14 @@
   height: 16px;
   width: 28px;
   cursor: pointer;
-  margin: 0 20px;
+  margin: 0 60px;
   bottom: 18px; }
 
 .jimu-widget-windmenu .model-menu {
   width: 90px;
-  position: absolute;
+  position: relative;
   z-index: 104;
-  bottom: 0px;
+  bottom: 80px;
   text-align: left;
   font-size: 12px;
   background: #FFFFFF;
