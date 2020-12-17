@@ -11,12 +11,15 @@ import EsriMap from 'esri/map';
 import FeatureLayer from 'esri/layers/FeatureLayer';
 import Query from 'esri/tasks/query';
 import GraphicsLayer from 'esri/layers/GraphicsLayer';
-import FeatureSet from "esri/tasks/FeatureSet";
+import FeatureSet from 'esri/tasks/FeatureSet';
+import SimpleMarkerSymbol from 'esri/symbols/SimpleMarkerSymbol';
+import Color from 'esri/Color';
 import CodedValueDomain from "esri/layers/CodedValueDomain";
 
-// jimu
 // @ts-ignore
 import LoadingShelter from 'jimu/dijit/LoadingShelter';
+// @ts-ignore
+import LayerStructure from 'jimu/LayerStructure';
 
 
 // dojo imports:
@@ -61,24 +64,32 @@ class Widget implements IWidget {
   private domNode: any;
   public  Table: any
   private supportsAdvancedQueries: any;
+  private sdwisLayer: any;
 
 
   private postCreate(args: any): void {
     this.inherited(arguments);
-    console.log('SDWISwidget::postCreate');
-  }
+    var layerStructure = LayerStructure.getInstance();
+    // @ts-ignore
+    this.sdwisLayer = layerStructure.getWebmapLayerNodes().find(function (x) {
+      return x.id.toLowerCase().includes('sdwis');
 
+    });
+    console.log('SDWISwidget::postCreate');
+  };
   private startup(): void {
 
     let self: any = this;
     this.inherited(arguments);
     console.log('SDWISwidget::startup');
 
+
     this.loadingShelter = new LoadingShelter({hidden: true});
     this.loadingShelter.placeAt(this.domNode);
 
     this.graphicsLayer = new GraphicsLayer();
     this.map.addLayer(this.graphicsLayer);
+
     this.featureLayer = new FeatureLayer(
       'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Safe_Drinking_Water_(SDWIS)_Region_9_V1/FeatureServer/0',
       {outFields: ['*']});
@@ -99,11 +110,14 @@ class Widget implements IWidget {
   };
 
   private onOpen(): void {
+
     let self: any = this;
     this.loadingShelter.show();
     var query = new Query();
+    this.sdwisLayer.show();
     query.where = '1=1';
     console.log('SDWISwidget::onOpen');
+
     var that = this;
     if (that.clickHandler !== undefined) {
       that.clickHandler.resume();
@@ -256,6 +270,8 @@ class Widget implements IWidget {
 
 
   private onClose(): void {
+      // turn off facilities
+    this.sdwisLayer.hide();
     console.log('SDWISwidget::onClose');
     var self: any = this;
     this.clickHandler.pause();

@@ -1,3 +1,4 @@
 {
-  "serviceUrl": "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/SDWIS_Base/FeatureServer"
+  //"serviceUrl": "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/SDWIS_Base/FeatureServer"
+  "serviceUrl": "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Safe_Drinking_Water_(SDWIS)_Region_9_V1/FeatureServer"
 }
