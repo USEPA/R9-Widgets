@@ -208,7 +208,6 @@ class Widget implements IWidget {
           });
           grid.startup();
           this.loadingShelter.hide(); // noneFound.push(false);
-
         } else {
           this.myNode.innerHTML = '<h3>No facilities found at this location</h3><br/>';
           this.loadingShelter.hide();
@@ -218,6 +217,9 @@ class Widget implements IWidget {
   };
 
     private loadFacility(facility: any) {
+    var selectedGraphic = new Graphic(facility.geometry, this.symbol);
+    this.graphicsLayer.add(selectedGraphic);
+    this.loadingShelter.show();
 
     const facilitytype = this.featureLayer.getDomain('Fac_Type')["getName"](facility.attributes.Fac_Type);
     const sourcetype = this.featureLayer.getDomain('Fac_SourceType')["getName"](facility.attributes.Fac_SourceType);
