@@ -11,6 +11,7 @@ import EsriMap from 'esri/map';
 import FeatureLayer from 'esri/layers/FeatureLayer';
 import Query from 'esri/tasks/query';
 import GraphicsLayer from 'esri/layers/GraphicsLayer';
+import Graphic from 'esri/graphic';
 import FeatureSet from 'esri/tasks/FeatureSet';
 import SimpleMarkerSymbol from 'esri/symbols/SimpleMarkerSymbol';
 import Color from 'esri/Color';
@@ -65,6 +66,7 @@ class Widget implements IWidget {
   public  Table: any
   private supportsAdvancedQueries: any;
   private sdwisLayer: any;
+  private symbol: any;
 
 
   private postCreate(args: any): void {
@@ -78,12 +80,13 @@ class Widget implements IWidget {
     console.log('SDWISwidget::postCreate');
   };
   private startup(): void {
+    this.symbol = new SimpleMarkerSymbol();
+    this.symbol.setSize(20);
+    this.symbol.setColor(new Color([255, 255, 0, 0.5]));
 
     let self: any = this;
     this.inherited(arguments);
     console.log('SDWISwidget::startup');
-
-
     this.loadingShelter = new LoadingShelter({hidden: true});
     this.loadingShelter.placeAt(this.domNode);
 
@@ -107,6 +110,7 @@ class Widget implements IWidget {
 
 
     this.clickHandler = this._clickHandler();
+
   };
 
   private onOpen(): void {
@@ -194,14 +198,17 @@ class Widget implements IWidget {
             var rowItem = grid.getItem(e.rowIndex);
             var facility = features.filter(feature => {
               return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
+
             });
 
 
             this.loadFacility(facility[0]);
 
+
           });
           grid.startup();
           this.loadingShelter.hide(); // noneFound.push(false);
+
         } else {
           this.myNode.innerHTML = '<h3>No facilities found at this location</h3><br/>';
           this.loadingShelter.hide();
@@ -211,6 +218,7 @@ class Widget implements IWidget {
   };
 
     private loadFacility(facility: any) {
+
     const facilitytype = this.featureLayer.getDomain('Fac_Type')["getName"](facility.attributes.Fac_Type);
     const sourcetype = this.featureLayer.getDomain('Fac_SourceType')["getName"](facility.attributes.Fac_SourceType);
     const availability = this.featureLayer.getDomain('Fac_Availability')["getName"](facility.attributes.Fac_Availability);
@@ -263,7 +271,7 @@ class Widget implements IWidget {
     query.where = `PWSID='${pwsid}'`;
     this.featureLayerAdmin.queryFeatures(query, (featureSet: FeatureSet) => {
       const facilityAdmin = featureSet.features[0];
-      var admin = `<p style="text-align: left;">`+`<b>Primary Contact: </b>`+ (facilityAdmin.attributes.org_name ? facilityAdmin.attributes.org_name : 'Not Reported')+`</br>`+`<b>Phone: </b>`+(facilityAdmin.attributes.phone_number ? facilityAdmin.attributes.phone_number : 'Not Reported')+`</br><b>Email: </b>`+(facilityAdmin.attributes.email_addr ? `<a href="mailto:${facilityAdmin.attributes.email_addr}"target="_blank">${facilityAdmin.attributes.email_addr} </a>` : 'Not Reported')+`</br>`+`<b>Address: </b>`+(facilityAdmin.attributes.address_line1 ? facilityAdmin.attributes.address_line1 : 'Not Reported')+`</br>`+(facilityAdmin.attributes.city_name ? facilityAdmin.attributes.city_name : 'Not Reported')+`, `+(facilityAdmin.attributes.state_code ? facilityAdmin.attributes.state_code : '')+` `+(facilityAdmin.attributes.zip_code ? facilityAdmin.attributes.zip_code : '')+`</p>`
+      var admin = `<p style="text-align: left;">`+`<b>Primary Contact: </b>`+ (facilityAdmin.attributes.org_name ? facilityAdmin.attributes.org_name : 'Not Reported')+`</br>`+`<b>Phone: </b>`+(facilityAdmin.attributes.phone_number ? facilityAdmin.attributes.phone_number : 'Not Reported')+`</br><b>Email: </b>`+(facilityAdmin.attributes.email_addr ? `<a href="mailto:${facilityAdmin.attributes.email_addr}"target="_blank">${facilityAdmin.attributes.email_addr} </a>` : 'Not Reported')+`</br>`+`<b>Address: </b>`+(facilityAdmin.attributes.address_line1 ? facilityAdmin.attributes.address_line1 : 'Not Reported')+`</br>`+(facilityAdmin.attributes.city_name ? facilityAdmin.attributes.city_name : '')+` `+(facilityAdmin.attributes.state_code ? facilityAdmin.attributes.state_code : '')+` `+(facilityAdmin.attributes.zip_code ? facilityAdmin.attributes.zip_code : '')+`</p>`
       domConstruct.place(admin, 'admincontacts')
     });
   }
