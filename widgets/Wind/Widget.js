@@ -22,6 +22,7 @@ import ModelMenu from './ModelMenu';
 // import gfs_wind from 'dojo/text!./current_wind_gfs.json';
 // import nam_wind from 'dojo/text!./current_wind_nam.json';
 import baseFx from 'dojo/_base/fx';
+import Dialog from 'dijit/Dialog';
 
 // To create a widget, you need to derive from BaseWidget.
 export default declare([BaseWidget], {
@@ -97,6 +98,10 @@ export default declare([BaseWidget], {
     //     this._clearMiniModeTimer();
     //   // }
     // })));
+    this.executiveSummaryDialog = new Dialog({
+          title: "Model Dialog Summary"
+        });
+    this.own(on(this.infoBtn, 'click', lang.hitch(this, this.openDialog)));
   },
   onOpen() {
     var vm = this;
@@ -461,6 +466,11 @@ export default declare([BaseWidget], {
       }
     }
     // this._setUI(isRunInMobile);
+  },
+  openDialog: function(){
+    this.executiveSummaryDialog.set("content", '<h1>TEST title thing</h1>');
+    this.executiveSummaryDialog.show();
+
   },
   // _destroyModelMenu: function () {
   //   if(this.modelMenu && this.modelMenu.destroy){

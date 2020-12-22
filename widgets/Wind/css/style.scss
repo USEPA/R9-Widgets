@@ -40,6 +40,24 @@
   top: 14px;
   z-index: 1; }
 
+.jimu-widget-windmenu .info-btn {
+  height: 15px;
+  width: 15px;
+  background: url("../images/info.svg") no-repeat;
+  background-position: 50% 50%;
+  background-size: 15px 15px;
+  cursor: pointer;
+  vertical-align: middle;
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 1; }
+.jimu-widget-windmenu .info-btn:hover {
+  background: url("../images/info_hover.svg") no-repeat;
+  background-position: 50% 50%;
+  background-size: 15px 15px;
+ }
+
 .jimu-widget-windmenu .label-container {
   padding: 10px 15px 10px 10px;
   font-size: 12px; }
