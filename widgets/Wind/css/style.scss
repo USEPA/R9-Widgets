@@ -53,6 +53,10 @@
   bottom: 10px;
   z-index: 1; }
 
+.jimu-widget-windmenu .no-select > *{
+  //all child elements
+  user-select: none;
+}
 .jimu-widget-windmenu .info-btn:hover {
   background: url("../images/info_hover.svg") no-repeat;
   background-position: 50% 50%;
@@ -171,7 +175,8 @@
   border-bottom: 1px solid #c9e0f6; }
 
 .model-menu-item:hover {
-  background: #EEEEEE; }
+  background: #eeeeee;
+  border-radius: 10px;}
 
 .jimu-widget-windmenu .model-label {
   width: 40px;

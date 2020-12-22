@@ -102,7 +102,7 @@ export default declare([BaseWidget], {
     this.executiveSummaryDialog = new Dialog({
           title: "Wind Widget Information",
           content: windDialogContent,
-          style: "width: 40%"
+          style: "width: 30%"
         });
     this.own(on(this.infoBtn, 'click', lang.hitch(this, this.openDialog)));
   },
