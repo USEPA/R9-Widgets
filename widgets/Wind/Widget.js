@@ -23,6 +23,7 @@ import ModelMenu from './ModelMenu';
 // import nam_wind from 'dojo/text!./current_wind_nam.json';
 import baseFx from 'dojo/_base/fx';
 import Dialog from 'dijit/Dialog';
+import windDialogContent from 'dojo/text!./WindDialog.html'
 
 // To create a widget, you need to derive from BaseWidget.
 export default declare([BaseWidget], {
@@ -99,7 +100,9 @@ export default declare([BaseWidget], {
     //   // }
     // })));
     this.executiveSummaryDialog = new Dialog({
-          title: "Model Dialog Summary"
+          title: "Wind Widget Information",
+          content: windDialogContent,
+          style: "width: 40%"
         });
     this.own(on(this.infoBtn, 'click', lang.hitch(this, this.openDialog)));
   },
@@ -468,7 +471,7 @@ export default declare([BaseWidget], {
     // this._setUI(isRunInMobile);
   },
   openDialog: function(){
-    this.executiveSummaryDialog.set("content", '<h1>TEST title thing</h1>');
+
     this.executiveSummaryDialog.show();
 
   },
