@@ -22,6 +22,8 @@ import ModelMenu from './ModelMenu';
 // import gfs_wind from 'dojo/text!./current_wind_gfs.json';
 // import nam_wind from 'dojo/text!./current_wind_nam.json';
 import baseFx from 'dojo/_base/fx';
+import Dialog from 'dijit/Dialog';
+import windDialogContent from 'dojo/text!./WindDialog.html'
 
 // To create a widget, you need to derive from BaseWidget.
 export default declare([BaseWidget], {
@@ -97,6 +99,12 @@ export default declare([BaseWidget], {
     //     this._clearMiniModeTimer();
     //   // }
     // })));
+    this.executiveSummaryDialog = new Dialog({
+          title: "Wind Widget Information",
+          content: windDialogContent,
+          style: "width: 30%"
+        });
+    this.own(on(this.infoBtn, 'click', lang.hitch(this, this.openDialog)));
   },
   onOpen() {
     var vm = this;
@@ -111,22 +119,18 @@ export default declare([BaseWidget], {
     vm.listeners = [
       vm.map.on("extent-change", function () {
         vm.redraw();
-        // vm._addToLegend();
       }),
       vm.map.on("resize", function () {
       }),
       vm.map.on("zoom-start", function () {
         vm.redraw();
-        // vm._addToLegend();
       }),
       vm.map.on("pan-start", function () {
-        console.log('pan-start');
         vm.redraw();
       })
     ];
     vm._setPopupPosition();
     this._initWindModelMenu();
-    // vm._hideLoading();
   },
   onClose() {
     console.log('Wind::onClose');
@@ -158,7 +162,7 @@ export default declare([BaseWidget], {
     return !!document.createElement("canvas").getContext;
   },
   redraw: function () {
-    console.log('redraw');
+    // console.log('redraw');
     var vm = this;
     if ((this.state === 'opened' || this.state === 'active') && vm.rasterLayer._element) {
       vm.rasterLayer._element.width = vm.map.width;
@@ -280,10 +284,6 @@ export default declare([BaseWidget], {
   _setWindModel(windModelStr) {
     const vm = this;
     vm._showLoading();
-    // if (vm._model === windModelStr) {
-    //   console.log('no model change');
-    //   return;
-    // }
     vm._model = windModelStr;
     //  HRRR, NAM, GFS
     let windPromise = vm._model === 'HRRR'?vm.layersRequest_hrrr: vm._model === 'NAM'?vm.layersRequest_nam:vm.layersRequest_gfs;
@@ -398,7 +398,7 @@ export default declare([BaseWidget], {
     evt.stopPropagation();
   },
   showWindMenu: function() {
-    html.setStyle(this.noWindContentNode, 'display', 'none');
+    // html.setStyle(this.noWindContentNode, 'display', 'none');
       //styles
       html.setStyle(this.domNode, 'display', 'block');
       html.setStyle(this.windContentNode, 'display', 'block');
@@ -469,6 +469,11 @@ export default declare([BaseWidget], {
       }
     }
     // this._setUI(isRunInMobile);
+  },
+  openDialog: function(){
+
+    this.executiveSummaryDialog.show();
+
   },
   // _destroyModelMenu: function () {
   //   if(this.modelMenu && this.modelMenu.destroy){

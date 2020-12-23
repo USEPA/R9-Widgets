@@ -34,7 +34,7 @@ define(['dojo/_base/declare',
 
       postCreate: function() {
         this.inherited(arguments);
-        this._initModelMenu();
+        this._initMenu();
       },
 
       startup: function() {
@@ -45,8 +45,14 @@ define(['dojo/_base/declare',
         this.inherited(arguments);
       },
 
-      _initModelMenu: function(){
+      setModelMenuTimer: function() {
+        const timeOut = 600;
+        this._modelTimer = setTimeout(lang.hitch(this, function() {
+            this._closeModelMenu();
+          }), timeOut);
+      },
 
+      _initMenu: function(){
         Object.keys(this._modelList).forEach(lang.hitch(this, function (key) {
           var dom = this[key];
           var str = this._modelList[key];
@@ -55,6 +61,18 @@ define(['dojo/_base/declare',
         }));
 
         this.own(on(this.domNode, 'click', lang.hitch(this, this._closeModelMenu)));
+        const timeOut = 600;
+        this.own(on(this.modelMenu, 'mouseout', lang.hitch(this, function(evt) {
+          console.log('mouseout');
+          this.setModelMenuTimer();
+          })
+        ));
+        this.own(on(this.modelMenu, 'mouseover', lang.hitch(this, function(evt) {
+          console.log('mouseover');
+          clearTimeout(this._modelTimer);
+          })
+        ));
+
         this._checks = query(".check", this.modelMenu);
 
         // default
@@ -158,7 +176,7 @@ define(['dojo/_base/declare',
       _showModelMenu: function() {
         html.removeClass(this.modelMenu, "hide");
         this.emit("open");
-
+        // this.setModelMenuTimer();
         // this.a11y_focusOnSelectedItem();
       },
 
