@@ -38,7 +38,6 @@ export default declare([BaseWidget], {
   _model: 'HRRR',
   postCreate: function postCreate() {
     this.inherited(postCreate, arguments);
-    console.log('Wind::postCreate');
     this.canvasSupport = this.supports_canvas();
     var vm = this;
     if (this.canvasSupport) {
@@ -89,7 +88,7 @@ export default declare([BaseWidget], {
   },
   startup() {
     this.inherited(arguments);
-    console.log('Wind::startup');
+    // console.log('Wind::startup');
 
     //close btn
     this.own(on(this.closeBtn, 'click', lang.hitch(this, this._closeHandler)));
@@ -108,7 +107,7 @@ export default declare([BaseWidget], {
   },
   onOpen() {
     var vm = this;
-    console.log('Wind::onOpen');
+    // console.log('Wind::onOpen');
     vm._showLoading();
     dojo.setStyle(this.buttonNode, 'border', 'solid 1px white');
 
@@ -133,7 +132,7 @@ export default declare([BaseWidget], {
     this._initWindModelMenu();
   },
   onClose() {
-    console.log('Wind::onClose');
+    // console.log('Wind::onClose');
     this.listeners.forEach(function (listener) {
       listener.remove();
     });
@@ -208,7 +207,6 @@ export default declare([BaseWidget], {
     }, 750);
   },
   _getLegend: function () {
-    console.log('-getLegend');
     var vm = this;
     vm.gettingLegend = true;
     var pm = PanelManager.getInstance();
@@ -229,7 +227,6 @@ export default declare([BaseWidget], {
     if (windLegend) windLegend.remove();
   },
   _addToLegend: function () {
-    console.log('_addToLegend');
     var vm = this;
     vm.legend_update_interval = setInterval(function () {
       //   var legendWidget = wm.getWidgetsByName('Legend');
@@ -266,16 +263,12 @@ export default declare([BaseWidget], {
     return legend_html;
   },
   _initWindModelMenu: function () {
+    // console.log('_initWindModelMenu');
     const vm = this;
-
-
-    console.log('_initWindModelMenu');
     if (!vm.modelMenu) {
       vm.modelMenuNode = html.create('div', { "class": "jimu-float-trailing" }, vm.modelContent);
       vm.modelMenu = new ModelMenu({}, vm.modelMenuNode);
-
       vm.modelMenuSelectedHanlder = this.own(on(this.modelMenu, 'selected', lang.hitch(this, function (modelStr) {
-        console.log(modelStr + ' selected from Widget.js');
         vm._setWindModel(modelStr);
       })));
     }
@@ -304,7 +297,7 @@ export default declare([BaseWidget], {
         if (!vm._legend && !vm.gettingLegend) {
           vm._getLegend();
         } else if (!vm._legend && vm.gettingLegend){
-          console.log('getting legend');
+          // console.log('getting legend');
         } else {
           vm._addToLegend();
         }
@@ -319,7 +312,7 @@ export default declare([BaseWidget], {
   },
 
   _closeHandler: function(){
-    console.log('position on close'+this.position);
+    // console.log('position on close'+this.position);
     WidgetManager.getInstance().closeWidget(this);
   },
   //   //miniModeTimer
@@ -436,11 +429,10 @@ export default declare([BaseWidget], {
     vm._forecast_datetime = moment(forecastData[0].header.refTime)
       .add(forecastData[0].header.forecastTime, 'hours').format('ll hA');
     vm.windExtentLabelNode.innerText = 'Forecast for '+vm._forecast_datetime;
-    console.log(vm._forecast_datetime);
+    // console.log(vm._forecast_datetime);
   },
   _setPopupPosition: function (isRunInMobile) {
-
-    console.log('_setPopupPosition');
+    // console.log('_setPopupPosition');
     if(!isRunInMobile){
       //height
       if (this.config.showLabels){
