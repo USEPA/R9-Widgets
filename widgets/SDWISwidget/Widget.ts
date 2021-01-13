@@ -244,14 +244,13 @@ class Widget implements IWidget {
     this.featureLayerPWS.queryFeatures(query, (featureSet: FeatureSet) => {
       const facilityPWS = featureSet.features[0];
       const tribe = this.featureLayerPWS.getDomain('Tribe')["getName"](facilityPWS.attributes.Tribe);
-      const popserved = this.featureLayerPWS.getDomain('PWS_PopCat')["getName"](facilityPWS.attributes.PWS_PopCat);
       const school = this.featureLayerPWS.getDomain('PWS_SchoolorDaycare')["getName"](facilityPWS.attributes.PWS_SchoolorDaycare);
       const ownertype = this.featureLayerPWS.getDomain('PWS_OwnerType')["getName"](facilityPWS.attributes.PWS_OwnerType);
       const wholesale = this.featureLayerPWS.getDomain('PWS_Wholesale')["getName"](facilityPWS.attributes.PWS_Wholesale);
       const watertype = this.featureLayerPWS.getDomain('PWS_WSourceType')["getName"](facilityPWS.attributes.PWS_WSourceType);
       const state = this.featureLayerPWS.getDomain('PWS_AgencyCode')["getName"](facilityPWS.attributes.PWS_AgencyCode);
 
-   var pws = `<b><p style="text-align: center;">Public Water System Details</p></b>`+ `<hr/>`+`<b>City Served: </b>` +(facilityPWS.attributes.City ? facilityPWS.attributes.City : 'Not Reported')+ `</br>`+ `<b>County Served: </b>`+(facilityPWS.attributes.County ? facilityPWS.attributes.County : 'Not Reported')+ `</br>`+`<b>State: </b>`+ (state ? state : 'Not Reported') + `</br>`+`<b>Tribe Name: </b>`+ (tribe ? tribe : 'Not Reported') + `</br>`+ `<b>PWS Population Served Category: </b>`+ (popserved ? popserved : 'Not Reported') +`</br>`+`<b>Is the PWS a School or Daycare? </b>`+ (school ? school : 'Not Reported') +`</br>`+`<b>PWS Owner Type: </b>`+ (ownertype ? ownertype : 'Not Reported') +`</br>`+ `<b>Is PWS Wholesaler to Another PWS? </b>`+ (wholesale ? wholesale : 'Not Reported') +`</br>` +`<b>PWS Source Water Type: </b>`+ (watertype ? watertype : 'Not Reported') +`</br>`+`<p style="text-align: center;">&nbsp;</p>`
+   var pws = `<b><p style="text-align: center;">Public Water System Details</p></b>`+ `<hr/>`+`<b>City Served: </b>` +(facilityPWS.attributes.City ? facilityPWS.attributes.City : 'Not Reported')+ `</br>`+ `<b>County Served: </b>`+(facilityPWS.attributes.County ? facilityPWS.attributes.County : 'Not Reported')+ `</br>`+`<b>State: </b>`+ (state ? state : 'Not Reported') + `</br>`+`<b>Tribe Name: </b>`+ (tribe ? tribe : 'Not Reported') + `</br>`+ `<b>PWS Population Served: </b>`+ (facilityPWS.attributes.PWS_PopServe ? facilityPWS.attributes.PWS_PopServe : 'Not Reported') +`</br>`+`<b>Is the PWS a School or Daycare? </b>`+ (school ? school : 'Not Reported') +`</br>`+`<b>PWS Owner Type: </b>`+ (ownertype ? ownertype : 'Not Reported') +`</br>`+ `<b>Is PWS Wholesaler to Another PWS? </b>`+ (wholesale ? wholesale : 'Not Reported') +`</br>` +`<b>PWS Source Water Type: </b>`+ (watertype ? watertype : 'Not Reported') +`</br>`+`<p style="text-align: center;">&nbsp;</p>`
     domConstruct.place(pws, 'pwsinfo')
       });
   }
