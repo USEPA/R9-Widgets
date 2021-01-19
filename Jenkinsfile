@@ -1,4 +1,5 @@
 node {
+  try {
   stage('build') {
     dir('cop') {
       try {
@@ -43,5 +44,7 @@ node {
 //   stage('deploy') {
 //     input(message: "Shall we proceed?")
 //   }
+      } finally {
   cleanWs()
+  }
 }
