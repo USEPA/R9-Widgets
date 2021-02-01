@@ -45,8 +45,8 @@ define(['dojo/_base/declare',
         this.inherited(arguments);
       },
 
-      setModelMenuTimer: function() {
-        const timeOut = 600;
+      setModelMenuTimer: function(timeOut) {
+        // const timeOut = 600;
         this._modelTimer = setTimeout(lang.hitch(this, function() {
             this._closeModelMenu();
           }), timeOut);
@@ -61,14 +61,11 @@ define(['dojo/_base/declare',
         }));
 
         this.own(on(this.domNode, 'click', lang.hitch(this, this._closeModelMenu)));
-        const timeOut = 600;
         this.own(on(this.modelMenu, 'mouseout', lang.hitch(this, function(evt) {
-          console.log('mouseout');
-          this.setModelMenuTimer();
+          this.setModelMenuTimer(600);
           })
         ));
         this.own(on(this.modelMenu, 'mouseover', lang.hitch(this, function(evt) {
-          console.log('mouseover');
           clearTimeout(this._modelTimer);
           })
         ));
@@ -105,7 +102,6 @@ define(['dojo/_base/declare',
             html.removeClass(check, 'hide');
           }
           this.modelLabelNode.innerHTML = jimuUtils.sanitizeHTML(optionItem.innerText);
-
           this._model = modelStr;
           // console.log(this._model);
           this.emit("selected", modelStr);
@@ -162,7 +158,6 @@ define(['dojo/_base/declare',
       },
 
       _onModelLabelClick: function(evt) {
-        console.log('_onModelLabelClick');
         evt.stopPropagation();
         evt.preventDefault();
         if(html.hasClass(this.modelMenu, "hide")){
@@ -176,7 +171,7 @@ define(['dojo/_base/declare',
       _showModelMenu: function() {
         html.removeClass(this.modelMenu, "hide");
         this.emit("open");
-        // this.setModelMenuTimer();
+        this.setModelMenuTimer(1500);
         // this.a11y_focusOnSelectedItem();
       },
 
