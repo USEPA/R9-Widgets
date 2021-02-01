@@ -61,7 +61,6 @@ define(['dojo/_base/declare',
         }));
 
         this.own(on(this.domNode, 'click', lang.hitch(this, this._closeModelMenu)));
-        const timeOut = 600;
         this.own(on(this.modelMenu, 'mouseout', lang.hitch(this, function(evt) {
           this.setModelMenuTimer(600);
           })
@@ -103,7 +102,6 @@ define(['dojo/_base/declare',
             html.removeClass(check, 'hide');
           }
           this.modelLabelNode.innerHTML = jimuUtils.sanitizeHTML(optionItem.innerText);
-
           this._model = modelStr;
           // console.log(this._model);
           this.emit("selected", modelStr);
