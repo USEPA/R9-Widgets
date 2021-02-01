@@ -138,6 +138,7 @@ export default declare([BaseWidget], {
     });
     dojo.setStyle(this.buttonNode, 'border', '');
     this.map.removeLayer(this.rasterLayer);
+    this._removeFromLegend();
   },
   // onMinimize(){
   //   console.log('Wind::onMinimize');
