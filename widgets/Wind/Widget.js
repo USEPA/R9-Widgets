@@ -23,17 +23,12 @@ import ModelMenu from './ModelMenu';
 // import nam_wind from 'dojo/text!./current_wind_nam.json';
 import baseFx from 'dojo/_base/fx';
 import Dialog from 'dijit/Dialog';
-import windDialogContent from 'dojo/text!./WindDialog.html'
+import windDialogContent from 'dojo/text!./WindDialog.html';
 
-// To create a widget, you need to derive from BaseWidget.
+
 export default declare([BaseWidget], {
-
-  // Custom widget code goes here
-
   baseClass: 'wind',
   data: null,
-  // add additional properties here
-  // methods to communication with app container:
   _forecast_datetime: '',
   _model: 'HRRR',
   postCreate: function postCreate() {
@@ -46,34 +41,18 @@ export default declare([BaseWidget], {
         opacity: 0.9,
         id: 'Current Wind Forecast'
       });
-
-      // vm.layersRequest = esriRequest({
-      //   url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind.json',
-      //   content: {},
-      //   handleAs: "json"
-      // });
       // HRRR
       vm.layersRequest_hrrr = esriRequest({
         url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind_hrrr.json',
         content: {},
         handleAs: "json"
       });
-      // vm.layersRequest_hrrr.then(
-      //   function(response){
-      //     vm.data_hrrr = response;
-      //   }
-      // );
-      //NAM
+      // NAM
       vm.layersRequest_nam = esriRequest({
         url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind_nam.json',
         content: {},
         handleAs: "json"
       });
-      // vm.layersRequest_nam.then(
-      //   function(response){
-      //     vm.data_nam = response;
-      //   }
-      // );
       // GFS
       vm.layersRequest_gfs = esriRequest({
         url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind_gfs.json',
@@ -92,12 +71,6 @@ export default declare([BaseWidget], {
 
     //close btn
     this.own(on(this.closeBtn, 'click', lang.hitch(this, this._closeHandler)));
-    //toggle mini-mode(desktop)
-    // this.own(on(this.domNode, 'mouseover', lang.hitch(this, function () {
-    //   // if (!utils.isRunInMobile()) {
-    //     this._clearMiniModeTimer();
-    //   // }
-    // })));
     this.executiveSummaryDialog = new Dialog({
           title: "Wind Widget Information",
           content: windDialogContent,
@@ -110,11 +83,7 @@ export default declare([BaseWidget], {
     // console.log('Wind::onOpen');
     vm._showLoading();
     dojo.setStyle(this.buttonNode, 'border', 'solid 1px white');
-
     vm._setWindModel(vm._model);
-
-    // vm.showWindMenu();
-
     vm.listeners = [
       vm.map.on("extent-change", function () {
         vm.redraw();
@@ -274,6 +243,7 @@ export default declare([BaseWidget], {
     if (!vm.modelMenu) {
       vm.modelMenuNode = html.create('div', { "class": "jimu-float-trailing" }, vm.modelContent);
       vm.modelMenu = new ModelMenu({}, vm.modelMenuNode);
+      // on select:
       vm.modelMenuSelectedHanlder = this.own(on(this.modelMenu, 'selected', lang.hitch(this, function (modelStr) {
         vm._setWindModel(modelStr);
       })));
@@ -319,23 +289,6 @@ export default declare([BaseWidget], {
     // console.log('position on close'+this.position);
     WidgetManager.getInstance().closeWidget(this);
   },
-  //   //miniModeTimer
-  // _clearMiniModeTimer: function () {
-  //   html.removeClass(this.domNode, 'mini-mode');
-  //   // this._adaptResponsive({ refreshMoveable:false });
-  //   if (this._miniModeTimer) {
-  //     clearTimeout(this._miniModeTimer);
-  //   }
-  // },
-  // _setMiniModeTimer: function () {
-  //   var time = utils.isRunInMobile() ? 5000 : 2000;
-  //   this._miniModeTimer = setTimeout(lang.hitch(this, function () {
-  //     // if (false === this.a11y_shownBy508) {
-  //       html.addClass(this.domNode, 'mini-mode');
-  //       // this._adaptResponsive();
-  //     // }
-  //   }), time);
-  // },
 
   //moveable
   makeMoveable: function (handleNode) {
@@ -467,18 +420,7 @@ export default declare([BaseWidget], {
     // this._setUI(isRunInMobile);
   },
   openDialog: function(){
-
     this.executiveSummaryDialog.show();
-
   },
-  // _destroyModelMenu: function () {
-  //   if(this.modelMenu && this.modelMenu.destroy){
-  //     this.modelMenu.destroy();
-  //   }
-  //   this.modelMenu = null;
-  //   this.modelMenuSelectedHanlder = null;
-  //   this.modelMenuOpenHanlder = null;
-  //   this.modelMenuCloseHanlder = null;
-  // }
 });
 
