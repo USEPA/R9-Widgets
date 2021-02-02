@@ -39,7 +39,7 @@ export default declare([BaseWidget], {
   postCreate: function postCreate() {
     this.inherited(postCreate, arguments);
     this.canvasSupport = this.supports_canvas();
-    var vm = this;
+    const vm = this;
     if (this.canvasSupport) {
       vm._getIconNode();
       vm.rasterLayer = new RasterLayer(null, {
@@ -106,7 +106,7 @@ export default declare([BaseWidget], {
     this.own(on(this.infoBtn, 'click', lang.hitch(this, this.openDialog)));
   },
   onOpen() {
-    var vm = this;
+    const vm = this;
     // console.log('Wind::onOpen');
     vm._showLoading();
     dojo.setStyle(this.buttonNode, 'border', 'solid 1px white');
@@ -163,7 +163,7 @@ export default declare([BaseWidget], {
   },
   redraw: function () {
     // console.log('redraw');
-    var vm = this;
+    const vm = this;
     if ((this.state === 'opened' || this.state === 'active') && vm.rasterLayer._element) {
       vm.rasterLayer._element.width = vm.map.width;
       vm.rasterLayer._element.height = vm.map.height;
@@ -202,13 +202,13 @@ export default declare([BaseWidget], {
     // widg.onClick();
   },
   _hideLoading: function () {
-    var vm = this;
+    const vm = this;
     setTimeout(function () {
       html.setAttr(vm.buttonWidg.iconNode, 'src', vm.buttonWidg.widgetConfig.icon);
     }, 750);
   },
   _getLegend: function () {
-    var vm = this;
+    const vm = this;
     vm.gettingLegend = true;
     var pm = PanelManager.getInstance();
     var wm = WidgetManager.getInstance();
@@ -220,6 +220,7 @@ export default declare([BaseWidget], {
     return wm.loadWidget(legend).then(function (legendWidget) {
       vm._legend = legendWidget;
       vm._addToLegend();
+      vm.gettingLegend = false;
     });
   },
   _removeFromLegend: function () {
@@ -228,12 +229,14 @@ export default declare([BaseWidget], {
     if (windLegend) windLegend.remove();
   },
   _addToLegend: function () {
-    var vm = this;
+    const vm = this;
+
+    if (vm.legend_update_interval) clearInterval(vm.legend_update_interval);
     vm.legend_update_interval = setInterval(function () {
       //   var legendWidget = wm.getWidgetsByName('Legend');
       if (vm._legend.domNode.children.length === 2) {
         vm._removeFromLegend();
-        if ( vm._legend.domNode.innerHTML.indexOf('id="wind_widget_legend"') === -1) {
+        if (vm._legend.domNode.innerHTML.indexOf('id="wind_widget_legend"') === -1) {
           vm.wind_legend = domConstruct.toDom('<div style="display: block;" class="esriLegendService" id="wind_widget_legend">' +
             '<table><tbody>' +
             '<tr><td align="left" colspan="2"><span class="esriLegendServiceLabel">Forecast Wind Speed for ' +
@@ -248,8 +251,9 @@ export default declare([BaseWidget], {
       }
     }, 200);
   },
-  _generateWindLegend: function () {
-    var vm = this;
+
+  _generateWindLegend: function _generateWindLegend() {
+    const vm = this;
     var legend_template = '<tr><td style="width: 15px;">' +
       '<div style="width: 15px; height: 15px; background-color: ${color};"></div></td><td>${speed}</td></tr>';
     var legend_html = '';
@@ -263,7 +267,8 @@ export default declare([BaseWidget], {
     });
     return legend_html;
   },
-  _initWindModelMenu: function () {
+
+  _initWindModelMenu: function _initWindModelMenu () {
     // console.log('_initWindModelMenu');
     const vm = this;
     if (!vm.modelMenu) {
@@ -275,7 +280,7 @@ export default declare([BaseWidget], {
     }
   },
 
-  _setWindModel(windModelStr) {
+  _setWindModel: function _setWindModel (windModelStr) {
     const vm = this;
     vm._showLoading();
     vm._model = windModelStr;
@@ -297,9 +302,7 @@ export default declare([BaseWidget], {
         //legend
         if (!vm._legend && !vm.gettingLegend) {
           vm._getLegend();
-        } else if (!vm._legend && vm.gettingLegend){
-          // console.log('getting legend');
-        } else {
+        } else if (vm._legend && !vm.gettingLegend){
           vm._addToLegend();
         }
         vm.redraw();
