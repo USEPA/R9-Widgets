@@ -213,7 +213,7 @@ export default declare([BaseWidget], {
             '</span></td></tr>' +
             vm._generateWindLegend() +
             '</tbody></table></div>');
-          domConstruct.place(vm.wind_legend, vm._legend.domNode.children[1], 'first');
+          domConstruct.place(vm.wind_legend, vm._legend.domNode.children[0], 'first');
         }
         // console.log('clearInterval');
         clearInterval(vm.legend_update_interval);
