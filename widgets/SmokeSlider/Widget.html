@@ -1,0 +1,77 @@
+<div class="jimu-widget-timeslider">
+	<div class="close-btn" data-dojo-attach-point="closeBtn" tabindex="0"></div>
+
+
+
+	<div class="no-time-content drag-handler" data-dojo-attach-point="noTimeContentNode" id="noTimeContentNode">${nls.disableTips}</div>
+
+
+	<div class="time-content" data-dojo-attach-point="timeContentNode">
+		<div class="label-container drag-handler" data-dojo-attach-point="labelContainer" data-dojo-attach-event="onclick:_onHandleClick">
+			<div class="time-extent-container">
+				<div class="live-icon hide" data-dojo-attach-point="liveIcon" title="${nls.liveData}"></div>
+				<div class="jimu-ellipsis" data-dojo-attach-point="timeExtentLabelNode">${nls.timeExtent}</div>
+			</div>
+
+			<div class="layer-labels jimu-ellipsis" data-dojo-attach-point="layerLabelsNode">${nls.layers}</div>
+		</div>
+
+		<div class="slider-content clearFix jimu-float-leading" data-dojo-attach-point="sliderContent">
+			<div data-dojo-attach-point="sliderNodeContainer" class="slider-node-container jimu-float-leading"></div>
+
+			<div data-dojo-attach-point="btnsContainer" class="btns-container jimu-float-leading">
+				<div data-dojo-attach-point="previousBtn" class="previousBtn btn jimu-float-leading"></div>
+				<div data-dojo-attach-point="playBtn" class="playBtn btn jimu-float-leading"></div>
+				<div data-dojo-attach-point="nextBtn" class="nextBtn btn jimu-float-leading"></div>
+			</div>
+
+			<!--speedMenuNode-->
+		</div>
+    </div>
+    <table class="layer-list-table airqToggle" data-dojo-attach-point="airqNode" id="airqNode">
+        <tbody class="layers-list-body">
+            <tr class="jimu-widget-row layer-row" tabindex="0">
+                <td class="col col1" style="width: 20px;">
+                    <div class="div-select jimu-float-leading">
+                            <div class="jimu-checkbox"
+                                     aria-disabled="false" role="checkbox" title="Toggle Air Quality Layer"
+                                     aria-label="" aria-checked="false">
+                                    <div class="checkbox jimu-float-leading jimu-icon jimu-icon-checkbox"
+                                         id="airq_toggle_node"
+                                         data-dojo-attach-point = "airq_toggle_node"
+                                         data-dojo-attach-event="onclick:_ontoggleAirQ">
+                                    </div>
+                                    <div class="label jimu-float-leading not-visible" title="">
+
+                                    </div>
+                            </div>
+                        </div>
+<!--?                    <div class="noLegend-div jimu-float-leading"><img class="noLegend-image"-->
+<!--?                                                                      src="/webappbuilder/apps/2/widgets/LayerList/images/noLegend.png"-->
+<!--?                                                                      alt="l"></div>-->
+                </td>
+                <td class="col col2">
+                    <div data-dojo-attach-point="airQ_label" div-content jimu-float-leading label-container">Air Quality Visibility</div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+
+
+<!--?    <div class="div-select jimu-float-leading">-->
+<!--?        <div class="jimu-checkbox"-->
+<!--?                 aria-disabled="false" role="checkbox" title="Toggle Air Quality Layer"-->
+<!--?                 aria-label="" aria-checked="false">-->
+<!--?                <div class="checkbox jimu-float-leading jimu-icon jimu-icon-checkbox" id="airq_toggle"-->
+<!--?                     data-dojo-attach-point = "airq_toggle"-->
+<!--?                     data-dojo-attach-event="onclick:_ontoggleAirQ">-->
+<!--?                </div>-->
+<!--?                <div class="label jimu-float-leading not-visible" title="">-->
+
+<!--?                </div>-->
+
+<!--?                <h3>TEST</h3>-->
+<!--?        </div>-->
+<!--?	</div>-->
+</div>
