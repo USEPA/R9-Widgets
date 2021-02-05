@@ -23,57 +23,36 @@ import ModelMenu from './ModelMenu';
 // import nam_wind from 'dojo/text!./current_wind_nam.json';
 import baseFx from 'dojo/_base/fx';
 import Dialog from 'dijit/Dialog';
-import windDialogContent from 'dojo/text!./WindDialog.html'
+import windDialogContent from 'dojo/text!./WindDialog.html';
 
-// To create a widget, you need to derive from BaseWidget.
+
 export default declare([BaseWidget], {
-
-  // Custom widget code goes here
-
   baseClass: 'wind',
   data: null,
-  // add additional properties here
-  // methods to communication with app container:
   _forecast_datetime: '',
   _model: 'HRRR',
   postCreate: function postCreate() {
     this.inherited(postCreate, arguments);
     this.canvasSupport = this.supports_canvas();
-    var vm = this;
+    const vm = this;
     if (this.canvasSupport) {
       vm._getIconNode();
       vm.rasterLayer = new RasterLayer(null, {
         opacity: 0.9,
         id: 'Current Wind Forecast'
       });
-
-      // vm.layersRequest = esriRequest({
-      //   url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind.json',
-      //   content: {},
-      //   handleAs: "json"
-      // });
       // HRRR
       vm.layersRequest_hrrr = esriRequest({
         url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind_hrrr.json',
         content: {},
         handleAs: "json"
       });
-      // vm.layersRequest_hrrr.then(
-      //   function(response){
-      //     vm.data_hrrr = response;
-      //   }
-      // );
-      //NAM
+      // NAM
       vm.layersRequest_nam = esriRequest({
         url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind_nam.json',
         content: {},
         handleAs: "json"
       });
-      // vm.layersRequest_nam.then(
-      //   function(response){
-      //     vm.data_nam = response;
-      //   }
-      // );
       // GFS
       vm.layersRequest_gfs = esriRequest({
         url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind_gfs.json',
@@ -92,12 +71,6 @@ export default declare([BaseWidget], {
 
     //close btn
     this.own(on(this.closeBtn, 'click', lang.hitch(this, this._closeHandler)));
-    //toggle mini-mode(desktop)
-    // this.own(on(this.domNode, 'mouseover', lang.hitch(this, function () {
-    //   // if (!utils.isRunInMobile()) {
-    //     this._clearMiniModeTimer();
-    //   // }
-    // })));
     this.executiveSummaryDialog = new Dialog({
           title: "Wind Widget Information",
           content: windDialogContent,
@@ -106,15 +79,11 @@ export default declare([BaseWidget], {
     this.own(on(this.infoBtn, 'click', lang.hitch(this, this.openDialog)));
   },
   onOpen() {
-    var vm = this;
+    const vm = this;
     // console.log('Wind::onOpen');
     vm._showLoading();
     dojo.setStyle(this.buttonNode, 'border', 'solid 1px white');
-
     vm._setWindModel(vm._model);
-
-    // vm.showWindMenu();
-
     vm.listeners = [
       vm.map.on("extent-change", function () {
         vm.redraw();
@@ -163,7 +132,7 @@ export default declare([BaseWidget], {
   },
   redraw: function () {
     // console.log('redraw');
-    var vm = this;
+    const vm = this;
     if ((this.state === 'opened' || this.state === 'active') && vm.rasterLayer._element) {
       vm.rasterLayer._element.width = vm.map.width;
       vm.rasterLayer._element.height = vm.map.height;
@@ -202,13 +171,13 @@ export default declare([BaseWidget], {
     // widg.onClick();
   },
   _hideLoading: function () {
-    var vm = this;
+    const vm = this;
     setTimeout(function () {
       html.setAttr(vm.buttonWidg.iconNode, 'src', vm.buttonWidg.widgetConfig.icon);
     }, 750);
   },
   _getLegend: function () {
-    var vm = this;
+    const vm = this;
     vm.gettingLegend = true;
     var pm = PanelManager.getInstance();
     var wm = WidgetManager.getInstance();
@@ -220,6 +189,7 @@ export default declare([BaseWidget], {
     return wm.loadWidget(legend).then(function (legendWidget) {
       vm._legend = legendWidget;
       vm._addToLegend();
+      vm.gettingLegend = false;
     });
   },
   _removeFromLegend: function () {
@@ -228,12 +198,14 @@ export default declare([BaseWidget], {
     if (windLegend) windLegend.remove();
   },
   _addToLegend: function () {
-    var vm = this;
+    const vm = this;
+
+    if (vm.legend_update_interval) clearInterval(vm.legend_update_interval);
     vm.legend_update_interval = setInterval(function () {
       //   var legendWidget = wm.getWidgetsByName('Legend');
       if (vm._legend.domNode.children.length === 2) {
         vm._removeFromLegend();
-        if ( vm._legend.domNode.innerHTML.indexOf('id="wind_widget_legend"') === -1) {
+        if (vm._legend.domNode.innerHTML.indexOf('id="wind_widget_legend"') === -1) {
           vm.wind_legend = domConstruct.toDom('<div style="display: block;" class="esriLegendService" id="wind_widget_legend">' +
             '<table><tbody>' +
             '<tr><td align="left" colspan="2"><span class="esriLegendServiceLabel">Forecast Wind Speed for ' +
@@ -241,15 +213,16 @@ export default declare([BaseWidget], {
             '</span></td></tr>' +
             vm._generateWindLegend() +
             '</tbody></table></div>');
-          domConstruct.place(vm.wind_legend, vm._legend.domNode.children[1], 'first');
+          domConstruct.place(vm.wind_legend, vm._legend.domNode.children[0], 'first');
         }
         // console.log('clearInterval');
         clearInterval(vm.legend_update_interval);
       }
     }, 200);
   },
-  _generateWindLegend: function () {
-    var vm = this;
+
+  _generateWindLegend: function _generateWindLegend() {
+    const vm = this;
     var legend_template = '<tr><td style="width: 15px;">' +
       '<div style="width: 15px; height: 15px; background-color: ${color};"></div></td><td>${speed}</td></tr>';
     var legend_html = '';
@@ -263,19 +236,21 @@ export default declare([BaseWidget], {
     });
     return legend_html;
   },
-  _initWindModelMenu: function () {
+
+  _initWindModelMenu: function _initWindModelMenu () {
     // console.log('_initWindModelMenu');
     const vm = this;
     if (!vm.modelMenu) {
       vm.modelMenuNode = html.create('div', { "class": "jimu-float-trailing" }, vm.modelContent);
       vm.modelMenu = new ModelMenu({}, vm.modelMenuNode);
+      // on select:
       vm.modelMenuSelectedHanlder = this.own(on(this.modelMenu, 'selected', lang.hitch(this, function (modelStr) {
         vm._setWindModel(modelStr);
       })));
     }
   },
 
-  _setWindModel(windModelStr) {
+  _setWindModel: function _setWindModel (windModelStr) {
     const vm = this;
     vm._showLoading();
     vm._model = windModelStr;
@@ -297,9 +272,7 @@ export default declare([BaseWidget], {
         //legend
         if (!vm._legend && !vm.gettingLegend) {
           vm._getLegend();
-        } else if (!vm._legend && vm.gettingLegend){
-          // console.log('getting legend');
-        } else {
+        } else if (vm._legend && !vm.gettingLegend){
           vm._addToLegend();
         }
         vm.redraw();
@@ -316,23 +289,6 @@ export default declare([BaseWidget], {
     // console.log('position on close'+this.position);
     WidgetManager.getInstance().closeWidget(this);
   },
-  //   //miniModeTimer
-  // _clearMiniModeTimer: function () {
-  //   html.removeClass(this.domNode, 'mini-mode');
-  //   // this._adaptResponsive({ refreshMoveable:false });
-  //   if (this._miniModeTimer) {
-  //     clearTimeout(this._miniModeTimer);
-  //   }
-  // },
-  // _setMiniModeTimer: function () {
-  //   var time = utils.isRunInMobile() ? 5000 : 2000;
-  //   this._miniModeTimer = setTimeout(lang.hitch(this, function () {
-  //     // if (false === this.a11y_shownBy508) {
-  //       html.addClass(this.domNode, 'mini-mode');
-  //       // this._adaptResponsive();
-  //     // }
-  //   }), time);
-  // },
 
   //moveable
   makeMoveable: function (handleNode) {
@@ -464,18 +420,7 @@ export default declare([BaseWidget], {
     // this._setUI(isRunInMobile);
   },
   openDialog: function(){
-
     this.executiveSummaryDialog.show();
-
   },
-  // _destroyModelMenu: function () {
-  //   if(this.modelMenu && this.modelMenu.destroy){
-  //     this.modelMenu.destroy();
-  //   }
-  //   this.modelMenu = null;
-  //   this.modelMenuSelectedHanlder = null;
-  //   this.modelMenuOpenHanlder = null;
-  //   this.modelMenuCloseHanlder = null;
-  // }
 });
 
