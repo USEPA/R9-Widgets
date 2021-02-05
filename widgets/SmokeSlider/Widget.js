@@ -141,15 +141,12 @@ define(['dojo/_base/declare',
       onOpen: function() {
         // DW turn on layer
         var layerStructure = LayerStructure.getInstance();
-        layerStructure.getNodeById("NDGD_SmokeForecast_v1_1852").show();
-
-        this.airQLayer = layerStructure.getNodeById("AirNowLatestContoursPM25_2250");
-        //layerStructure.getNodeById("AirNowLatestContoursPM25_2250").show();
-        // for (const[key, value] of Object.entries(this.map._layers)){
-        //   if (value.id.includes('AirNowLatestContour')){
-        //     this.airQLayer = value;
-        //   }
-        // }
+        const all_layers = layerStructure.getLayerNodes();
+        // NDGD_SmokeForecast_v1_1852
+        const smoke_node = all_layers.find((lyr) => {return lyr.id.includes('NDGD_SmokeForecast');});
+        smoke_node.show();
+        // AirNowLatestContoursPM25_2250
+        this.airQLayer = all_layers.find((lyr) => {return lyr.id.includes('AirNowLatestContours');});
         this.airQ_label.innerHTML = this.airQLayer.title;
 
         this.listeners = [this.airQLayer.on(LayerNode.EVENT_TOOGLE_CHANGE, () => {
