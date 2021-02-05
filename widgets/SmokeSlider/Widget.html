@@ -25,25 +25,21 @@
             <tr class="jimu-widget-row layer-row" tabindex="0">
                 <td class="col col1" style="width: 20px;">
                     <div class="div-select jimu-float-leading">
-                            <div class="jimu-checkbox"
-                                     aria-disabled="false" role="checkbox" title="Toggle Air Quality Layer"
-                                     aria-label="" aria-checked="false">
-                                    <div class="checkbox jimu-float-leading jimu-icon jimu-icon-checkbox"
-                                         id="airq_toggle_node"
-                                         data-dojo-attach-point = "airq_toggle_node"
-                                         data-dojo-attach-event="onclick:_ontoggleAirQ">
-                                    </div>
-                                    <div class="label jimu-float-leading not-visible" title="">
-
-                                    </div>
-                            </div>
+                        <div class="jimu-checkbox"
+                                 aria-disabled="false" role="checkbox" title="Toggle Air Quality Layer"
+                                 aria-label="" aria-checked="false">
+                                <div class="checkbox jimu-float-leading jimu-icon jimu-icon-checkbox"
+                                     id="airq_toggle_node"
+                                     data-dojo-attach-point = "airq_toggle_node"
+                                     data-dojo-attach-event="onclick:_ontoggleAirQ">
+                                </div>
+                                <div class="label jimu-float-leading not-visible" title=""/>
                         </div>
-<!--?                    <div class="noLegend-div jimu-float-leading"><img class="noLegend-image"-->
-<!--?                                                                      src="/webappbuilder/apps/2/widgets/LayerList/images/noLegend.png"-->
-<!--?                                                                      alt="l"></div>-->
+                    </div>
                 </td>
                 <td class="col col2">
-                    <div data-dojo-attach-point="airQ_label" div-content jimu-float-leading label-container">Air Quality Visibility</div>
+                    <div data-dojo-attach-point="airQ_label"
+                         class="div-content jimu-float-leading label-container">Air Quality Visibility</div>
                 </td>
             </tr>
         </tbody>

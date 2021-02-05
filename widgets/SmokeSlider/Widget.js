@@ -139,7 +139,7 @@ define(['dojo/_base/declare',
       },
 
       onOpen: function() {
-        // DW turn on layer 
+        // DW turn on layer
         var layerStructure = LayerStructure.getInstance();
         layerStructure.getNodeById("NDGD_SmokeForecast_v1_1852").show();
 
@@ -176,8 +176,8 @@ define(['dojo/_base/declare',
           this._adaptResponsive();
 
           this._setPlayBtnStyleTimer();
-
-          this.a11y_open();
+          this._ontoggleAirQ(undefined);
+          // this.a11y_open();
         }));
       },
       _closeOthersTimeSlider: function () {
@@ -196,7 +196,7 @@ define(['dojo/_base/declare',
       this.listeners.forEach(function (listener) {
         listener.remove();
       });
-        // DW turn off layer 
+        // DW turn off layer
         var layerStructure = LayerStructure.getInstance();
         layerStructure.getNodeById("NDGD_SmokeForecast_v1_1852").hide();
         //layerStructure.getNodeById("AirNowLatestContoursPM25_2250").hide();
