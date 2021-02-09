@@ -216,6 +216,7 @@ define(['dojo/_base/declare',
           //this.timeProcesser.clearAutoRefreshTimer();//autoRefresh
           this._cleanPlayBtnStyleTimer();
         }));
+        this.airQLayer.hide();
       },
       //on close btn click
       _closeHanlder: function(){
@@ -929,7 +930,7 @@ define(['dojo/_base/declare',
           } else {
             this.airQLayer.show();
           }
-        };
+        }
         if (!this.airQLayer.isVisible()) {
         //  uncheck
           this.airq_checked = false;
