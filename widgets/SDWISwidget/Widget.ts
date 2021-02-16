@@ -75,12 +75,12 @@ class Widget implements IWidget {
     this.inherited(arguments);
     var layerStructure = LayerStructure.getInstance();
     // @ts-ignore
-    this.sdwisLayer = layerStructure.getWebmapLayerNodes().find(function (x) {
-      return x.id.toLowerCase().includes('sdwis');
+    this.sdwisLayer = layerStructure.getWebmapLayerNodes().find(function(x) {
+      return x.id.toLowerCase().includes( 'sdwis');
       });
-    this.sdwisPWS = layerStructure.getWebmapLayerNodes().find(function (x) {
-      return x.id.toLowerCase().includes('pws');
-      });
+    //this.sdwisPWS = layerStructure.getWebmapLayerNodes().find(function(x)  {
+      //return x.id.toLowerCase().includes('water system');
+      //});
     console.log('SDWISwidget::postCreate');
   };
   private startup(): void {
@@ -290,6 +290,7 @@ class Widget implements IWidget {
   private onClose(): void {
       // turn off facilities
     this.sdwisLayer.hide();
+    //this.sdwisPWS.hide();
     console.log('SDWISwidget::onClose');
     var self: any = this;
     this.clickHandler.pause();
