@@ -78,9 +78,9 @@ class Widget implements IWidget {
     this.sdwisLayer = layerStructure.getWebmapLayerNodes().find(function (x) {
       return x.id.toLowerCase().includes('sdwis');
       });
-    //this.sdwisPWS = layerStructure.getWebmapLayerNodes().find(function (y) {
-      //return y.id.toLowerCase().includes('PWS');
-      //});
+    this.sdwisPWS = layerStructure.getWebmapLayerNodes().find(function (x) {
+      return x.id.toLowerCase().includes('pws');
+      });
     console.log('SDWISwidget::postCreate');
   };
   private startup(): void {
