@@ -68,6 +68,7 @@ class Widget implements IWidget {
   private sdwisLayer: any;
   private symbol: any;
   private Legend: any;
+  private sdwisPWS: any;
 
 
   private postCreate(args: any): void {
@@ -76,8 +77,10 @@ class Widget implements IWidget {
     // @ts-ignore
     this.sdwisLayer = layerStructure.getWebmapLayerNodes().find(function (x) {
       return x.id.toLowerCase().includes('sdwis');
-
-    });
+      });
+    //this.sdwisPWS = layerStructure.getWebmapLayerNodes().find(function (y) {
+      //return y.id.toLowerCase().includes('PWS');
+      //});
     console.log('SDWISwidget::postCreate');
   };
   private startup(): void {
@@ -102,6 +105,7 @@ class Widget implements IWidget {
     this.featureLayerPWS = new FeatureLayer(
       'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Safe_Drinking_Water_(SDWIS)_Region_9_V1/FeatureServer/1',
       {outFields: ['*']});
+    this.supportsAdvancedQueries = true
     this.featureLayerTable = new FeatureLayer(
       'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Safe_Drinking_Water_(SDWIS)_Region_9_V1/FeatureServer/3',
       {outFields: ['*']});
@@ -119,8 +123,10 @@ class Widget implements IWidget {
   private onOpen(): void {
     let self: any = this;
     this.loadingShelter.show();
+
     var query = new Query();
     this.sdwisLayer.show();
+    //this.sdwisPWS.show();
     query.where = '1=1';
     console.log('SDWISwidget::onOpen');
 
