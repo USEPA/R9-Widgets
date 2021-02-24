@@ -28,6 +28,8 @@ export default declare([BaseWidget], {
   postCreate: function postCreate() {
     this.inherited(postCreate, arguments);
     this.clickHandler = this._clickHandler();
+    var layerStructure = LayerStructure.getInstance();
+    this.webeocLayer = layerStructure.getWebmapLayerNodes().find(x => x.id.toLowerCase().includes('webeoc'));
     console.log('WebEOCWidget::postCreate');
   },
   _clickHandler: function _clickHandler() {
@@ -148,15 +150,16 @@ export default declare([BaseWidget], {
   },
   onOpen: function onOpen() {
     // turn on webeoc layer
-    var layerStructure = LayerStructure.getInstance();
-    layerStructure.getWebmapLayerNodes().find(x => x.id.toLowerCase().includes('webeoc')).show();
+    this.webeocLayer.show();
+
     this.map.setInfoWindowOnClick(false);
     this.mapIdNode.innerHTML = 'Select Web EOC point to view the log';
-    
+
     this.clickHandler.resume();
     console.log('WebEOCWidget::onOpen');
   },
   onClose() {
+    this.webeocLayer.hide();
     this.map.setInfoWindowOnClick(true);
     this.graphicsLayer.clear();
     this.clickHandler.pause();
@@ -181,3 +184,4 @@ export default declare([BaseWidget], {
   //   console.log('WebEOCWidget::resize');
   // }
 });
+
