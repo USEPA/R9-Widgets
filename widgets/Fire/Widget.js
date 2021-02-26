@@ -51,8 +51,9 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       var query = new Query();
       var queryTask = new QueryTask(vs.perimeterbufferFC.url);
 
-      query.where = "RETRIEVED >= " + "'" + currentDate + "'";
-      //query.where = "1=1";
+      // query.where = "RETRIEVED >= " + "'" + currentDate + "'";
+      query.where = "1=1";
+      query.num = 20;
       query.outSpatialReference = {wkid:102100};
       query.returnGeometry = true;
       query.orderByFields = ["IncidentName ASC"];
@@ -84,19 +85,41 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
          var dailyAcres = vs.all_fires[fire].attributes.DailyAcres ? vs.all_fires[fire].attributes.DailyAcres: 0;
          var gisAcres = vs.all_fires[fire].attributes.GISAcres ? vs.all_fires[fire].attributes.GISAcres: 0;
          var incidentName = vs.all_fires[fire].attributes.IncidentName.toUpperCase();
+         var counties = vs.all_fires[fire].attributes.counties;
+         var facilities = JSON.parse(vs.all_fires[fire].attributes.facilities);
+         var tribes = JSON.parse(vs.all_fires[fire].attributes.tribes);
 
          //If dailyAcres is 0 then look at GISAcres
          var reportingAcres
          if (dailyAcres == 0) {
            reportingAcres = gisAcres;
-         }else {
+         } else {
            reportingAcres = dailyAcres;
+         }
+         var rmp = '', npl = '';
+         if (facilities) {
+           rmp = `, ${facilities.total} RMP`;
+           npl = `, ${facilities.total} NPL`;
+         }
+         var t = '';
+         if (tribes) {
+           t = `, ${tribes.total} tribes`;
+         }
+         var c = '';
+         if (counties) {
+           c = `(${counties})`;
          }
 
           //Incident Name with acres
-         var layerDivNode = domConstruct.toDom("<div class='layerDiv' id='" + "F" + vs.all_fires[fire].attributes.OBJECTID +
-           "'><div class='fireNameTxt'>" + incidentName + "</div><div class='acresTxt'>  (" +
-           parseFloat(reportingAcres).toLocaleString('en') + " acres)</div>" + "</div>");
+         // var layerDivNode = domConstruct.toDom("<div class='layerDiv' id='" + "F" + vs.all_fires[fire].attributes.OBJECTID +
+         //   "'><div class='fireNameTxt'>" + incidentName + "</div><div class='acresTxt'>  (" +
+         //   parseFloat(reportingAcres).toLocaleString('en') + " acres)</div>" + "</div>");
+
+                   //Incident Name with acres
+         var layerDivNode = domConstruct.toDom(`<div class='layerDiv' id='F${vs.all_fires[fire].attributes.OBJECTID}'>
+            <div class='fireNameTxt'>${incidentName} ${c}</div>
+            <div class='acresTxt'>(${parseFloat(reportingAcres).toLocaleString('en')} acres${rmp}${npl}${t})</div>
+            </div>`);
 
          //add percent containment bar
           var pclabel;
@@ -140,7 +163,7 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       // var reportNode = domConstruct.toDom("<div class='attLink'><a href='" + results[0].url + "'>" + "Get Report" + "</a><div id='" + "z" + fireDiv.id + "'><a href='#' title='Zoom To'>" + "Zoom To" + "</a></div></div>");
       // domConstruct.place(reportNode, fireDiv, "first");
 
-      var reportNode = domConstruct.toDom("<div class='attLink'><div id='" + "r" + fireDiv.id + "' class='report-button' alt='Zoom To'></div><div class='search-button' id='" + "z" + fireDiv.id + "'></div></div>");
+      var reportNode = domConstruct.toDom("<div class='attLink'><div id='" + "r" + fireDiv.id + "' class='report-button' title='Get Report'></div><div title='Zoom To' class='search-button' id='" + "z" + fireDiv.id + "'></div></div>");
       domConstruct.place(reportNode, fireDiv, "first");
 
       on(dom.byId("z"+ fireDiv.id), "click", vs._onClickFireName);
