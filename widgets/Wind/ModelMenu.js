@@ -73,7 +73,7 @@ define(['dojo/_base/declare',
         this._checks = query(".check", this.modelMenu);
 
         // default
-        this.setModel("HRRR");//init display
+        this.setModel("GFS");//init display
 
         this.own(on(this.modelLabelNode, 'click', lang.hitch(this, function (evt) {
           this._onModelLabelClick(evt);
