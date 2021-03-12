@@ -45,7 +45,7 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       vs.busyHandle.show();
 
       //get perimeter buffer feature layer
-       vs.perimeterbufferFC = new FeatureLayer("https://utility.arcgis.com/usrsvcs/servers/8ab605dafb5e44868271d946dfabfef9/rest/services/R9GIS/FirePerimeterBuffer/FeatureServer/0");
+       vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/ArcGIS/rest/services/R9_Fire_Perimeter_Buffers/FeatureServer/0");
 
       //Query for fires
       var query = new Query();
@@ -85,7 +85,7 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
          var dailyAcres = vs.all_fires[fire].attributes.DailyAcres ? vs.all_fires[fire].attributes.DailyAcres: 0;
          var gisAcres = vs.all_fires[fire].attributes.GISAcres ? vs.all_fires[fire].attributes.GISAcres: 0;
          var incidentName = vs.all_fires[fire].attributes.IncidentName.toUpperCase();
-         var counties = vs.all_fires[fire].attributes.counties;
+         var counties = JSON.parse(vs.all_fires[fire].attributes.counties);
          var facilities = JSON.parse(vs.all_fires[fire].attributes.facilities);
          var tribes = JSON.parse(vs.all_fires[fire].attributes.tribes);
 
@@ -98,16 +98,16 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
          }
          var rmp = '', npl = '';
          if (facilities) {
-           rmp = `, ${facilities.total} RMP`;
-           npl = `, ${facilities.total} NPL`;
+           rmp = `, ${facilities.facilities["Active RMP Facilities"]} RMP`;
+           npl = `, ${facilities.facilities["NationalPriorityListPoint_R9_2019_R9"]} NPL`;
          }
          var t = '';
          if (tribes) {
-           t = `, ${tribes.total} tribes`;
+           t = `, ${tribes.length} tribes`;
          }
          var c = '';
          if (counties) {
-           c = `(${counties})`;
+           c = `(${counties.join(', ')})`;
          }
 
           //Incident Name with acres
@@ -117,7 +117,7 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
 
                    //Incident Name with acres
          var layerDivNode = domConstruct.toDom(`<div class='layerDiv' id='F${vs.all_fires[fire].attributes.OBJECTID}'>
-            <div class='fireNameTxt'>${incidentName} ${c}</div>
+            <div class='fireNameTxt' title='${c}'>${incidentName} ${c}</div>
             <div class='acresTxt'>(${parseFloat(reportingAcres).toLocaleString('en')} acres${rmp}${npl}${t})</div>
             </div>`);
 

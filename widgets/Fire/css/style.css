@@ -15,6 +15,9 @@
   font-weight: bold;
   font-size: larger;
   max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .claro .dijitProgressBar {
