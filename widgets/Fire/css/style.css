@@ -15,9 +15,7 @@
   font-weight: bold;
   font-size: larger;
   max-width: 250px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin-bottom: 5px;
 }
 
 .claro .dijitProgressBar {
@@ -108,6 +106,9 @@
 }
 .jimu-widget-fire .acresTxt {
     font-weight: normal;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .jimu-widget-fire .search-button{

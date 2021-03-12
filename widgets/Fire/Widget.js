@@ -107,7 +107,7 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
          }
          var c = '';
          if (counties) {
-           c = `(${counties.join(', ')})`;
+           c = `${counties.join(', ')}`;
          }
 
           //Incident Name with acres
@@ -117,7 +117,8 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
 
                    //Incident Name with acres
          var layerDivNode = domConstruct.toDom(`<div class='layerDiv' id='F${vs.all_fires[fire].attributes.OBJECTID}'>
-            <div class='fireNameTxt' title='${c}'>${incidentName} ${c}</div>
+            <div class='fireNameTxt'>${incidentName}</div>
+            <div class='acresTxt' title='${c}'>County: ${c}</div>
             <div class='acresTxt'>(${parseFloat(reportingAcres).toLocaleString('en')} acres${rmp}${npl}${t})</div>
             </div>`);
 
@@ -125,10 +126,10 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
           var pclabel;
           var pcValue;
          if(percentContained == "No Data") {
-           pclabel = "No Data";
+           pclabel = parseFloat(reportingAcres).toLocaleString('en') + " acres";
            pcValue = 0;
          }else{
-           pclabel = Math.round(percentContained) + "% contained";
+           pclabel = parseFloat(reportingAcres).toLocaleString('en') + " acres";
            pcValue = Math.round(percentContained);
          }
          //size of bar
