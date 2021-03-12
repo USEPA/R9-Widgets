@@ -132,20 +132,20 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
            pcValue = Math.round(percentContained);
          }
          //size of bar
-         var barWidth;
-         if(dailyAcres < 10000){
-           barWidth = '100px';
-         }else if(dailyAcres >= 10000 && dailyAcres < 30000){
-           barWidth = '150px';
-         }else if(dailyAcres >= 30000 && dailyAcres < 100000){
-           barWidth = '225px';
-         }else if(dailyAcres > 100000){
-           barWidth = '300px';
-         }
+         // var barWidth;
+         // if(dailyAcres < 10000){
+         //   barWidth = '100px';
+         // }else if(dailyAcres >= 10000 && dailyAcres < 30000){
+         //   barWidth = '150px';
+         // }else if(dailyAcres >= 30000 && dailyAcres < 100000){
+         //   barWidth = '225px';
+         // }else if(dailyAcres > 100000){
+         //   barWidth = '300px';
+         // }
          var myProgressBar = new ProgressBar({
            value: pcValue,
            label: pclabel,
-           style: "width: "+ barWidth
+           // style: "width: "+ barWidth
          }).placeAt(layerDivNode).startup();
 
          domConstruct.place(layerDivNode, vs.fireList);
