@@ -77,6 +77,17 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       console.log("Query Fire Results");
       vs.all_fires = results.features;
 
+      //get min and max acres
+      vs.acresArray = vs.all_fires.map(function (a) {
+         var dAcres = a.attributes.DailyAcres ? a.attributes.DailyAcres:0;
+         var gAcres = a.attributes.GISAcres ? a.attributes.GISAcres:0;
+         if(dAcres == 0){
+           return gAcres;
+         }else {
+           return parseFloat(dAcres);
+         }
+      });
+
       //Loop through fires and add dom objects
       for (var fire in vs.all_fires) {
 
@@ -133,7 +144,13 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
            pcValue = Math.round(percentContained);
          }
          //size of bar
-         // var barWidth;
+         var acresMin = Math.min.apply(Math, vs.acresArray);
+         var acresMax = Math.max.apply(Math, vs.acresArray);
+         var acresRange = acresMax - acresMin;
+         var scale = 200/acresRange;
+         var scaledPixels = (reportingAcres - acresMin)*(200/acresRange);
+         var bar = 100 + scaledPixels;
+         var barWidth = bar.toString() + 'px';
          // if(dailyAcres < 10000){
          //   barWidth = '100px';
          // }else if(dailyAcres >= 10000 && dailyAcres < 30000){
@@ -146,7 +163,7 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
          var myProgressBar = new ProgressBar({
            value: pcValue,
            label: pclabel,
-           // style: "width: "+ barWidth
+           style: "width: "+ barWidth
          }).placeAt(layerDivNode).startup();
 
          domConstruct.place(layerDivNode, vs.fireList);
