@@ -45,15 +45,19 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       vs.busyHandle.show();
 
       //get perimeter buffer feature layer
-       vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/ArcGIS/rest/services/R9_Fire_Perimeter_Buffers/FeatureServer/0");
+      //https://epa.maps.arcgis.com/home/item.html?id=34f62d591f1b49a287f7f78cfc60994d#overview
+       vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/ArcGIS/rest/services/R9_Fire_Perimeter_Buffers/FeatureServer/0", {
+         definitionExpression: "RETRIEVED >= " + "'" + currentDate + "'"
+       });
+       vs.map.addLayer(vs.perimeterbufferFC);
 
       //Query for fires
       var query = new Query();
       var queryTask = new QueryTask(vs.perimeterbufferFC.url);
 
-      // query.where = "RETRIEVED >= " + "'" + currentDate + "'";
-      query.where = "1=1";
-      query.num = 20;
+      query.where = "RETRIEVED >= " + "'" + currentDate + "'";
+      // query.where = "1=1";
+      // query.num = 20;
       query.outSpatialReference = {wkid:102100};
       query.returnGeometry = true;
       query.orderByFields = ["IncidentName ASC"];
@@ -98,6 +102,8 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
          var incidentName = vs.all_fires[fire].attributes.IncidentName.toUpperCase();
          var counties = JSON.parse(vs.all_fires[fire].attributes.counties);
          var facilities = JSON.parse(vs.all_fires[fire].attributes.facilities);
+          var rmpFacilities = facilities.facilities["Active RMP Facilities"] ? facilities.facilities["Active RMP Facilities"]:0;
+         var nplFacilities = facilities.facilities["NationalPriorityListPoint_R9_2019_R9"] ? facilities.facilities["NationalPriorityListPoint_R9_2019_R9"]:0;
          var tribes = JSON.parse(vs.all_fires[fire].attributes.tribes);
 
          //If dailyAcres is 0 then look at GISAcres
@@ -107,10 +113,11 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
          } else {
            reportingAcres = dailyAcres;
          }
+
          var rmp = '', npl = '';
          if (facilities) {
-           rmp = `, ${facilities.facilities["Active RMP Facilities"]} RMP`;
-           npl = `, ${facilities.facilities["NationalPriorityListPoint_R9_2019_R9"]} NPL`;
+           rmp = `, ${rmpFacilities} RMP`;
+           npl = `, ${nplFacilities} NPL`;
          }
          var t = '';
          if (tribes) {
@@ -186,14 +193,16 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
 
       on(dom.byId("z"+ fireDiv.id), "click", vs._onClickFireName);
       on(dom.byId("r"+ fireDiv.id), "click", function (e) {
-        window.open(results[0].url, "_top");
+        //Get latest report from the bottom of the list (array)
+        var latestReportIndex = results.length - 1;
+        window.open(results[latestReportIndex].url, "_top");
       });
     },
 
     _QueryfireResultsError: function(err){
       //Need to write a better error report
       vs.busyHandle.hide();
-      console.log('error')
+      console.log('error');
     },
 
     _onClickFireName: function(e){
@@ -221,6 +230,9 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
 
     onClose: function(){
       console.log('onClose');
+      //toggle fire layer visibilty off
+      //vs.map.getLayer(vs.perimeterbufferFC.id);
+      vs.perimeterbufferFC.hide();
     },
 
     onMinimize: function(){
