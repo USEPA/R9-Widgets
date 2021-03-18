@@ -158,15 +158,7 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
          var scaledPixels = (reportingAcres - acresMin)*(200/acresRange);
          var bar = 100 + scaledPixels;
          var barWidth = bar.toString() + 'px';
-         // if(dailyAcres < 10000){
-         //   barWidth = '100px';
-         // }else if(dailyAcres >= 10000 && dailyAcres < 30000){
-         //   barWidth = '150px';
-         // }else if(dailyAcres >= 30000 && dailyAcres < 100000){
-         //   barWidth = '225px';
-         // }else if(dailyAcres > 100000){
-         //   barWidth = '300px';
-         // }
+
          var myProgressBar = new ProgressBar({
            value: pcValue,
            label: pclabel,
@@ -211,16 +203,18 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       targetObjID = targetID[1];
       //get fire buffer extent
       var query = new Query();
+      var queryTask = new QueryTask(vs.perimeterbufferFC.url);
       query.objectIds = [targetObjID];
       query.outSpatialReference = {wkid:102100};
       query.returnGeometry = true;
-      query.outFields = ["*"];
-      vs.perimeterbufferFC.queryExtent(query, vs._queryFeatureReslts);
+      //query.outFields = ["*"];
+      // vs.perimeterbufferFC.queryExtent(query, vs._queryFeatureReslts, vs._QueryfireResultsError); what
+      queryTask.execute(query, vs._queryFeatureReslts);
     },
 
     _queryFeatureReslts: function(results){
       //set map extent
-      var fireBufferExtent = new Extent(results.extent);
+      var fireBufferExtent = new Extent(results.features[0].geometry.getExtent());
       vs.map.setExtent(fireBufferExtent);
     },
 
