@@ -15,10 +15,10 @@
 ///////////////////////////////////////////////////////////////////////////
 define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct', 'esri/tasks/QueryTask', 'esri/tasks/query',
         'dijit/ProgressBar', 'esri/layers/FeatureLayer', 'esri/dijit/util/busyIndicator', 'dojo/dom-style', 'dojo/on',
-        'esri/geometry/Extent', 'dijit/form/Button'],
+        'esri/geometry/Extent', 'dijit/form/Button', 'jimu/LayerStructure'],
 function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
           ProgressBar, FeatureLayer, busyIndicator, domStyle, on,
-         Extent, Button) {
+         Extent, Button, LayerStructure) {
   //To create a widget, you need to derive from BaseWidget.
   return declare([BaseWidget], {
     // DemoWidget code goes here
@@ -43,6 +43,9 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       //set up busyIndicator
       vs.busyHandle = busyIndicator.create(vs.fireWidgetFrame);
       vs.busyHandle.show();
+
+      //Identify default fire layers
+      vs.fireLayerNames = ["NIFS Current Wildfire Perimeters", "Wildfire Reporting (IRWIN)"];
 
       //get perimeter buffer feature layer
       //https://epa.maps.arcgis.com/home/item.html?id=34f62d591f1b49a287f7f78cfc60994d#overview
@@ -220,12 +223,25 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
 
     onOpen: function(){
       console.log('onOpen');
+      //Make fire layers visible
+      var layerStructure = LayerStructure.getInstance();
+      layerStructure.traversal(function(layerNode) {
+        if(vs.fireLayerNames.includes(layerNode.title)){
+          layerNode.show();
+        }
+      });
+      vs.perimeterbufferFC.show();
     },
 
     onClose: function(){
       console.log('onClose');
       //toggle fire layer visibilty off
-      //vs.map.getLayer(vs.perimeterbufferFC.id);
+      var layerStructure = LayerStructure.getInstance();
+      layerStructure.traversal(function(layerNode) {
+        if(vs.fireLayerNames.includes(layerNode.title)){
+          layerNode.hide();
+        }
+      });
       vs.perimeterbufferFC.hide();
     },
 
