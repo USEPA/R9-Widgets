@@ -44,8 +44,9 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       vs.busyHandle = busyIndicator.create(vs.fireWidgetFrame);
       vs.busyHandle.show();
 
-      //Identify default fire layers
+      //Identify default fire layers and visisblity
       vs.fireLayerNames = ["NIFS Current Wildfire Perimeters", "Wildfire Reporting (IRWIN)"];
+      vs.fireLayerVisReset = [];
 
       //get perimeter buffer feature layer
       //https://epa.maps.arcgis.com/home/item.html?id=34f62d591f1b49a287f7f78cfc60994d#overview
@@ -146,12 +147,15 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
          //add percent containment bar
           var pclabel;
           var pcValue;
+          var pcTitle;
          if(percentContained == "No Data") {
            pclabel = parseFloat(reportingAcres).toLocaleString('en') + " acres";
            pcValue = 0;
+           pcTitle = '0% Contained';
          }else{
            pclabel = parseFloat(reportingAcres).toLocaleString('en') + " acres";
            pcValue = Math.round(percentContained);
+           pcTitle = percentContained + '% Contained';
          }
          //size of bar
          var acresMin = Math.min.apply(Math, vs.acresArray);
@@ -163,7 +167,7 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
          var barWidth = bar.toString() + 'px';
 
          var myProgressBar = new ProgressBar({
-           title: percentContained + '% Contained',
+           title: pcTitle,
            value: pcValue,
            label: pclabel,
            style: "width: "+ barWidth
@@ -226,12 +230,13 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       console.log('onOpen');
       //Make fire layers visible
       var layerStructure = LayerStructure.getInstance();
-      var index = 0;
+
       layerStructure.traversal(function(layerNode) {
-        if(vs.fireLayerNames.includes(layerNode.title)){
+        if(vs.fireLayerNames.includes(layerNode.title) && !layerNode.isVisible()){
           layerNode.show();
+          vs.fireLayerVisReset.push(layerNode.title);
         }
-        index++;
+
       });
       //Check to see if perimeter buffer layer has been added
       var bufferLayerStatus = vs.map.getLayer(vs.perimeterbufferFC.id);
@@ -242,15 +247,16 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
 
     onClose: function(){
       console.log('onClose');
-      //toggle fire layer visibilty off
-      // var layerStructure = LayerStructure.getInstance();
-      // layerStructure.traversal(function(layerNode) {
-      //   if(vs.fireLayerNames.includes(layerNode.title)){
-      //     layerNode.hide();
-      //   }
-      // });
-      // vs.perimeterbufferFC.hide();
+      //if the widget set visible on, then for that layer set visibility off
+      var layerStructure = LayerStructure.getInstance();
+      layerStructure.traversal(function(layerNode) {
+        if(vs.fireLayerVisReset.includes(layerNode.title)){
+          layerNode.hide();
+        }
+      });
+
       vs.map.removeLayer(vs.perimeterbufferFC);
+      vs.fireLayerVisReset = [];
     },
 
     onMinimize: function(){
