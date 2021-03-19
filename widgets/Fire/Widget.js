@@ -14,254 +14,252 @@
 // limitations under the License.
 ///////////////////////////////////////////////////////////////////////////
 define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct', 'esri/tasks/QueryTask', 'esri/tasks/query',
-        'dijit/ProgressBar', 'esri/layers/FeatureLayer', 'esri/dijit/util/busyIndicator', 'dojo/dom-style', 'dojo/on',
-        'esri/geometry/Extent', 'dijit/form/Button', 'jimu/LayerStructure'],
-function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
-          ProgressBar, FeatureLayer, busyIndicator, domStyle, on,
-         Extent, Button, LayerStructure) {
-  //To create a widget, you need to derive from BaseWidget.
-  return declare([BaseWidget], {
-    // DemoWidget code goes here
+    'dijit/ProgressBar', 'esri/layers/FeatureLayer', 'esri/dijit/util/busyIndicator', 'dojo/dom-style', 'dojo/on',
+    'esri/geometry/Extent', 'dijit/form/Button', 'jimu/LayerStructure'],
+  function (declare, BaseWidget, dom, domConstruct, QueryTask, Query,
+            ProgressBar, FeatureLayer, busyIndicator, domStyle, on,
+            Extent, Button, LayerStructure) {
+    //To create a widget, you need to derive from BaseWidget.
+    return declare([BaseWidget], {
+      // DemoWidget code goes here
 
-    //please note that this property is be set by the framework when widget is loaded.
-    //templateString: template,
+      //please note that this property is be set by the framework when widget is loaded.
+      //templateString: template,
 
-    baseClass: 'jimu-widget-fire',
+      baseClass: 'jimu-widget-fire',
 
-    postCreate: function() {
-      this.inherited(arguments);
-      console.log('postCreate');
-    },
+      postCreate: function () {
+        this.inherited(arguments);
+        console.log('postCreate');
+      },
 
-    startup: function() {
-      vs = this;
-      this.inherited(arguments);
-      console.log('startup');
-      var currentDate = vs._getCurrentDate();
+      startup: function () {
+        vs = this;
+        this.inherited(arguments);
+        console.log('startup');
+        var currentDate = vs._getCurrentDate();
 
-      //set up busyIndicator
-      vs.busyHandle = busyIndicator.create(vs.fireWidgetFrame);
-      vs.busyHandle.show();
+        //set up busyIndicator
+        vs.busyHandle = busyIndicator.create(vs.fireWidgetFrame);
+        vs.busyHandle.show();
 
-      //Identify default fire layers and visisblity
-      vs.fireLayerNames = ["NIFS Current Wildfire Perimeters", "Wildfire Reporting (IRWIN)"];
-      vs.fireLayerVisReset = [];
+        //Identify default fire layers and visisblity
+        vs.fireLayerNames = ["NIFS Current Wildfire Perimeters", "Wildfire Reporting (IRWIN)"];
+        vs.fireLayerVisReset = [];
 
-      //get perimeter buffer feature layer
-       vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/ArcGIS/rest/services/R9_Fire_Perimeter_Buffers/FeatureServer/0", {
-         definitionExpression: "RETRIEVED >= " + "'" + currentDate + "'"
-       });
-       vs.map.addLayer(vs.perimeterbufferFC, 0);
+        //get perimeter buffer feature layer
+        vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/ArcGIS/rest/services/R9_Fire_Perimeter_Buffers/FeatureServer/0", {
+          definitionExpression: "RETRIEVED >= " + "'" + currentDate + "'"
+        });
+        vs.map.addLayer(vs.perimeterbufferFC, 0);
 
-      //Query for fires
-      var query = new Query();
-      var queryTask = new QueryTask(vs.perimeterbufferFC.url);
+        //Query for fires
+        var query = new Query();
+        var queryTask = new QueryTask(vs.perimeterbufferFC.url);
 
-      query.where = "RETRIEVED >= " + "'" + currentDate + "'";
-      query.outSpatialReference = {wkid:102100};
-      query.returnGeometry = true;
-      query.orderByFields = ["IncidentName ASC"];
-      query.outFields = ["*"];
-      queryTask.execute(query, this._QueryFiresResults, vs._QueryfireResultsError).then(function(){
-        vs.busyHandle.hide();
-        domStyle.set(vs.headerInfo, "display", "block");
-      });
-    },
+        query.where = "RETRIEVED >= " + "'" + currentDate + "'";
+        query.outSpatialReference = {wkid: 102100};
+        query.returnGeometry = true;
+        query.orderByFields = ["IncidentName ASC"];
+        query.outFields = ["*"];
+        queryTask.execute(query, this._QueryFiresResults, vs._QueryfireResultsError).then(function () {
+          vs.busyHandle.hide();
+          domStyle.set(vs.headerInfo, "display", "block");
+        });
+      },
 
-    _getCurrentDate: function(){
-      var today = new Date();
-      var dd = String(today.getDate()).padStart(2, '0');
-      var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-      var yyyy = today.getFullYear();
+      _getCurrentDate: function () {
+        var today = new Date();
+        var dd = String(today.getDate()).padStart(2, '0');
+        var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+        var yyyy = today.getFullYear();
 
-      return yyyy + '-' + mm + '-' + dd;
-    },
+        return yyyy + '-' + mm + '-' + dd;
+      },
 
-    _QueryFiresResults: function(results){
-      console.log("Query Fire Results");
-      vs.all_fires = results.features;
+      _QueryFiresResults: function (results) {
+        console.log("Query Fire Results");
+        vs.all_fires = results.features;
 
-      //get min and max acres
-      vs.acresArray = vs.all_fires.map(function (a) {
-         var dAcres = a.attributes.DailyAcres ? a.attributes.DailyAcres:0;
-         var gAcres = a.attributes.GISAcres ? a.attributes.GISAcres:0;
-         if(dAcres == 0){
-           return gAcres;
-         }else {
-           return parseFloat(dAcres);
-         }
-      });
+        //get min and max acres
+        vs.acresArray = vs.all_fires.map(function (a) {
+          var dAcres = a.attributes.DailyAcres ? a.attributes.DailyAcres : 0;
+          var gAcres = a.attributes.GISAcres ? a.attributes.GISAcres : 0;
+          if (dAcres == 0) {
+            return gAcres;
+          } else {
+            return parseFloat(dAcres);
+          }
+        });
 
-      //Loop through fires and add dom objects
-      for (var fire in vs.all_fires) {
+        //Loop through fires and add dom objects
+        for (var fire in vs.all_fires) {
 
-         //Acres and PercentContained
-         var percentContained = vs.all_fires[fire].attributes.PercentContained ? vs.all_fires[fire].attributes.PercentContained:"No Data";
-         var dailyAcres = vs.all_fires[fire].attributes.DailyAcres ? vs.all_fires[fire].attributes.DailyAcres: 0;
-         var gisAcres = vs.all_fires[fire].attributes.GISAcres ? vs.all_fires[fire].attributes.GISAcres: 0;
-         var incidentName = vs.all_fires[fire].attributes.IncidentName.toUpperCase();
-         var counties = JSON.parse(vs.all_fires[fire].attributes.counties);
-         var facilities = JSON.parse(vs.all_fires[fire].attributes.facilities);
-          var rmpFacilities = facilities.facilities["Active RMP Facilities"] ? facilities.facilities["Active RMP Facilities"]:0;
-         var nplFacilities = facilities.facilities["NationalPriorityListPoint_R9_2019_R9"] ? facilities.facilities["NationalPriorityListPoint_R9_2019_R9"]:0;
-         var tribes = JSON.parse(vs.all_fires[fire].attributes.tribes);
+          //Acres and PercentContained
+          var percentContained = vs.all_fires[fire].attributes.PercentContained ? vs.all_fires[fire].attributes.PercentContained : 0;
+          var dailyAcres = vs.all_fires[fire].attributes.DailyAcres ? vs.all_fires[fire].attributes.DailyAcres : 0;
+          var gisAcres = vs.all_fires[fire].attributes.GISAcres ? vs.all_fires[fire].attributes.GISAcres : 0;
+          var incidentName = vs.all_fires[fire].attributes.IncidentName.toUpperCase();
+          var counties = JSON.parse(vs.all_fires[fire].attributes.counties);
+          var facilities = JSON.parse(vs.all_fires[fire].attributes.facilities);
+          var rmpFacilities = facilities.facilities["Active RMP Facilities"] ? facilities.facilities["Active RMP Facilities"] : 0;
+          var nplFacilities = facilities.facilities["NationalPriorityListPoint_R9_2019_R9"] ? facilities.facilities["NationalPriorityListPoint_R9_2019_R9"] : 0;
+          var tribes = JSON.parse(vs.all_fires[fire].attributes.tribes);
 
-         //If dailyAcres is 0 then look at GISAcres
-         var reportingAcres
-         if (dailyAcres == 0) {
-           reportingAcres = gisAcres;
-         } else {
-           reportingAcres = dailyAcres;
-         }
+          //If dailyAcres is 0 then look at GISAcres
+          var reportingAcres
+          if (dailyAcres == 0) {
+            reportingAcres = gisAcres;
+          } else {
+            reportingAcres = dailyAcres;
+          }
 
-         var rmp = '', npl = '';
-         if (facilities) {
-           rmp = `, ${rmpFacilities} RMP`;
-           npl = `, ${nplFacilities} NPL`;
-         }
-         var t = '';
-         if (tribes) {
-           t = `, ${tribes.length} tribes`;
-         }
-         var c = '';
-         if (counties) {
-           c = `${counties.join(', ')}`;
-         }
+          var rmp = '', npl = '';
+          if (facilities) {
+            rmp = `, ${rmpFacilities} RMP`;
+            npl = `, ${nplFacilities} NPL`;
+          }
+          var t = '';
+          if (tribes) {
+            t = `, ${tribes.length} tribes`;
+          }
+          var c = '';
+          if (counties) {
+            if (counties.length > 1) {
+              c = 'Counties';
+            } else {
+              c = 'County';
+            }
+            c = `${c}: ${counties.join(', ')}`;
+          }
 
-         //Incident Name with acres
-         var layerDivNode = domConstruct.toDom(`<div class='layerDiv' id='F${vs.all_fires[fire].attributes.OBJECTID}'>
+          //Incident Name with acres
+          var layerDivNode = domConstruct.toDom(`<div class='layerDiv' id='F${vs.all_fires[fire].attributes.OBJECTID}'>
             <div class='fireNameTxt'>${incidentName}</div>
-            <div class='acresTxt' title='${c}'>County: ${c}</div>
+            <div class='acresTxt' title='${c}'>${c}</div>
             <div class='acresTxt'>(${parseFloat(reportingAcres).toLocaleString('en')} acres${rmp}${npl}${t})</div>
             </div>`);
 
-         //add percent containment bar
-          var pclabel;
-          var pcValue;
-          var pcTitle;
-         if(percentContained == "No Data") {
-           pclabel = parseFloat(reportingAcres).toLocaleString('en') + " acres";
-           pcValue = 0;
-           pcTitle = '0% Contained';
-         }else{
-           pclabel = parseFloat(reportingAcres).toLocaleString('en') + " acres";
-           pcValue = Math.round(percentContained);
-           pcTitle = percentContained + '% Contained';
-         }
-         //size of bar
-         var acresMin = Math.min.apply(Math, vs.acresArray);
-         var acresMax = Math.max.apply(Math, vs.acresArray);
-         var acresRange = acresMax - acresMin;
-         var scale = 200/acresRange;
-         var scaledPixels = (reportingAcres - acresMin)*(200/acresRange);
-         var bar = 100 + scaledPixels;
-         var barWidth = bar.toString() + 'px';
+          //add percent containment bar
 
-         var myProgressBar = new ProgressBar({
-           title: pcTitle,
-           value: pcValue,
-           label: pclabel,
-           style: "width: "+ barWidth
-         }).placeAt(layerDivNode).startup();
-         domConstruct.place(layerDivNode, vs.fireList);
-         //get fire attachment
-         vs.perimeterbufferFC.queryAttachmentInfos(vs.all_fires[fire].attributes.OBJECTID, vs._queryFireAttachment, vs._QueryfireResultsError);
-      }
-    },
 
-    _queryFireAttachment: function(results){
-      console.log('Attachment Query Results');
-      var objectIDString = "F" + results[0].objectId;
-      var fireDiv = dom.byId(objectIDString);
+          var pclabel = parseFloat(reportingAcres).toLocaleString('en') + " acres";
+          var pcValue = Math.round(percentContained);
+          var pcTitle = percentContained + '% Contained';
+          //size of bar
+          var acresMin = Math.min.apply(Math, vs.acresArray);
+          var acresMax = Math.max.apply(Math, vs.acresArray);
+          var acresRange = acresMax - acresMin;
+          var scale = 200 / acresRange;
+          var scaledPixels = (reportingAcres - acresMin) * (200 / acresRange);
+          var bar = 100 + scaledPixels;
+          var barWidth = bar.toString() + 'px';
 
-      var reportNode = domConstruct.toDom("<div class='attLink'><div id='" + "r" + fireDiv.id + "' class='report-button' title='Get Report'></div><div title='Zoom To' class='search-button' id='" + "z" + fireDiv.id + "'></div></div>");
-      domConstruct.place(reportNode, fireDiv, "first");
-
-      on(dom.byId("z"+ fireDiv.id), "click", vs._onClickFireName);
-      on(dom.byId("r"+ fireDiv.id), "click", function (e) {
-        //Get latest report from the bottom of the list (array)
-        var latestReportIndex = results.length - 1;
-        window.open(results[latestReportIndex].url, "_top");
-      });
-    },
-
-    _QueryfireResultsError: function(err){
-      //Need to write a better error report
-      vs.busyHandle.hide();
-      console.log('error');
-    },
-
-    _onClickFireName: function(e){
-      //get objectid of firebuffer clicked on
-      var targetID = e.currentTarget.id.split('F');
-      targetObjID = targetID[1];
-      //get fire buffer extent
-      var query = new Query();
-      var queryTask = new QueryTask(vs.perimeterbufferFC.url);
-      query.objectIds = [targetObjID];
-      query.outSpatialReference = {wkid:102100};
-      query.returnGeometry = true;
-      queryTask.execute(query, vs._queryFeatureReslts);
-    },
-
-    _queryFeatureReslts: function(results){
-      //set map extent
-      var fireBufferExtent = new Extent(results.features[0].geometry.getExtent());
-      vs.map.setExtent(fireBufferExtent);
-    },
-
-    onOpen: function(){
-      console.log('onOpen');
-      //Make fire layers visible
-      var layerStructure = LayerStructure.getInstance();
-
-      layerStructure.traversal(function(layerNode) {
-        if(vs.fireLayerNames.includes(layerNode.title) && !layerNode.isVisible()){
-          layerNode.show();
-          vs.fireLayerVisReset.push(layerNode.title);
+          var myProgressBar = new ProgressBar({
+            title: pcTitle,
+            value: pcValue,
+            label: pclabel,
+            style: "width: " + barWidth
+          }).placeAt(layerDivNode).startup();
+          domConstruct.place(layerDivNode, vs.fireList);
+          //get fire attachment
+          vs.perimeterbufferFC.queryAttachmentInfos(vs.all_fires[fire].attributes.OBJECTID, vs._queryFireAttachment, vs._QueryfireResultsError);
         }
+      },
 
-      });
-      //Check to see if perimeter buffer layer has been added
-      var bufferLayerStatus = vs.map.getLayer(vs.perimeterbufferFC.id);
-      if(!bufferLayerStatus){
-        vs.map.addLayer(vs.perimeterbufferFC);
-      }
-    },
+      _queryFireAttachment: function (results) {
+        console.log('Attachment Query Results');
+        var objectIDString = "F" + results[0].objectId;
+        var fireDiv = dom.byId(objectIDString);
 
-    onClose: function(){
-      console.log('onClose');
-      //if the widget set visible on, then for that layer set visibility off
-      var layerStructure = LayerStructure.getInstance();
-      layerStructure.traversal(function(layerNode) {
-        if(vs.fireLayerVisReset.includes(layerNode.title)){
-          layerNode.hide();
+        var reportNode = domConstruct.toDom("<div class='attLink'><div id='" + "r" + fireDiv.id + "' class='report-button' title='Get Report'></div><div title='Zoom To' class='search-button' id='" + "z" + fireDiv.id + "'></div></div>");
+        domConstruct.place(reportNode, fireDiv, "first");
+
+        on(dom.byId("z" + fireDiv.id), "click", vs._onClickFireName);
+        on(dom.byId("r" + fireDiv.id), "click", function (e) {
+          //Get latest report from the bottom of the list (array)
+          var latestReportIndex = results.length - 1;
+          window.open(results[latestReportIndex].url, "_top");
+        });
+      },
+
+      _QueryfireResultsError: function (err) {
+        //Need to write a better error report
+        vs.busyHandle.hide();
+        console.log('error');
+      },
+
+      _onClickFireName: function (e) {
+        //get objectid of firebuffer clicked on
+        var targetID = e.currentTarget.id.split('F');
+        targetObjID = targetID[1];
+        //get fire buffer extent
+        var query = new Query();
+        var queryTask = new QueryTask(vs.perimeterbufferFC.url);
+        query.objectIds = [targetObjID];
+        query.outSpatialReference = {wkid: 102100};
+        query.returnGeometry = true;
+        queryTask.execute(query, vs._queryFeatureReslts);
+      },
+
+      _queryFeatureReslts: function (results) {
+        //set map extent
+        var fireBufferExtent = new Extent(results.features[0].geometry.getExtent());
+        vs.map.setExtent(fireBufferExtent);
+      },
+
+      onOpen: function () {
+        console.log('onOpen');
+        //Make fire layers visible
+        var layerStructure = LayerStructure.getInstance();
+
+        layerStructure.traversal(function (layerNode) {
+          if (vs.fireLayerNames.includes(layerNode.title) && !layerNode.isVisible()) {
+            layerNode.show();
+            vs.fireLayerVisReset.push(layerNode.title);
+          }
+
+        });
+        //Check to see if perimeter buffer layer has been added
+        var bufferLayerStatus = vs.map.getLayer(vs.perimeterbufferFC.id);
+        if (!bufferLayerStatus) {
+          vs.map.addLayer(vs.perimeterbufferFC);
         }
-      });
+      },
 
-      vs.map.removeLayer(vs.perimeterbufferFC);
-      vs.fireLayerVisReset = [];
-    },
+      onClose: function () {
+        console.log('onClose');
+        //if the widget set visible on, then for that layer set visibility off
+        var layerStructure = LayerStructure.getInstance();
+        layerStructure.traversal(function (layerNode) {
+          if (vs.fireLayerVisReset.includes(layerNode.title)) {
+            layerNode.hide();
+          }
+        });
 
-    onMinimize: function(){
-      console.log('onMinimize');
-    },
+        vs.map.removeLayer(vs.perimeterbufferFC);
+        vs.fireLayerVisReset = [];
+      },
 
-    onMaximize: function(){
-      console.log('onMaximize');
-    },
+      onMinimize: function () {
+        console.log('onMinimize');
+      },
 
-    onSignIn: function(credential){
-      /* jshint unused:false*/
-      console.log('onSignIn');
-    },
+      onMaximize: function () {
+        console.log('onMaximize');
+      },
 
-    onSignOut: function(){
-      console.log('onSignOut');
-    },
+      onSignIn: function (credential) {
+        /* jshint unused:false*/
+        console.log('onSignIn');
+      },
 
-    showVertexCount: function(count){
-      this.vertexCount.innerHTML = 'The vertex count is: ' + count;
-    }
+      onSignOut: function () {
+        console.log('onSignOut');
+      },
+
+      showVertexCount: function (count) {
+        this.vertexCount.innerHTML = 'The vertex count is: ' + count;
+      }
+    });
   });
-});
