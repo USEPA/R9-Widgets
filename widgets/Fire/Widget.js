@@ -163,6 +163,7 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
          var barWidth = bar.toString() + 'px';
 
          var myProgressBar = new ProgressBar({
+           title: percentContained + '% Contained',
            value: pcValue,
            label: pclabel,
            style: "width: "+ barWidth
@@ -225,24 +226,31 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       console.log('onOpen');
       //Make fire layers visible
       var layerStructure = LayerStructure.getInstance();
+      var index = 0;
       layerStructure.traversal(function(layerNode) {
         if(vs.fireLayerNames.includes(layerNode.title)){
           layerNode.show();
         }
+        index++;
       });
-      vs.perimeterbufferFC.show();
+      //Check to see if perimeter buffer layer has been added
+      var bufferLayerStatus = vs.map.getLayer(vs.perimeterbufferFC.id);
+      if(!bufferLayerStatus){
+        vs.map.addLayer(vs.perimeterbufferFC);
+      }
     },
 
     onClose: function(){
       console.log('onClose');
       //toggle fire layer visibilty off
-      var layerStructure = LayerStructure.getInstance();
-      layerStructure.traversal(function(layerNode) {
-        if(vs.fireLayerNames.includes(layerNode.title)){
-          layerNode.hide();
-        }
-      });
-      vs.perimeterbufferFC.hide();
+      // var layerStructure = LayerStructure.getInstance();
+      // layerStructure.traversal(function(layerNode) {
+      //   if(vs.fireLayerNames.includes(layerNode.title)){
+      //     layerNode.hide();
+      //   }
+      // });
+      // vs.perimeterbufferFC.hide();
+      vs.map.removeLayer(vs.perimeterbufferFC);
     },
 
     onMinimize: function(){
