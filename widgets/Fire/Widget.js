@@ -51,7 +51,7 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
        vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/ArcGIS/rest/services/R9_Fire_Perimeter_Buffers/FeatureServer/0", {
          definitionExpression: "RETRIEVED >= " + "'" + currentDate + "'"
        });
-       vs.map.addLayer(vs.perimeterbufferFC);
+       vs.map.addLayer(vs.perimeterbufferFC, 0);
 
       //Query for fires
       var query = new Query();
