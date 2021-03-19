@@ -149,3 +149,25 @@
   background-image: url("../images/operation_hover.svg");
 }
 
+.jimu-widget-fire .containedLegend{
+  background-color: #0d71bc;
+  width: 15px;
+  height: 15px;
+}
+
+.jimu-widget-fire .notcontainedLegend{
+  background-color: #ca0000;
+  width: 15px;
+  height: 15px;
+}
+
+.jimu-widget-fire .customLegend > div{
+  vertical-align:top;
+  display:inline-block;
+  margin: 3px;
+  font-size: 14px;
+
+}
+
+
+
