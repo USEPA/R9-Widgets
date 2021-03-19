@@ -34,9 +34,8 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
     },
 
     startup: function() {
-      vs = this
+      vs = this;
       this.inherited(arguments);
-      // this.mapIdNode.innerHTML = 'map id:' + this.map.id;
       console.log('startup');
       var currentDate = vs._getCurrentDate();
 
@@ -49,7 +48,6 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       vs.fireLayerVisReset = [];
 
       //get perimeter buffer feature layer
-      //https://epa.maps.arcgis.com/home/item.html?id=34f62d591f1b49a287f7f78cfc60994d#overview
        vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/ArcGIS/rest/services/R9_Fire_Perimeter_Buffers/FeatureServer/0", {
          definitionExpression: "RETRIEVED >= " + "'" + currentDate + "'"
        });
@@ -60,8 +58,6 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       var queryTask = new QueryTask(vs.perimeterbufferFC.url);
 
       query.where = "RETRIEVED >= " + "'" + currentDate + "'";
-      // query.where = "1=1";
-      // query.num = 20;
       query.outSpatialReference = {wkid:102100};
       query.returnGeometry = true;
       query.orderByFields = ["IncidentName ASC"];
@@ -132,12 +128,7 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
            c = `${counties.join(', ')}`;
          }
 
-          //Incident Name with acres
-         // var layerDivNode = domConstruct.toDom("<div class='layerDiv' id='" + "F" + vs.all_fires[fire].attributes.OBJECTID +
-         //   "'><div class='fireNameTxt'>" + incidentName + "</div><div class='acresTxt'>  (" +
-         //   parseFloat(reportingAcres).toLocaleString('en') + " acres)</div>" + "</div>");
-
-                   //Incident Name with acres
+         //Incident Name with acres
          var layerDivNode = domConstruct.toDom(`<div class='layerDiv' id='F${vs.all_fires[fire].attributes.OBJECTID}'>
             <div class='fireNameTxt'>${incidentName}</div>
             <div class='acresTxt' title='${c}'>County: ${c}</div>
@@ -172,21 +163,16 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
            label: pclabel,
            style: "width: "+ barWidth
          }).placeAt(layerDivNode).startup();
-
          domConstruct.place(layerDivNode, vs.fireList);
-
          //get fire attachment
          vs.perimeterbufferFC.queryAttachmentInfos(vs.all_fires[fire].attributes.OBJECTID, vs._queryFireAttachment, vs._QueryfireResultsError);
       }
-
     },
 
     _queryFireAttachment: function(results){
       console.log('Attachment Query Results');
       var objectIDString = "F" + results[0].objectId;
       var fireDiv = dom.byId(objectIDString);
-      // var reportNode = domConstruct.toDom("<div class='attLink'><a href='" + results[0].url + "'>" + "Get Report" + "</a><div id='" + "z" + fireDiv.id + "'><a href='#' title='Zoom To'>" + "Zoom To" + "</a></div></div>");
-      // domConstruct.place(reportNode, fireDiv, "first");
 
       var reportNode = domConstruct.toDom("<div class='attLink'><div id='" + "r" + fireDiv.id + "' class='report-button' title='Get Report'></div><div title='Zoom To' class='search-button' id='" + "z" + fireDiv.id + "'></div></div>");
       domConstruct.place(reportNode, fireDiv, "first");
@@ -215,8 +201,6 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
       query.objectIds = [targetObjID];
       query.outSpatialReference = {wkid:102100};
       query.returnGeometry = true;
-      //query.outFields = ["*"];
-      // vs.perimeterbufferFC.queryExtent(query, vs._queryFeatureReslts, vs._QueryfireResultsError); what
       queryTask.execute(query, vs._queryFeatureReslts);
     },
 
