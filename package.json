@@ -11,8 +11,8 @@
     "build-prod": "esri-wab-build ../cop"
   },
   "devDependencies": {
-    "babel-core": "^6.26.3",
     "@types/arcgis-js-api": "^3.33.0",
+    "babel-core": "^6.26.3",
     "babel-plugin-transform-es2015-modules-simple-amd": "^0.3.0",
     "babel-preset-es2015-without-strict": "0.0.4",
     "babel-preset-stage-0": "^6.24.1",
@@ -29,7 +29,7 @@
     "grunt-sass": "^3.1.0",
     "grunt-sync": "^0.8.2",
     "grunt-ts": "^6.0.0-beta.22",
-    "node-sass": "^5.0.0",
+    "node-sass": "^4.14.1",
     "typescript": "^3.9.7"
   }
 }
