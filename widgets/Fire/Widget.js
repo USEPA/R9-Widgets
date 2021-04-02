@@ -108,7 +108,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
 
           //If dailyAcres is 0 then look at GISAcres
           var reportingAcres
-          if (dailyAcres == 0) {
+          if (dailyAcres === 0) {
             reportingAcres = gisAcres;
           } else {
             reportingAcres = dailyAcres;
@@ -147,12 +147,17 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           var pcValue = Math.round(percentContained);
           var pcTitle = percentContained + '% Contained';
           //size of bar
-          var acresMin = Math.min.apply(Math, vs.acresArray);
+          var acresMin = 0
           var acresMax = Math.max.apply(Math, vs.acresArray);
           var acresRange = acresMax - acresMin;
-          var scale = 200 / acresRange;
-          var scaledPixels = (reportingAcres - acresMin) * (200 / acresRange);
-          var bar = 100 + scaledPixels;
+          var scale = 300 / acresRange;
+          var scaledPixels = (reportingAcres - acresMin) * (300 / acresRange);
+          var bar;
+          if (scaledPixels < 100){
+            bar = 100;
+          } else {
+            bar = scaledPixels;
+          }
           var barWidth = bar.toString() + 'px';
 
           var myProgressBar = new ProgressBar({
