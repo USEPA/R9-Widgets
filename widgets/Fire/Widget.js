@@ -108,7 +108,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
 
           //If dailyAcres is 0 then look at GISAcres
           var reportingAcres
-          if (dailyAcres === 0) {
+          if (dailyAcres == 0) {
             reportingAcres = gisAcres;
           } else {
             reportingAcres = dailyAcres;
