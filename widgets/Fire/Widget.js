@@ -149,12 +149,20 @@ function(declare, BaseWidget, dom, domConstruct, QueryTask, Query,
            pcTitle = percentContained + '% Contained';
          }
          //size of bar
-         var acresMin = Math.min.apply(Math, vs.acresArray);
+         // var acresMin = Math.min.apply(Math, vs.acresArray);
+         var acresMin = 0;
          var acresMax = Math.max.apply(Math, vs.acresArray);
          var acresRange = acresMax - acresMin;
-         var scale = 200/acresRange;
-         var scaledPixels = (reportingAcres - acresMin)*(200/acresRange);
-         var bar = 100 + scaledPixels;
+         var scale = 300/acresRange;
+         var scaledPixels = (reportingAcres - acresMin)*(300/acresRange);
+         // var bar = 100 + scaledPixels;
+          var bar;
+         if (scaledPixels < 100){
+           bar = 100;
+         } else {
+           bar = scaledPixels;
+         }
+         // var bar = scaledPixels;
          var barWidth = bar.toString() + 'px';
 
          var myProgressBar = new ProgressBar({
