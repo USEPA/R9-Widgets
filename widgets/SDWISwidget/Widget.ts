@@ -148,7 +148,7 @@ class Widget implements IWidget {
     this.loadingShelter.show();
 
     var query = new Query();
-    this.sdwisLayer.show();
+    // this.sdwisLayer.show();
     //this.sdwisPWS.show();
     query.where = '1=1';
     console.log('SDWISwidget::onOpen');
@@ -316,7 +316,7 @@ class Widget implements IWidget {
 
   private onClose(): void {
     // turn off facilities
-    this.sdwisLayer.hide();
+    // this.sdwisLayer.hide();
     //this.sdwisPWS.hide();
     console.log('SDWISwidget::onClose');
     var self: any = this;
