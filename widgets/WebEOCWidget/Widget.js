@@ -30,6 +30,7 @@ export default declare([BaseWidget], {
     this.inherited(postCreate, arguments);
     this.clickHandler = this._clickHandler();
     var layerStructure = LayerStructure.getInstance();
+
     this.webeocLayer = layerStructure.getWebmapLayerNodes().find(function (x) {
       return x.id.toLowerCase().includes('webeoc');
     });
@@ -185,3 +186,4 @@ export default declare([BaseWidget], {
   //   console.log('WebEOCWidget::resize');
   // }
 });
+
