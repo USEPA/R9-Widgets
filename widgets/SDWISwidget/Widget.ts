@@ -255,11 +255,11 @@ class Widget implements IWidget {
     this.graphicsLayer.add(selectedGraphic);
     this.loadingShelter.show();
 
-    const facilitytype = this.featureLayer.getDomain('Fac_Type')["getName"](facility.attributes.fac_type);
-    const sourcetype = this.featureLayer.getDomain('Fac_SourceType')["getName"](facility.attributes.fac_sourcetype);
-    const availability = this.featureLayer.getDomain('Fac_Availability')["getName"](facility.attributes.fac_availability);
-    const sellertreated = this.featureLayer.getDomain('SELLERTRTCODE')["getName"](facility.attributes.sellertrtcode);
-    const trtstatus = this.featureLayer.getDomain('FacSourceTrtStatus')["getName"](facility.attributes.facsourcetrtstatus);
+    const facilitytype = this.featureLayer.getDomain('fac_type')["getName"](facility.attributes.fac_type);
+    const sourcetype = this.featureLayer.getDomain('fac_sourcetype')["getName"](facility.attributes.fac_sourcetype);
+    const availability = this.featureLayer.getDomain('fac_availability')["getName"](facility.attributes.fac_availability);
+    const sellertreated = this.featureLayer.getDomain('sellertrtcode')["getName"](facility.attributes.sellertrtcode);
+    const trtstatus = this.featureLayer.getDomain('facsourcetrtstatus')["getName"](facility.attributes.facsourcetrtstatus);
     var that = this;
     if (that.clickHandler !== undefined) {
       that.clickHandler.resume();
@@ -278,12 +278,12 @@ class Widget implements IWidget {
     query.where = `PWSID='${PWS_ID}'`;
     this.featureLayerPWS.queryFeatures(query, (featureSet: FeatureSet) => {
       const facilityPWS = featureSet.features[0];
-      const tribe = this.featureLayerPWS.getDomain('Tribe')["getName"](facilityPWS.attributes.tribe);
-      const school = this.featureLayerPWS.getDomain('PWS_SchoolorDaycare')["getName"](facilityPWS.attributes.pws_schoolordaycare);
-      const ownertype = this.featureLayerPWS.getDomain('PWS_OwnerType')["getName"](facilityPWS.attributes.pws_ownertype);
-      const wholesale = this.featureLayerPWS.getDomain('PWS_Wholesale')["getName"](facilityPWS.attributes.pws_wholesale);
-      const watertype = this.featureLayerPWS.getDomain('PWS_WSourceType')["getName"](facilityPWS.attributes.pws_wsourcetype);
-      const state = this.featureLayerPWS.getDomain('PWS_AgencyCode')["getName"](facilityPWS.attributes.pws_agencycode);
+      const tribe = this.featureLayerPWS.getDomain('tribe')["getName"](facilityPWS.attributes.tribe);
+      const school = this.featureLayerPWS.getDomain('pws_schoolordaycare')["getName"](facilityPWS.attributes.pws_schoolordaycare);
+      const ownertype = this.featureLayerPWS.getDomain('pws_ownertype')["getName"](facilityPWS.attributes.pws_ownertype);
+      const wholesale = this.featureLayerPWS.getDomain('pws_wholesale')["getName"](facilityPWS.attributes.pws_wholesale);
+      const watertype = this.featureLayerPWS.getDomain('pws_wsourcetype')["getName"](facilityPWS.attributes.pws_wsourcetype);
+      const state = this.featureLayerPWS.getDomain('pws_agencycode')["getName"](facilityPWS.attributes.pws_agencycode);
 
       var pws = `<b><p style="text-align: center;">Public Water System Details</p></b>` + `<hr/>` + `<b>City Served: </b>` + (facilityPWS.attributes.city ? facilityPWS.attributes.city : 'Not Reported') + `</br>` + `<b>County Served: </b>` + (facilityPWS.attributes.county ? facilityPWS.attributes.county : 'Not Reported') + `</br>` + `<b>State: </b>` + (state ? state : 'Not Reported') + `</br>` + `<b>Tribe Name: </b>` + (tribe ? tribe : 'Not Reported') + `</br>` + `<b>PWS Population Served: </b>` + (facilityPWS.attributes.pws_popserve ? facilityPWS.attributes.pws_popserve : 'Not Reported') + `</br>` + `<b>Is the PWS a School or Daycare? </b>` + (school ? school : 'Not Reported') + `</br>` + `<b>PWS Owner Type: </b>` + (ownertype ? ownertype : 'Not Reported') + `</br>` + `<b>Is PWS Wholesaler to Another PWS? </b>` + (wholesale ? wholesale : 'Not Reported') + `</br>` + `<b>PWS Source Water Type: </b>` + (watertype ? watertype : 'Not Reported') + `<p style="text-align: center;">&nbsp;</p>`
       domConstruct.place(pws, 'pwsinfo')
