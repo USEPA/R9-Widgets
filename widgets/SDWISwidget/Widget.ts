@@ -231,7 +231,7 @@ class Widget implements IWidget {
           grid.on('RowClick', (e: any) => {
             var rowItem = grid.getItem(e.rowIndex);
             var facility = features.filter(feature => {
-              return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
+              return feature.attributes.objectid === rowItem.objectid[0];
 
             });
 
@@ -255,20 +255,20 @@ class Widget implements IWidget {
     this.graphicsLayer.add(selectedGraphic);
     this.loadingShelter.show();
 
-    const facilitytype = this.featureLayer.getDomain('Fac_Type')["getName"](facility.attributes.Fac_Type);
-    const sourcetype = this.featureLayer.getDomain('Fac_SourceType')["getName"](facility.attributes.Fac_SourceType);
-    const availability = this.featureLayer.getDomain('Fac_Availability')["getName"](facility.attributes.Fac_Availability);
-    const sellertreated = this.featureLayer.getDomain('SELLERTRTCODE')["getName"](facility.attributes.SELLERTRTCODE);
-    const trtstatus = this.featureLayer.getDomain('FacSourceTrtStatus')["getName"](facility.attributes.FacSourceTrtStatus);
+    const facilitytype = this.featureLayer.getDomain('Fac_Type')["getName"](facility.attributes.fac_type);
+    const sourcetype = this.featureLayer.getDomain('Fac_SourceType')["getName"](facility.attributes.fac_sourcetype);
+    const availability = this.featureLayer.getDomain('Fac_Availability')["getName"](facility.attributes.fac_availability);
+    const sellertreated = this.featureLayer.getDomain('SELLERTRTCODE')["getName"](facility.attributes.sellertrtcode);
+    const trtstatus = this.featureLayer.getDomain('FacSourceTrtStatus')["getName"](facility.attributes.facsourcetrtstatus);
     var that = this;
     if (that.clickHandler !== undefined) {
       that.clickHandler.resume();
     }
-    this.myNode.innerHTML = `<p style="font-size:16px"><b>Public Water System (PWS)</b></p>` + `<b><p style="font-size:14px">Name: </b>` + (facility.attributes.Fac_PWS_Name ? facility.attributes.Fac_PWS_Name : 'Not Reported') + `</br>` + `<b>ID: </b>` + (facility.attributes.Fac_PWSID ? facility.attributes.Fac_PWSID : 'Not Reported') + '</p>' + `</br><b><p style="text-align: center;">Water System Facility Details</p></b>` + `<hr/>` + `<b>Facility Name:</b>` + ` ` + (facility.attributes.FacilityName ? facility.attributes.FacilityName : 'Not Reported') + '</br>' + `<b>Facility ID: </b>` + (facility.attributes.FacilityID ? facility.attributes.FacilityID : 'Not Reported') + `</br>` + `<b>Facility Type: </b>` + (facilitytype ? facilitytype : 'Not Reported') + '</br>' + `<b>Source Type:</b>` + ` ` + (sourcetype ? sourcetype : 'Not Reported') + `</br>` + `<b>Source Treated: </b>` + (trtstatus ? trtstatus : 'Not Reported') + `</br>` + `<b>Facility Availability:</b>` + ` ` + (availability ? availability : 'Not Reported') + `</br>` + `<b>Last Updated:</b>` + ` ` + (facility.attributes.Last_Reported ? facility.attributes.Last_Reported : 'Not Reported') + `</br>` + '<b>PWS Purchased From: </b>' + (facility.attributes.PWSID_SELLER ? facility.attributes.PWSID_SELLER : 'Not Reported') + `</br>` + `<b>Purchased Water Treated: </b>` + (sellertreated ? sellertreated : 'Not Reported') + `</br>` + `</br>` + `<div id="pwsinfo"></div>` + `<p style="text-align: center;"><a href="https://echo.epa.gov/detailed-facility-report?fid=${facility.attributes.Fac_PWSID}" target="_blank"><b>ECHO Detailed System Report</b> </a></p>` + `<p style="text-align: center;">&nbsp;</p><table style="height: 98px; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%"><tbody><tr><td style="text-align: center; width: 287px;"><b>Public Water System Contact</b>` + `<hr/>` + `<div id="admincontacts"></div></td></tr>` + `</tbody></table><p>&nbsp;</p>` + `<table style="height: 98px; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%"><tbody><tr><td style="text-align: center; width: 287px;"><strong><p style="text-align: center;">Regulatory Agency Contact</strong>` + `<hr/>` + `<div id="tableinfo"></div>` + `</tbody></table></p></td></tr><p>&nbsp;</p>`;
+    this.myNode.innerHTML = `<p style="font-size:16px"><b>Public Water System (PWS)</b></p>` + `<b><p style="font-size:14px">Name: </b>` + (facility.attributes.fac_pws_name ? facility.attributes.fac_pws_name : 'Not Reported') + `</br>` + `<b>ID: </b>` + (facility.attributes.fac_pwsid ? facility.attributes.fac_pwsid : 'Not Reported') + '</p>' + `</br><b><p style="text-align: center;">Water System Facility Details</p></b>` + `<hr/>` + `<b>Facility Name:</b>` + ` ` + (facility.attributes.facilityname ? facility.attributes.facilityname : 'Not Reported') + '</br>' + `<b>Facility ID: </b>` + (facility.attributes.facilityid ? facility.attributes.facilityid : 'Not Reported') + `</br>` + `<b>Facility Type: </b>` + (facilitytype ? facilitytype : 'Not Reported') + '</br>' + `<b>Source Type:</b>` + ` ` + (sourcetype ? sourcetype : 'Not Reported') + `</br>` + `<b>Source Treated: </b>` + (trtstatus ? trtstatus : 'Not Reported') + `</br>` + `<b>Facility Availability:</b>` + ` ` + (availability ? availability : 'Not Reported') + `</br>` + `<b>Last Updated:</b>` + ` ` + (facility.attributes.last_reported ? facility.attributes.last_reported : 'Not Reported') + `</br>` + '<b>PWS Purchased From: </b>' + (facility.attributes.pwsid_seller ? facility.attributes.pwsid_seller : 'Not Reported') + `</br>` + `<b>Purchased Water Treated: </b>` + (sellertreated ? sellertreated : 'Not Reported') + `</br>` + `</br>` + `<div id="pwsinfo"></div>` + `<p style="text-align: center;"><a href="https://echo.epa.gov/detailed-facility-report?fid=${facility.attributes.fac_pwsid}" target="_blank"><b>ECHO Detailed System Report</b> </a></p>` + `<p style="text-align: center;">&nbsp;</p><table style="height: 98px; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%"><tbody><tr><td style="text-align: center; width: 287px;"><b>Public Water System Contact</b>` + `<hr/>` + `<div id="admincontacts"></div></td></tr>` + `</tbody></table><p>&nbsp;</p>` + `<table style="height: 98px; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%"><tbody><tr><td style="text-align: center; width: 287px;"><strong><p style="text-align: center;">Regulatory Agency Contact</strong>` + `<hr/>` + `<div id="tableinfo"></div>` + `</tbody></table></p></td></tr><p>&nbsp;</p>`;
     this.loadingShelter.hide();
-    this.loadFacilityPWS(facility.attributes.Fac_PWSID);
-    this.loadFacilityTable(facility.attributes.PAcode);
-    this.loadFacilityAdmin(facility.attributes.Fac_PWSID);
+    this.loadFacilityPWS(facility.attributes.fac_pwsid);
+    this.loadFacilityTable(facility.attributes.pacode);
+    this.loadFacilityAdmin(facility.attributes.fac_pwsid);
   }
 
 // , Pulls in PWS information from PWS points layer
@@ -278,14 +278,14 @@ class Widget implements IWidget {
     query.where = `PWSID='${PWS_ID}'`;
     this.featureLayerPWS.queryFeatures(query, (featureSet: FeatureSet) => {
       const facilityPWS = featureSet.features[0];
-      const tribe = this.featureLayerPWS.getDomain('Tribe')["getName"](facilityPWS.attributes.Tribe);
-      const school = this.featureLayerPWS.getDomain('PWS_SchoolorDaycare')["getName"](facilityPWS.attributes.PWS_SchoolorDaycare);
-      const ownertype = this.featureLayerPWS.getDomain('PWS_OwnerType')["getName"](facilityPWS.attributes.PWS_OwnerType);
-      const wholesale = this.featureLayerPWS.getDomain('PWS_Wholesale')["getName"](facilityPWS.attributes.PWS_Wholesale);
-      const watertype = this.featureLayerPWS.getDomain('PWS_WSourceType')["getName"](facilityPWS.attributes.PWS_WSourceType);
-      const state = this.featureLayerPWS.getDomain('PWS_AgencyCode')["getName"](facilityPWS.attributes.PWS_AgencyCode);
+      const tribe = this.featureLayerPWS.getDomain('Tribe')["getName"](facilityPWS.attributes.tribe);
+      const school = this.featureLayerPWS.getDomain('PWS_SchoolorDaycare')["getName"](facilityPWS.attributes.pws_schoolordaycare);
+      const ownertype = this.featureLayerPWS.getDomain('PWS_OwnerType')["getName"](facilityPWS.attributes.pws_ownertype);
+      const wholesale = this.featureLayerPWS.getDomain('PWS_Wholesale')["getName"](facilityPWS.attributes.pws_wholesale);
+      const watertype = this.featureLayerPWS.getDomain('PWS_WSourceType')["getName"](facilityPWS.attributes.pws_wsourcetype);
+      const state = this.featureLayerPWS.getDomain('PWS_AgencyCode')["getName"](facilityPWS.attributes.pws_agencycode);
 
-      var pws = `<b><p style="text-align: center;">Public Water System Details</p></b>` + `<hr/>` + `<b>City Served: </b>` + (facilityPWS.attributes.City ? facilityPWS.attributes.City : 'Not Reported') + `</br>` + `<b>County Served: </b>` + (facilityPWS.attributes.County ? facilityPWS.attributes.County : 'Not Reported') + `</br>` + `<b>State: </b>` + (state ? state : 'Not Reported') + `</br>` + `<b>Tribe Name: </b>` + (tribe ? tribe : 'Not Reported') + `</br>` + `<b>PWS Population Served: </b>` + (facilityPWS.attributes.PWS_PopServe ? facilityPWS.attributes.PWS_PopServe : 'Not Reported') + `</br>` + `<b>Is the PWS a School or Daycare? </b>` + (school ? school : 'Not Reported') + `</br>` + `<b>PWS Owner Type: </b>` + (ownertype ? ownertype : 'Not Reported') + `</br>` + `<b>Is PWS Wholesaler to Another PWS? </b>` + (wholesale ? wholesale : 'Not Reported') + `</br>` + `<b>PWS Source Water Type: </b>` + (watertype ? watertype : 'Not Reported') + `<p style="text-align: center;">&nbsp;</p>`
+      var pws = `<b><p style="text-align: center;">Public Water System Details</p></b>` + `<hr/>` + `<b>City Served: </b>` + (facilityPWS.attributes.city ? facilityPWS.attributes.city : 'Not Reported') + `</br>` + `<b>County Served: </b>` + (facilityPWS.attributes.county ? facilityPWS.attributes.county : 'Not Reported') + `</br>` + `<b>State: </b>` + (state ? state : 'Not Reported') + `</br>` + `<b>Tribe Name: </b>` + (tribe ? tribe : 'Not Reported') + `</br>` + `<b>PWS Population Served: </b>` + (facilityPWS.attributes.pws_popserve ? facilityPWS.attributes.pws_popserve : 'Not Reported') + `</br>` + `<b>Is the PWS a School or Daycare? </b>` + (school ? school : 'Not Reported') + `</br>` + `<b>PWS Owner Type: </b>` + (ownertype ? ownertype : 'Not Reported') + `</br>` + `<b>Is PWS Wholesaler to Another PWS? </b>` + (wholesale ? wholesale : 'Not Reported') + `</br>` + `<b>PWS Source Water Type: </b>` + (watertype ? watertype : 'Not Reported') + `<p style="text-align: center;">&nbsp;</p>`
       domConstruct.place(pws, 'pwsinfo')
     });
   }
@@ -297,7 +297,7 @@ class Widget implements IWidget {
     query.where = `PACode='${PAcode}'`;
     this.featureLayerTable.queryFeatures(query, (featureSet: FeatureSet) => {
       const facilityTable = featureSet.features[0];
-      var table = `<p style="text-align: center;">${facilityTable.attributes.RegAuthority}</p>` + `<p style="text-align: left;"><b>Primary Contact: </b>` + (facilityTable.attributes.PrimaryContactName ? facilityTable.attributes.PrimaryContactName : 'Not Reported') + `</br>` + `<b>Phone: </b>` + (facilityTable.attributes.Phone_Number ? facilityTable.attributes.Phone_Number : 'Not Reported') + `</br>` + `<b>Email: </b>` + (facilityTable.attributes.Email ? `<a href="mailto:${facilityTable.attributes.Email}"target="_blank">${facilityTable.attributes.Email} </a>` : 'Not Reported') + `</br>` + `<b>Website: </b>` + `<a href="${facilityTable.attributes.Website}" target="_blank">Click Here for Website</a>` + `</br>` + `<b>Address: </b>` + (facilityTable.attributes.Mailing_Address ? facilityTable.attributes.Mailing_Address : 'Not Reported') + `</p>`
+      var table = `<p style="text-align: center;">${facilityTable.attributes.regauthority}</p>` + `<p style="text-align: left;"><b>Primary Contact: </b>` + (facilityTable.attributes.primarycontactname ? facilityTable.attributes.primarycontactname : 'Not Reported') + `</br>` + `<b>Phone: </b>` + (facilityTable.attributes.phone_number ? facilityTable.attributes.phone_number : 'Not Reported') + `</br>` + `<b>Email: </b>` + (facilityTable.attributes.email ? `<a href="mailto:${facilityTable.attributes.email}"target="_blank">${facilityTable.attributes.email} </a>` : 'Not Reported') + `</br>` + `<b>Website: </b>` + `<a href="${facilityTable.attributes.website}" target="_blank">Click Here for Website</a>` + `</br>` + `<b>Address: </b>` + (facilityTable.attributes.mailing_address ? facilityTable.attributes.mailing_address : 'Not Reported') + `</p>`
       domConstruct.place(table, 'tableinfo')
     });
   }
