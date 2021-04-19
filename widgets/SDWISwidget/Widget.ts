@@ -217,7 +217,7 @@ class Widget implements IWidget {
           }
 
           var layout = [
-            {'name': 'Facility Name', 'field': 'FacilityName', 'width': '100%'}
+            {'name': 'Facility Name', 'field': 'facilityname', 'width': '100%'}
           ];
 
           grid = new DataGrid({
