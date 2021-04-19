@@ -26,10 +26,14 @@ export default declare([BaseWidget], {
 
   // methods to communication with app container:
   postCreate: function postCreate() {
+    "use strict";
     this.inherited(postCreate, arguments);
     this.clickHandler = this._clickHandler();
     var layerStructure = LayerStructure.getInstance();
-    this.webeocLayer = layerStructure.getWebmapLayerNodes().find(x => x.id.toLowerCase().includes('webeoc'));
+
+    this.webeocLayer = layerStructure.getWebmapLayerNodes().find(function (x) {
+      return x.id.toLowerCase().includes('webeoc');
+    });
     console.log('WebEOCWidget::postCreate');
   },
   _clickHandler: function _clickHandler() {
@@ -151,10 +155,8 @@ export default declare([BaseWidget], {
   onOpen: function onOpen() {
     // turn on webeoc layer
     this.webeocLayer.show();
-
     this.map.setInfoWindowOnClick(false);
     this.mapIdNode.innerHTML = 'Select Web EOC point to view the log';
-
     this.clickHandler.resume();
     console.log('WebEOCWidget::onOpen');
   },

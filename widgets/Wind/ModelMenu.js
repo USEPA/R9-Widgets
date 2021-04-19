@@ -34,7 +34,7 @@ define(['dojo/_base/declare',
 
       postCreate: function() {
         this.inherited(arguments);
-        this._initModelMenu();
+        this._initMenu();
       },
 
       startup: function() {
@@ -45,8 +45,14 @@ define(['dojo/_base/declare',
         this.inherited(arguments);
       },
 
-      _initModelMenu: function(){
+      setModelMenuTimer: function(timeOut) {
+        // const timeOut = 600;
+        this._modelTimer = setTimeout(lang.hitch(this, function() {
+            this._closeModelMenu();
+          }), timeOut);
+      },
 
+      _initMenu: function(){
         Object.keys(this._modelList).forEach(lang.hitch(this, function (key) {
           var dom = this[key];
           var str = this._modelList[key];
@@ -55,10 +61,19 @@ define(['dojo/_base/declare',
         }));
 
         this.own(on(this.domNode, 'click', lang.hitch(this, this._closeModelMenu)));
+        this.own(on(this.modelMenu, 'mouseout', lang.hitch(this, function(evt) {
+          this.setModelMenuTimer(600);
+          })
+        ));
+        this.own(on(this.modelMenu, 'mouseover', lang.hitch(this, function(evt) {
+          clearTimeout(this._modelTimer);
+          })
+        ));
+
         this._checks = query(".check", this.modelMenu);
 
         // default
-        this.setModel("HRRR");//init display
+        this.setModel("GFS");//init display
 
         this.own(on(this.modelLabelNode, 'click', lang.hitch(this, function (evt) {
           this._onModelLabelClick(evt);
@@ -87,7 +102,6 @@ define(['dojo/_base/declare',
             html.removeClass(check, 'hide');
           }
           this.modelLabelNode.innerHTML = jimuUtils.sanitizeHTML(optionItem.innerText);
-
           this._model = modelStr;
           // console.log(this._model);
           this.emit("selected", modelStr);
@@ -144,7 +158,6 @@ define(['dojo/_base/declare',
       },
 
       _onModelLabelClick: function(evt) {
-        console.log('_onModelLabelClick');
         evt.stopPropagation();
         evt.preventDefault();
         if(html.hasClass(this.modelMenu, "hide")){
@@ -158,7 +171,7 @@ define(['dojo/_base/declare',
       _showModelMenu: function() {
         html.removeClass(this.modelMenu, "hide");
         this.emit("open");
-
+        this.setModelMenuTimer(1500);
         // this.a11y_focusOnSelectedItem();
       },
 
