@@ -99,18 +99,18 @@ class Widget implements IWidget {
 
 
     this.featureLayer = new FeatureLayer(
-      'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Safe_Drinking_Water_(SDWIS)_Region_9_V1/FeatureServer/0',
+      'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/SDWIS_Base/FeatureServer/0',
       {outFields: ['*']});
     this.supportsAdvancedQueries = true
     this.featureLayerPWS = new FeatureLayer(
-      'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Safe_Drinking_Water_(SDWIS)_Region_9_V1/FeatureServer/1',
+      'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/SDWIS_Base/FeatureServer/1',
       {outFields: ['*']});
     this.supportsAdvancedQueries = true
     this.featureLayerTable = new FeatureLayer(
-      'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Safe_Drinking_Water_(SDWIS)_Region_9_V1/FeatureServer/3',
+      'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/SDWIS_Base/FeatureServer/3',
       {outFields: ['*']});
     this.featureLayerAdmin = new FeatureLayer(
-      'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Safe_Drinking_Water_(SDWIS)_Region_9_V1/FeatureServer/5',
+      'https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/SDWIS_Base/FeatureServer/5',
       {outFields: ['*']});
 
 
