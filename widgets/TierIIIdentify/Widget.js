@@ -497,7 +497,10 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
 
         // could pull this once and check if the values are set instead of pulling data each time
         statusLayer.queryFeatures(statusQuery, function (records) {
-          dojo.forEach(records.features, function (record) {
+          const sortedRecords = [records.features.find((r) => r.attributes.State === 'California')]
+            .concat(records.features.filter((r)=> r.attributes.State !== 'California')
+            .sort((a,b) => a.attributes.State > b.attributes.State? -1: 1));
+          dojo.forEach(sortedRecords, function (record) {
             var lastUpdate = dojo.date.locale.format(new Date(record.attributes.LastUpdate), {
               datePattern: "yyyy-MM-dd",
               selector: "date"
