@@ -499,7 +499,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         statusLayer.queryFeatures(statusQuery, function (records) {
           const sortedRecords = [records.features.find((r) => r.attributes.State === 'California')]
             .concat(records.features.filter((r)=> r.attributes.State !== 'California')
-            .sort((a,b) => a.attributes.State > b.attributes.State? -1: 1));
+            .sort((a,b) => a.attributes.State > b.attributes.State? 1: -1));
           dojo.forEach(sortedRecords, function (record) {
             var lastUpdate = dojo.date.locale.format(new Date(record.attributes.LastUpdate), {
               datePattern: "yyyy-MM-dd",
