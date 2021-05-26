@@ -73,6 +73,7 @@ class Widget implements IWidget {
   private Legend: any;
   private sdwisPWS: any;
   private token: string;
+  private loadingError = false;
 
   private postCreate(args: any): void {
     this.inherited(arguments);
@@ -139,33 +140,40 @@ class Widget implements IWidget {
       'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/5',
       {outFields: ['*']});
 
+    this.featureLayer.on('error', e => {
+      this.myNode.innerHTML = 'Say something about this only working behind firewall';
+      this.loadingShelter.hide()
+      this.loadingError = true;
+    });
     this.map.addLayers([this.featureLayer, this.featureLayerPWS])
     this.clickHandler = this._clickHandler();
   };
 
   private onOpen(): void {
-    let self: any = this;
-    this.loadingShelter.show();
+    if (!this.loadingError) {
+      let self: any = this;
+      this.loadingShelter.show();
 
-    var query = new Query();
-    // this.sdwisLayer.show();
-    //this.sdwisPWS.show();
-    query.where = '1=1';
-    console.log('SDWISwidget::onOpen');
+      var query = new Query();
+      // this.sdwisLayer.show();
+      //this.sdwisPWS.show();
+      query.where = '1=1';
+      console.log('SDWISwidget::onOpen');
 
 
-    var that = this;
-    if (that.clickHandler !== undefined) {
-      that.clickHandler.resume();
+      var that = this;
+      if (that.clickHandler !== undefined) {
+        that.clickHandler.resume();
+      }
+      this.featureLayer.queryCount(query, (count: number) => {
+        this.myNode.innerHTML = `There are currently <b>${count}</b> facilities in the SDWIS feature service.` + `</br></br><b><i>This data is scale-dependent, please zoom in to see the points.</i></b>` + `<h2 style="text-decoration: underline;">Safe Drinking Water Information System (SDWIS)</h2>` + `The data is directly from the <b>National SDWIS Database</b> and updated on a quarterly basis. The <b><a href="https://epa.maps.arcgis.com/home/item.html?id=107c64d513ad4f1f8b80e4f60ab5a851"target="_blank">GeoPlatform service</a></b> provides information on facilities, public water systems, primacy agencies, administrative contacts, and tribal entities.  The facility symbols are <i>clustered</i> to minimize overlap; zoom in closer to see a facility's true location.  Detailed information about the <b>SDWIS Federal Reporting Services</b> can be found <b><a href="https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-information-system-sdwis-federal-reporting"target="_blank">here.</a></b>` + `<h2 style="text-decoration: underline;">Enforcement & Compliance History Online (ECHO)</h2>` + `EPA's ECHO website provides details for facilities in your community to assess their compliance with environmental regulations.  The interaction in this widget uses the Public Water System (PWS) ID to search the records.  Check out the ECHO website <a href="https://echo.epa.gov/"target="_blank"><b>here</b></a> for more information and guidance.</br></br>The <i><b>ECHO Detailed System Report</b></i> is linked with the selected facility record and opens the ECHO website details for the associated public water system in a new browser window.` + `<h2 style="text-decoration: underline;">Definitions</h2>` + `<b>Facilities - </b>These points represent facilities within a public water system.  The facility types include but are not limited to wells, well heads, treatment plants, sampling stations, valves, transmission mains, pumps, pressure control, etc.  Facilities are identified with Facility ID and Facility Name.  The PWS ID indicates the public water system the selected facility falls under.</br><img id="Legend" img src=\"widgets/SDWISwidget/images/Symbology.png\" style=\"width:75%;height:75%;\">` + `</br><b>Public Water Systems (PWS) - </b> The public water system information is linked from the facility selected in the map.  The PWS ID and PWS Name provide the unique identification for the public water system associated with the facility record.</br> </br><table style=" border-color: #000000; margin-left: auto; margin-right: auto;" width="100%"><tbody><td style="text-align: left; width: 287px;"><b>PWS Contact Information - </b>This section provides contact information for the public water system associated with the selected facility.  This information comes from the Admin Contacts table.</table>` + `</br><table style="height: 98px; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%"><tbody></tbody><td style="text-align: left; width: 287px;"><b>Regulatory Agency - </b> This section provides information for the regulatory organization associated with and responsible for the selected facility's public water system.  This information comes from the Primacy Agency table.` + `</br></td></table>`;
+
+        this.loadingShelter.hide();
+      })
+
+      this.clickHandler.resume();
+      this.map.setInfoWindowOnClick(false);
     }
-    this.featureLayer.queryCount(query, (count: number) => {
-      this.myNode.innerHTML = `There are currently <b>${count}</b> facilities in the SDWIS feature service.` + `</br></br><b><i>This data is scale-dependent, please zoom in to see the points.</i></b>` + `<h2 style="text-decoration: underline;">Safe Drinking Water Information System (SDWIS)</h2>` + `The data is directly from the <b>National SDWIS Database</b> and updated on a quarterly basis. The <b><a href="https://epa.maps.arcgis.com/home/item.html?id=107c64d513ad4f1f8b80e4f60ab5a851"target="_blank">GeoPlatform service</a></b> provides information on facilities, public water systems, primacy agencies, administrative contacts, and tribal entities.  The facility symbols are <i>clustered</i> to minimize overlap; zoom in closer to see a facility's true location.  Detailed information about the <b>SDWIS Federal Reporting Services</b> can be found <b><a href="https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-information-system-sdwis-federal-reporting"target="_blank">here.</a></b>` + `<h2 style="text-decoration: underline;">Enforcement & Compliance History Online (ECHO)</h2>` + `EPA's ECHO website provides details for facilities in your community to assess their compliance with environmental regulations.  The interaction in this widget uses the Public Water System (PWS) ID to search the records.  Check out the ECHO website <a href="https://echo.epa.gov/"target="_blank"><b>here</b></a> for more information and guidance.</br></br>The <i><b>ECHO Detailed System Report</b></i> is linked with the selected facility record and opens the ECHO website details for the associated public water system in a new browser window.` + `<h2 style="text-decoration: underline;">Definitions</h2>` + `<b>Facilities - </b>These points represent facilities within a public water system.  The facility types include but are not limited to wells, well heads, treatment plants, sampling stations, valves, transmission mains, pumps, pressure control, etc.  Facilities are identified with Facility ID and Facility Name.  The PWS ID indicates the public water system the selected facility falls under.</br><img id="Legend" img src=\"widgets/SDWISwidget/images/Symbology.png\" style=\"width:75%;height:75%;\">` + `</br><b>Public Water Systems (PWS) - </b> The public water system information is linked from the facility selected in the map.  The PWS ID and PWS Name provide the unique identification for the public water system associated with the facility record.</br> </br><table style=" border-color: #000000; margin-left: auto; margin-right: auto;" width="100%"><tbody><td style="text-align: left; width: 287px;"><b>PWS Contact Information - </b>This section provides contact information for the public water system associated with the selected facility.  This information comes from the Admin Contacts table.</table>` + `</br><table style="height: 98px; border-color: #000000; margin-left: auto; margin-right: auto;" width="100%"><tbody></tbody><td style="text-align: left; width: 287px;"><b>Regulatory Agency - </b> This section provides information for the regulatory organization associated with and responsible for the selected facility's public water system.  This information comes from the Primacy Agency table.` + `</br></td></table>`;
-
-      this.loadingShelter.hide();
-    })
-
-    this.clickHandler.resume();
-    this.map.setInfoWindowOnClick(false);
   };
 
 //Click function once the widget is open
