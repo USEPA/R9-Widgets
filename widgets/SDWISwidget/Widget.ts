@@ -203,7 +203,7 @@ class Widget implements IWidget {
             '<div id="gridDiv" style="width:100%;"></div>';
 
           var data: any = {
-            identifier: 'OBJECTID',
+            identifier: 'objectid',
             items: []
           };
           features.forEach((feature: any) => {
