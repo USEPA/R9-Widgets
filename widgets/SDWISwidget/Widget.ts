@@ -141,7 +141,7 @@ class Widget implements IWidget {
       {outFields: ['*']});
 
     this.featureLayer.on('error', e => {
-      this.myNode.innerHTML = 'Say something about this only working behind firewall';
+      this.myNode.innerHTML = 'The R9 SDWIS service resides on the EPA Intranet. Connect to the Pulse Secure client to access the data.';
       this.loadingShelter.hide()
       this.loadingError = true;
     });
