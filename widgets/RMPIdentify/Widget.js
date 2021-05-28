@@ -230,7 +230,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         var rmpQuery = new RelationshipQuery();
         rmpQuery.outFields = ['*'];
         rmpQuery.objectIds = [attributes.OBJECTID];
-        rmpQuery.relationshipId = that.AllFacilities.relationshipId;
+        rmpQuery.relationshipId = that.tblS1Facilities.relationshipId;
         this.facilities.queryRelatedFeatures(rmpQuery, function (e) {
             var features = e[attributes.OBJECTID].features;
             if (features.length === 1) {
@@ -318,7 +318,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
               if (mostRecentRMP.DeRegistrationEffectiveDate) {
                 status = 'De-registered';
                 var reason = (mostRecentRMP.DeregistrationReasonCode !== '04' ?
-                  that.AllFacilities.getDomain('DeregistrationReasonCode').getName(mostRecentRMP.DeregistrationReasonCode) :
+                  that.tblS1Facilities.getDomain('DeregistrationReasonCode').getName(mostRecentRMP.DeregistrationReasonCode) :
                   mostRecentRMP.DeregistrationReasonOtherText);
                 var date = mostRecentRMP.DeRegistrationEffectiveDate;
               } else {
@@ -337,21 +337,21 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
 
               if (mostRecentRMP.ValidLatLongFlag) {
                 var location_string = 'RMP Validated Location Used' +
-                  '<br/>Description: ' + that.AllFacilities.getDomain('LatLongDescription').getName(mostRecentRMP.LatLongDescription) +
-                  '<br/>Method: ' + that.AllFacilities.getDomain('LatLongMethod').getName(mostRecentRMP.LatLongMethod);
+                  '<br/>Description: ' + that.tblS1Facilities.getDomain('LatLongDescription').getName(mostRecentRMP.LatLongDescription) +
+                  '<br/>Method: ' + that.tblS1Facilities.getDomain('LatLongMethod').getName(mostRecentRMP.LatLongMethod);
               } else if (!mostRecentRMP.ValidLatLongFlag && mostRecentRMP.FRS_Lat !== undefined && mostRecentRMP.FRS_long !== undefined) {
                 var location_string = 'FRS Location Used' +
-                  '<br/>Description: ' + that.AllFacilities.getDomain('FRS_Description').getName(mostRecentRMP.FRS_Description) +
-                  '<br/>Method: ' + that.AllFacilities.getDomain('FRS_Method').getName(mostRecentRMP.FRS_Method);
+                  '<br/>Description: ' + that.tblS1Facilities.getDomain('FRS_Description').getName(mostRecentRMP.FRS_Description) +
+                  '<br/>Method: ' + that.tblS1Facilities.getDomain('FRS_Method').getName(mostRecentRMP.FRS_Method);
               } else {
                 var location_string = 'Location Not Validated' +
-                  '<br/>Description: ' + that.AllFacilities.getDomain('LatLongDescription').getName(mostRecentRMP.LatLongDescription) +
-                  '<br/>Method: ' + that.AllFacilities.getDomain('LatLongMethod').getName(mostRecentRMP.LatLongMethod);
+                  '<br/>Description: ' + that.tblS1Facilities.getDomain('LatLongDescription').getName(mostRecentRMP.LatLongDescription) +
+                  '<br/>Method: ' + that.tblS1Facilities.getDomain('LatLongMethod').getName(mostRecentRMP.LatLongMethod);
               }
 
               if (mostRecentRMP.HorizontalAccMeasure) {
                 location_string += '<br/>Horizontal Accuracy (m): ' + mostRecentRMP.HorizontalAccMeasure +
-                  '<br/>Horizontal Datum: ' + that.AllFacilities.getDomain('HorizontalRefDatumCode').getName(mostRecentRMP.HorizontalRefDatumCode) +
+                  '<br/>Horizontal Datum: ' + that.tblS1Facilities.getDomain('HorizontalRefDatumCode').getName(mostRecentRMP.HorizontalRefDatumCode) +
                   (mostRecentRMP.SourceMapScaleNumber ? '<br/>Source Map Scale: ' + mostRecentRMP.SourceMapScaleNumber : '')
               }
 
@@ -376,7 +376,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         if (attributes.DeRegistrationEffectiveDate) {
           status = 'De-registered';
           var reason = (attributes.DeregistrationReasonCode !== '04' ?
-            that.AllFacilities.getDomain('DeregistrationReasonCode').getName(attributes.DeregistrationReasonCode) :
+            that.tblS1Facilities.getDomain('DeregistrationReasonCode').getName(attributes.DeregistrationReasonCode) :
             attributes.DeregistrationReasonOtherText);
           var date = attributes.DeRegistrationEffectiveDate;
           var status_string = status +
@@ -438,7 +438,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         executiveSummaryQuery.relationshipId = that.ExecutiveSummaries.relationshipId;
         executiveSummaryQuery.objectIds = [attributes.OBJECTID];
 
-        that.AllFacilities.queryRelatedFeatures(executiveSummaryQuery, function (e) {
+        that.tblS1Facilities.queryRelatedFeatures(executiveSummaryQuery, function (e) {
           var summary = '';
           var summary_parts = e[attributes.OBJECTID].features.sort(function (obj1, obj2) {
             return obj1.attributes.ESSeqNum - obj2.attributes.ESSeqNum
@@ -454,7 +454,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         processQuery.relationshipId = that.tblS1Processes.relationshipId;
         processQuery.objectIds = [attributes.OBJECTID];
 
-        that.AllFacilities.queryRelatedFeatures(processQuery, function (featureSet) {
+        that.tblS1Facilities.queryRelatedFeatures(processQuery, function (featureSet) {
           dojo.forEach(featureSet[attributes.OBJECTID].features, function (process) {
             var row = domConstruct.toDom('' +
               '<div><b>Name: ' + (process.attributes.AltID ? process.attributes.AltID : 'not reported') + '</b></div>' +
@@ -541,7 +541,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         accidentQuery.relationshipId = that.tblS6AccidentHistory.relationshipId;
         accidentQuery.objectIds = [attributes.OBJECTID];
 
-        that.AllFacilities.queryRelatedFeatures(accidentQuery, function (featureSet) {
+        that.tblS1Facilities.queryRelatedFeatures(accidentQuery, function (featureSet) {
           if (featureSet.hasOwnProperty(attributes.OBJECTID)) {
             dojo.forEach(featureSet[attributes.OBJECTID].features, function (accident) {
               var release_event = [];
@@ -636,7 +636,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         ERQuery.relationshipId = that.tblS9EmergencyResponses.relationshipId;
         ERQuery.objectIds = [attributes.OBJECTID];
 
-        that.AllFacilities.queryRelatedFeatures(ERQuery, function (e) {
+        that.tblS1Facilities.queryRelatedFeatures(ERQuery, function (e) {
           var er_plans = e[attributes.OBJECTID].features[0];
           var row_string =
             '<table><tbody id="er_plan_table">' +
@@ -678,21 +678,21 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         if (!this.multipleRMPs) {
           if (attributes.ValidLatLongFlag) {
             var location_string = 'RMP Validated Location Used' +
-              '<br/>Description: ' + that.AllFacilities.getDomain('LatLongDescription').getName(attributes.LatLongDescription) +
-              '<br/>Method: ' + that.AllFacilities.getDomain('LatLongMethod').getName(attributes.LatLongMethod);
+              '<br/>Description: ' + that.tblS1Facilities.getDomain('LatLongDescription').getName(attributes.LatLongDescription) +
+              '<br/>Method: ' + that.tblS1Facilities.getDomain('LatLongMethod').getName(attributes.LatLongMethod);
           } else if (!attributes.ValidLatLongFlag && attributes.FRS_Lat !== undefined && attributes.FRS_long !== undefined) {
             var location_string = 'FRS Location Used' +
-              '<br/>Description: ' + that.AllFacilities.getDomain('FRS_Description').getName(attributes.FRS_Description) +
-              '<br/>Method: ' + that.AllFacilities.getDomain('FRS_Method').getName(attributes.FRS_Method);
+              '<br/>Description: ' + that.tblS1Facilities.getDomain('FRS_Description').getName(attributes.FRS_Description) +
+              '<br/>Method: ' + that.tblS1Facilities.getDomain('FRS_Method').getName(attributes.FRS_Method);
           } else {
             var location_string = 'Location Not Validated' +
-              '<br/>Description: ' + that.AllFacilities.getDomain('LatLongDescription').getName(attributes.LatLongDescription) +
-              '<br/>Method: ' + that.AllFacilities.getDomain('LatLongMethod').getName(attributes.LatLongMethod);
+              '<br/>Description: ' + that.tblS1Facilities.getDomain('LatLongDescription').getName(attributes.LatLongDescription) +
+              '<br/>Method: ' + that.tblS1Facilities.getDomain('LatLongMethod').getName(attributes.LatLongMethod);
           }
 
           if (attributes.HorizontalAccMeasure) {
             location_string += '<br/>Horizontal Accuracy (m): ' + attributes.HorizontalAccMeasure +
-              '<br/>Horizontal Datum: ' + that.AllFacilities.getDomain('HorizontalRefDatumCode').getName(attributes.HorizontalRefDatumCode) +
+              '<br/>Horizontal Datum: ' + that.tblS1Facilities.getDomain('HorizontalRefDatumCode').getName(attributes.HorizontalRefDatumCode) +
               (attributes.SourceMapScaleNumber ? '<br/>Source Map Scale: ' + attributes.SourceMapScaleNumber : '')
           }
 
