@@ -25,7 +25,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         var rmp_parent_layer_id = this.config.layerId.split('_')[0].toLowerCase();
         this.rmpLayer = layerStructure.getWebmapLayerNodes()
           .find(x => x.id.toLowerCase().includes(rmp_parent_layer_id)).getSubNodes()
-          .find(x => x.id.toLowerCase().includes(rmp_parent_layer_id)).getSubNodes()
+          // .find(x => x.id.toLowerCase().includes(rmp_parent_layer_id)).getSubNodes()
           .find(x => x.id.toLowerCase().includes(this.config.layerId.toLowerCase()));
         console.log('RMPIdentify::postCreate');
       },
