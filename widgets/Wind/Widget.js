@@ -43,19 +43,19 @@ export default declare([BaseWidget], {
       });
       // HRRR
       vm.layersRequest_hrrr = esriRequest({
-        url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind_hrrr.json',
+        url: '/apps/wind_data/current_wind_hrrr.json',
         content: {},
         handleAs: "json"
       });
       // NAM
       vm.layersRequest_nam = esriRequest({
-        url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind_nam.json',
+        url: '/apps/wind_data/current_wind_nam.json',
         content: {},
         handleAs: "json"
       });
       // GFS
       vm.layersRequest_gfs = esriRequest({
-        url: 'https://r9.ercloud.org/r9wab/wind_data/current_wind_gfs.json',
+        url: '/apps/wind_data/current_wind_gfs.json',
         content: {},
         handleAs: "json"
       });
