@@ -51,7 +51,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         //Identify default fire layers and visisblity
         //get perimeter buffer feature layer
         vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/ArcGIS/rest/services/R9_Fire_Perimeter_Buffers/FeatureServer/0", {
-          definitionExpression: "RETRIEVED >= " + "'" + currentDate + "'"
+          definitionExpression: "display = 1 AND acres >= 10 AND RETRIEVED >= " + "'" + currentDate + "'"
         });
         vs.map.addLayer(vs.perimeterbufferFC, 0);
 
@@ -59,7 +59,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         var query = new Query();
         var queryTask = new QueryTask(vs.perimeterbufferFC.url);
 
-        query.where = "RETRIEVED >= " + "'" + currentDate + "'";
+        query.where = "display = 1 AND acres >= 10 and RETRIEVED >= " + "'" + currentDate + "'";
         query.outSpatialReference = {wkid: 102100};
         query.returnGeometry = true;
         query.orderByFields = ["IncidentName ASC"];
@@ -228,8 +228,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
               filter: vs.all_fires.map(f => `IrwinID = '${f.attributes.IRWINID}'`).join(" OR ")
             }
           ];
-        vs.fireLayerVisReset = [];
-        vs.fireLayerFilterReset = [];
+          vs.fireLayerVisReset = [];
+          vs.fireLayerFilterReset = [];
 
           var layerStructure = LayerStructure.getInstance();
 
