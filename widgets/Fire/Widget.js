@@ -37,19 +37,21 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         vs = this;
         this.inherited(arguments);
         console.log('startup');
-        var currentDate = vs._getCurrentDate();
+
 
         //set up busyIndicator
         vs.busyHandle = busyIndicator.create(vs.fireWidgetFrame);
         vs.busyHandle.show();
 
-        //Identify default fire layers and visisblity
-        vs.fireLayerNames = ["NIFS Current Wildfire Perimeters", "Wildfire Reporting (IRWIN)"];
-        vs.fireLayerVisReset = [];
 
+      },
+
+      loadFires: function () {
+        var currentDate = vs._getCurrentDate();
+        //Identify default fire layers and visisblity
         //get perimeter buffer feature layer
         vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/ArcGIS/rest/services/R9_Fire_Perimeter_Buffers/FeatureServer/0", {
-          definitionExpression: "RETRIEVED >= " + "'" + currentDate + "'"
+          definitionExpression: "display = 1 AND acres >= 10 AND RETRIEVED >= " + "'" + currentDate + "'"
         });
         vs.map.addLayer(vs.perimeterbufferFC, 0);
 
@@ -57,12 +59,12 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         var query = new Query();
         var queryTask = new QueryTask(vs.perimeterbufferFC.url);
 
-        query.where = "RETRIEVED >= " + "'" + currentDate + "'";
+        query.where = "display = 1 AND acres >= 10 and RETRIEVED >= " + "'" + currentDate + "'";
         query.outSpatialReference = {wkid: 102100};
         query.returnGeometry = true;
         query.orderByFields = ["IncidentName ASC"];
         query.outFields = ["*"];
-        queryTask.execute(query, this._QueryFiresResults, vs._QueryfireResultsError).then(function () {
+        return queryTask.execute(query, this._QueryFiresResults, vs._QueryfireResultsError).then(function () {
           vs.busyHandle.hide();
           domStyle.set(vs.headerInfo, "display", "block");
         });
@@ -153,7 +155,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           var scale = 300 / acresRange;
           var scaledPixels = (reportingAcres - acresMin) * (300 / acresRange);
           var bar;
-          if (scaledPixels < 100){
+          if (scaledPixels < 100) {
             bar = 100;
           } else {
             bar = scaledPixels;
@@ -215,35 +217,52 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
 
       onOpen: function () {
         console.log('onOpen');
-        //Make fire layers visible
-        var layerStructure = LayerStructure.getInstance();
+        this.loadFires().then(function () {
+          vs.fireLayerNames = [
+            {
+              label: "NIFS Current Wildfire Perimeters",
+              filter: vs.all_fires.map(f => `GeometryID = '${f.attributes.GeometryID}'`).concat().join(" OR ")
+            },
+            {
+              label: "Wildfire Reporting (IRWIN)",
+              filter: vs.all_fires.map(f => `IrwinID = '${f.attributes.IRWINID}'`).join(" OR ")
+            }
+          ];
+          vs.fireLayerVisReset = [];
+          vs.fireLayerFilterReset = [];
 
-        layerStructure.traversal(function (layerNode) {
-          if (vs.fireLayerNames.includes(layerNode.title) && !layerNode.isVisible()) {
-            layerNode.show();
-            vs.fireLayerVisReset.push(layerNode.title);
+          var layerStructure = LayerStructure.getInstance();
+
+          layerStructure.traversal(function (layerNode) {
+            var fireLayer = vs.fireLayerNames.find(x => x.label === layerNode.title);
+            if (fireLayer) {
+              layerNode.setFilter(fireLayer.filter);
+              vs.fireLayerFilterReset.push(layerNode);
+              if (!layerNode.isVisible()) {
+                layerNode.show();
+                vs.fireLayerVisReset.push(layerNode);
+              }
+            }
+          });
+          //Check to see if perimeter buffer layer has been added
+          var bufferLayerStatus = vs.map.getLayer(vs.perimeterbufferFC.id);
+          if (!bufferLayerStatus) {
+            vs.map.addLayer(vs.perimeterbufferFC);
           }
-
         });
-        //Check to see if perimeter buffer layer has been added
-        var bufferLayerStatus = vs.map.getLayer(vs.perimeterbufferFC.id);
-        if (!bufferLayerStatus) {
-          vs.map.addLayer(vs.perimeterbufferFC);
-        }
+        //Make fire layers visible
+
       },
 
       onClose: function () {
         console.log('onClose');
         //if the widget set visible on, then for that layer set visibility off
-        var layerStructure = LayerStructure.getInstance();
-        layerStructure.traversal(function (layerNode) {
-          if (vs.fireLayerVisReset.includes(layerNode.title)) {
-            layerNode.hide();
-          }
-        });
+        vs.fireLayerVisReset.forEach(x => x.hide());
+        vs.fireLayerFilterReset.forEach(x => x.setFilter(''));
 
         vs.map.removeLayer(vs.perimeterbufferFC);
         vs.fireLayerVisReset = [];
+        vs.fireLayerFilterReset = [];
       },
 
       onMinimize: function () {
