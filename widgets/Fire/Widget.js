@@ -234,9 +234,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           var layerStructure = LayerStructure.getInstance();
 
           layerStructure.traversal(function (layerNode) {
-            console.log(layerNode.title);
             var fireLayer = vs.fireLayerNames.find(x => x.label === layerNode.title);
-            console.log(fireLayer);
             if (fireLayer) {
               layerNode.setFilter(fireLayer.filter);
               vs.fireLayerFilterReset.push(layerNode);
