@@ -44,7 +44,10 @@ node {
 //   stage('deploy') {
 //     input(message: "Shall we proceed?")
 //   }
-      } finally {
-  cleanWs()
+  } catch() {
+    currentBuild.result = 'FAILURE'
+  } finally {
+    slackSend(channel:"#r9-service-alerts", message: "Widget Branch ${env.BRANCH_NAME} Build ${currentBuild.result}")
+    cleanWs()
   }
 }
