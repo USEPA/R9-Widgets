@@ -95,6 +95,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         });
 
         //Loop through fires and add dom objects
+        vs.fireList.replaceChildren("");
         for (var fire in vs.all_fires) {
 
           //Acres and PercentContained
