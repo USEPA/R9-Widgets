@@ -263,6 +263,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         vs.map.removeLayer(vs.perimeterbufferFC);
         vs.fireLayerVisReset = [];
         vs.fireLayerFilterReset = [];
+        vs.fireList.innerHTML = '';
       },
 
       onMinimize: function () {
