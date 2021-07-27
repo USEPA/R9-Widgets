@@ -219,32 +219,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
       onOpen: function () {
         console.log('onOpen');
         this.loadFires().then(function () {
-          vs.fireLayerNames = [
-            {
-              label: "NIFS Current Wildfire Perimeters",
-              filter: vs.all_fires.map(f => `GeometryID = '${f.attributes.GeometryID}'`).concat().join(" OR ")
-            },
-            {
-              label: "Wildfire Reporting (IRWIN)",
-              filter: vs.all_fires.map(f => `IrwinID = '${f.attributes.IRWINID}'`).join(" OR ")
-            }
-          ];
-          vs.fireLayerVisReset = [];
-          vs.fireLayerFilterReset = [];
-
-          var layerStructure = LayerStructure.getInstance();
-
-          layerStructure.traversal(function (layerNode) {
-            var fireLayer = vs.fireLayerNames.find(x => x.label === layerNode.title);
-            if (fireLayer) {
-              layerNode.setFilter(fireLayer.filter);
-              vs.fireLayerFilterReset.push(layerNode);
-              if (!layerNode.isVisible()) {
-                layerNode.show();
-                vs.fireLayerVisReset.push(layerNode);
-              }
-            }
-          });
+          vs.filterFires();
           //Check to see if perimeter buffer layer has been added
           var bufferLayerStatus = vs.map.getLayer(vs.perimeterbufferFC.id);
           if (!bufferLayerStatus) {
@@ -254,12 +229,43 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         //Make fire layers visible
 
       },
+      filterFires: function () {
 
+        vs.fireLayerNames = [
+          {
+            label: "NIFS Current Wildfire Perimeters",
+            filter: vs.all_fires.map(f => `GeometryID = '${f.attributes.GeometryID}'`).concat().join(" OR ")
+          },
+          {
+            label: "Wildfire Reporting (IRWIN)",
+            filter: vs.all_fires.map(f => `IrwinID = '${f.attributes.IRWINID}'`).join(" OR ")
+          }
+        ];
+        vs.fireLayerVisReset = [];
+        vs.fireLayerFilterReset = [];
+
+        var layerStructure = LayerStructure.getInstance();
+
+        layerStructure.traversal(function (layerNode) {
+          var fireLayer = vs.fireLayerNames.find(x => x.label === layerNode.title);
+          if (fireLayer) {
+            layerNode.setFilter(fireLayer.filter);
+            vs.fireLayerFilterReset.push(layerNode);
+            if (!layerNode.isVisible()) {
+              layerNode.show();
+              vs.fireLayerVisReset.push(layerNode);
+            }
+          }
+        });
+      },
+      resetFireFilter: function () {
+        vs.fireLayerVisReset.forEach(x => x.hide());
+        vs.fireLayerFilterReset.forEach(x => x.setFilter(''));
+      },
       onClose: function () {
         console.log('onClose');
         //if the widget set visible on, then for that layer set visibility off
-        vs.fireLayerVisReset.forEach(x => x.hide());
-        vs.fireLayerFilterReset.forEach(x => x.setFilter(''));
+        this.resetFireFilter();
 
         vs.map.removeLayer(vs.perimeterbufferFC);
         vs.fireLayerVisReset = [];
@@ -267,6 +273,13 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         vs.fireList.innerHTML = '';
       },
 
+      toggleFires: function (e) {
+        if (e.target.checked) {
+          this.resetFireFilter();
+        } else {
+          this.filterFires();
+        }
+      },
       onMinimize: function () {
         console.log('onMinimize');
       },
