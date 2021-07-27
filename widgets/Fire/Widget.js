@@ -47,6 +47,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
       },
 
       loadFires: function () {
+        console.log('loadFires');
         var currentDate = vs._getCurrentDate();
         //Identify default fire layers and visisblity
         //get perimeter buffer feature layer
