@@ -10,24 +10,11 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('node-sass');
   const sass = require('node-sass');
   const env = require('./env');
-  var appDir = env.appDir;
-  var stemappDir = env.stemappDir;
   grunt.initConfig({
     sync: {
       main: {
         verbose: true,
-        files: [
-          {
-            cwd: 'dist/',
-            src: '**',
-            dest: stemappDir
-          },
-          {
-            cwd: 'dist/',
-            src: '**',
-            dest: appDir
-          }
-        ]
+        files: env.files
       }
     },
     ts: {'default': {'tsconfig': {'passThrough': true}}},
