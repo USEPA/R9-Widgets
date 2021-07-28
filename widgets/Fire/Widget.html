@@ -1,17 +1,33 @@
-<div  data-dojo-attach-point="fireWidgetFrame" style="height: 100%" >
+<div data-dojo-attach-point="fireWidgetFrame" style="height: 100%; display: flex; flex-direction: column;">
   <div data-dojo-attach-point="vertexCount"></div>
   <div data-dojo-attach-point="headerInfo" class="topInfo" style="display: none">
     <div class="discliamerText">${nls.label1}</div>
+
     <div class="customLegend">
-      <div  class="containedLegend"></div><div>Percent Contained</div>
-    </div>
-    <div class="customLegend">
-      <div class="notcontainedLegend"></div><div>Percent Not Contained</div>
+      <div style="display: flex">
+        <div class="containedLegend"></div>
+        <div>Percent Contained</div>
+      </div>
+      <div style="display: flex">
+        <div class="notcontainedLegend"></div>
+        <div>Percent Not Contained</div>
+      </div>
     </div>
 
-<!--    <div data-dojo-attach-point="fireDesc" class="left">-->
-<!--      <div class="discliamerText">${nls.label1}.</div>-->
-<!--    </div>-->
+    <div
+      style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin: 0 5px;">
+      <label for="fire_toggle" style="font-size: 14px; cursor: pointer">Show All Fires</label>
+      <label class="switch">
+        <input type="checkbox" data-dojo-attach-event="onClick:toggleFires" id="fire_toggle">
+        <span class="slider round"></span>
+
+      </label>
+    </div>
+
+
+    <!--    <div data-dojo-attach-point="fireDesc" class="left">-->
+    <!--      <div class="discliamerText">${nls.label1}.</div>-->
+    <!--    </div>-->
   </div>
   <div data-dojo-attach-point="fireList"></div>
 </div>
