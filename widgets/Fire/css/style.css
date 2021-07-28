@@ -156,18 +156,27 @@
   background-color: #0d71bc;
   width: 15px;
   height: 15px;
+  margin-right: 5px;
 }
 
 .jimu-widget-fire .notcontainedLegend {
   background-color: #ca0000;
   width: 15px;
   height: 15px;
+  margin-right: 5px;
+}
+
+.jimu-widget-fire .customLegend {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  margin: 10px 3px;
 }
 
 .jimu-widget-fire .customLegend > div {
   vertical-align: top;
   display: inline-block;
-  margin: 3px;
   font-size: 14px;
 
 }
