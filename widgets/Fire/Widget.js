@@ -261,14 +261,14 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         });
       },
       resetFireFilter: function () {
-        vs.fireLayerVisReset.forEach(x => x.hide());
+
         vs.fireLayerFilterReset.forEach(x => x.setFilter(''));
       },
       onClose: function () {
         console.log('onClose');
         //if the widget set visible on, then for that layer set visibility off
         this.resetFireFilter();
-
+        vs.fireLayerVisReset.forEach(x => x.hide());
         vs.map.removeLayer(vs.perimeterbufferFC);
         vs.fireLayerVisReset = [];
         vs.fireLayerFilterReset = [];
