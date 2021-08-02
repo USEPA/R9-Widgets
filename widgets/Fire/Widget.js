@@ -27,7 +27,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
       //templateString: template,
 
       baseClass: 'jimu-widget-fire',
-
+      irwinLabel: "Wildfire Reporting (IRWIN)",
       postCreate: function () {
         this.inherited(arguments);
         console.log('postCreate');
@@ -107,8 +107,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           var incidentName = vs.all_fires[fire].attributes.IncidentName.toUpperCase();
           var counties = JSON.parse(vs.all_fires[fire].attributes.counties);
           var facilities = JSON.parse(vs.all_fires[fire].attributes.facilities);
-          var rmpFacilities = facilities.facilities["Active RMP Facilities"] ? facilities.facilities["Active RMP Facilities"] : 0;
-          var nplFacilities = facilities.facilities["NationalPriorityListPoint_R9_2019_R9"] ? facilities.facilities["NationalPriorityListPoint_R9_2019_R9"] : 0;
+          var rmpFacilities = facilities.facilities && facilities.facilities["Active RMP Facilities"] ? facilities.facilities["Active RMP Facilities"] : 0;
+          var nplFacilities = facilities.facilities && facilities.facilities["NationalPriorityListPoint_R9_2019_R9"] ? facilities.facilities["NationalPriorityListPoint_R9_2019_R9"] : 0;
           var tribes = JSON.parse(vs.all_fires[fire].attributes.tribes);
 
           //If dailyAcres is 0 then look at GISAcres
@@ -138,11 +138,16 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
             c = `${c}: ${counties.join(', ')}`;
           }
 
+          var acresFacilitySubText = '';
+          if (facilities.facilities) {
+            acresFacilitySubText = `<div class='acresTxt'>(${parseFloat(reportingAcres).toLocaleString('en')} acres${rmp}${npl}${t})</div>`;
+          }
           //Incident Name with acres
-          var layerDivNode = domConstruct.toDom(`<div class='layerDiv' id='F${vs.all_fires[fire].attributes.OBJECTID}'>
+          var layerDivNode = domConstruct.toDom(`<div class='layerDiv' id='F${vs.all_fires[fire].attributes.OBJECTID}' title="Click to zoom">
+            <div class='attLink'></div>
             <div class='fireNameTxt'>${incidentName}</div>
             <div class='acresTxt' title='${c}'>${c}</div>
-            <div class='acresTxt'>(${parseFloat(reportingAcres).toLocaleString('en')} acres${rmp}${npl}${t})</div>
+            ${acresFacilitySubText}
             </div>`);
 
           //add percent containment bar
@@ -173,20 +178,23 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           }).placeAt(layerDivNode).startup();
           domConstruct.place(layerDivNode, vs.fireList);
           //get fire attachment
-          vs.perimeterbufferFC.queryAttachmentInfos(vs.all_fires[fire].attributes.OBJECTID, vs._queryFireAttachment, vs._QueryfireResultsError);
+          if (facilities.facilities) {
+            vs.perimeterbufferFC.queryAttachmentInfos(vs.all_fires[fire].attributes.OBJECTID, vs._queryFireAttachment, vs._QueryfireResultsError);
+          }
+          // setup zoom listener
+          on(dom.byId(`F${vs.all_fires[fire].attributes.OBJECTID}`), "click", vs._zoomToFire(vs.all_fires[fire].geometry));
         }
       },
 
       _queryFireAttachment: function (results) {
         console.log('Attachment Query Results');
         var objectIDString = "F" + results[0].objectId;
-        var fireDiv = dom.byId(objectIDString);
+        var fireDiv = dojo.query('#' + objectIDString + ' .attLink')[0];
 
-        var reportNode = domConstruct.toDom("<div class='attLink'><div id='" + "r" + fireDiv.id + "' class='report-button' title='Get Report'></div><div title='Zoom To' class='search-button' id='" + "z" + fireDiv.id + "'></div></div>");
+        var reportNode = domConstruct.toDom(`<div id='r${objectIDString}' class='report-button' title='Get Report'></div>`);
         domConstruct.place(reportNode, fireDiv, "first");
-
-        on(dom.byId("z" + fireDiv.id), "click", vs._onClickFireName);
-        on(dom.byId("r" + fireDiv.id), "click", function (e) {
+        on(dom.byId("r" + objectIDString), "click", function (e) {
+          e.stopPropagation();
           //Get latest report from the bottom of the list (array)
           var latestReportIndex = results.length - 1;
           window.open(results[latestReportIndex].url, "_top");
@@ -199,24 +207,30 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         console.log('error');
       },
 
-      _onClickFireName: function (e) {
+      _zoomToFire: (geometry) => (e) => {
         //get objectid of firebuffer clicked on
-        var targetID = e.currentTarget.id.split('F');
-        targetObjID = targetID[1];
-        //get fire buffer extent
-        var query = new Query();
-        var queryTask = new QueryTask(vs.perimeterbufferFC.url);
-        query.objectIds = [targetObjID];
-        query.outSpatialReference = {wkid: 102100};
-        query.returnGeometry = true;
-        queryTask.execute(query, vs._queryFeatureReslts);
+        if (geometry.type === 'polygon') {
+          var fireBufferExtent = new Extent(geometry.getExtent());
+          vs.map.setExtent(fireBufferExtent);
+        } else {
+          vs.map.centerAndZoom(geometry, 10);
+        }
+        // var targetID = e.currentTarget.id.split('F');
+        // targetObjID = targetID[1];
+        // //get fire buffer extent
+        // var query = new Query();
+        // var queryTask = new QueryTask(vs.perimeterbufferFC.url);
+        // query.objectIds = [targetObjID];
+        // query.outSpatialReference = {wkid: 102100};
+        // query.returnGeometry = true;
+        // queryTask.execute(query, vs._queryFeatureResults);
       },
 
-      _queryFeatureReslts: function (results) {
-        //set map extent
-        var fireBufferExtent = new Extent(results.features[0].geometry.getExtent());
-        vs.map.setExtent(fireBufferExtent);
-      },
+      // _queryFeatureResults: function (results) {
+      //   //set map extent
+      //
+      //
+      // },
 
       onOpen: function () {
         console.log('onOpen');
@@ -239,7 +253,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
             filter: vs.all_fires.map(f => `GeometryID = '${f.attributes.GeometryID}'`).concat().join(" OR ")
           },
           {
-            label: "Wildfire Reporting (IRWIN)",
+            label: vs.irwinLabel,
             filter: vs.all_fires.map(f => `IrwinID = '${f.attributes.IRWINID}'`).join(" OR ")
           }
         ];
@@ -257,17 +271,34 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
               layerNode.show();
               vs.fireLayerVisReset.push(layerNode);
             }
+            // capture layerObject promise
+
           }
         });
       },
-      resetFireFilter: function () {
+      resetFireFilter: function (loadAllFires) {
 
-        vs.fireLayerFilterReset.forEach(x => x.setFilter(''));
+        vs.fireLayerFilterReset.forEach(x => {
+          x.setFilter('');
+          if (x.title === vs.irwinLabel && loadAllFires) {
+            x.getLayerObject().then(function (layerObject) {
+              layerObject.queryFeatures({where: '1=1', orderByFields: ['DailyAcres DESC']}).then(function (results) {
+                results.features = results.features.map(x => {
+                  x.attributes.counties = JSON.stringify([x.attributes.POOCounty]);
+                  x.attributes.facilities = '{}';
+                  x.attributes.tribes = '[]';
+                  return x;
+                });
+                vs._QueryFiresResults(results);
+              });
+            });
+          }
+        });
       },
       onClose: function () {
         console.log('onClose');
         //if the widget set visible on, then for that layer set visibility off
-        this.resetFireFilter();
+        this.resetFireFilter(false);
         vs.fireLayerVisReset.forEach(x => x.hide());
         vs.map.removeLayer(vs.perimeterbufferFC);
         vs.fireLayerVisReset = [];
@@ -277,30 +308,47 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
 
       toggleFires: function (e) {
         if (e.target.checked) {
-          this.resetFireFilter();
+          this.resetFireFilter(true);
+          vs.map.removeLayer(vs.perimeterbufferFC);
         } else {
-          this.filterFires();
+          this.loadFires().then(function () {
+            vs.filterFires();
+            //Check to see if perimeter buffer layer has been added
+            var bufferLayerStatus = vs.map.getLayer(vs.perimeterbufferFC.id);
+            if (!bufferLayerStatus) {
+              vs.map.addLayer(vs.perimeterbufferFC);
+            }
+          });
         }
       },
       onMinimize: function () {
         console.log('onMinimize');
-      },
+      }
+      ,
 
       onMaximize: function () {
         console.log('onMaximize');
-      },
+      }
+      ,
 
       onSignIn: function (credential) {
         /* jshint unused:false*/
         console.log('onSignIn');
-      },
+      }
+      ,
 
       onSignOut: function () {
         console.log('onSignOut');
-      },
+      }
+      ,
 
       showVertexCount: function (count) {
         this.vertexCount.innerHTML = 'The vertex count is: ' + count;
       }
+      ,
+      loadAllFires: function () {
+
+      }
     });
-  });
+  })
+;
