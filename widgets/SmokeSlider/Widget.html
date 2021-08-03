@@ -1,10 +1,12 @@
 <div class="jimu-widget-timeslider">
 	<div class="close-btn" data-dojo-attach-point="closeBtn" tabindex="0"></div>
+    <!--dw start-->
+    <div class="info-btn" data-dojo-attach-point="infoBtn" tabindex="0"></div>
+    <!--dw end-->
 	<div class="no-time-content drag-handler" data-dojo-attach-point="noTimeContentNode" id="noTimeContentNode">${nls.disableTips}</div>
 	<div class="time-content" data-dojo-attach-point="timeContentNode">
 		<div class="label-container drag-handler" data-dojo-attach-point="labelContainer" data-dojo-attach-event="onclick:_onHandleClick">
 			<div class="time-extent-container">
-				<div class="live-icon hide" data-dojo-attach-point="liveIcon" title="${nls.liveData}"></div>
 				<div class="jimu-ellipsis" data-dojo-attach-point="timeExtentLabelNode">${nls.timeExtent}</div>
 			</div>
 			<div class="layer-labels jimu-ellipsis" data-dojo-attach-point="layerLabelsNode">${nls.layers}</div>

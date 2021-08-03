@@ -14,98 +14,85 @@
 // limitations under the License.
 ///////////////////////////////////////////////////////////////////////////
 
-define(['dojo/_base/declare',
-  'dojo/_base/lang',
-  "jimu/BaseWidgetSetting",
-  "dijit/_WidgetsInTemplateMixin",
-  'dojo/on',
-  "dojo/text!./AutoRefresh.html",
-  "esri/layers/TimeInfo",
-  "jimu/dijit/CheckBox",
-  "dijit/form/Select",
-  "dijit/form/ValidationTextBox"
-],
-  function (declare, lang, BaseWidgetSetting, _WidgetsInTemplateMixin, on, template,
-    esriTimeInfo, CheckBox, Select) {
-    var clazz = declare([BaseWidgetSetting, _WidgetsInTemplateMixin], {
-      templateString: template,
-      /*
-        configFromat = {
-          isAutoRefresh: false,// ture/false
-          interval:0,//number
-          unit:""
-        }
-      */
-      postCreate: function () {
-        this._unitsOptions = [{
-          "label": window.jimuNls.timeUnit.days,
-          "value": esriTimeInfo.UNIT_DAYS
-        }, {
-          "label": window.jimuNls.timeUnit.hours,
-          "value": esriTimeInfo.UNIT_HOURS
-        }, {
-          "label": window.jimuNls.timeUnit.minutes,
-          "value": esriTimeInfo.UNIT_MINUTES
-        }, {
-          "label": window.jimuNls.timeUnit.seconds,
-          "value": esriTimeInfo.UNIT_SECONDS
-        }];
-
-        this.autoRefresh = new CheckBox({
-          label: this.nls.autoRefresh,
-          checked: false
-        }, this.autoRefreshCheckBox);
-        this.autoRefresh.startup();
-        this.own(on(this.autoRefresh, "change", lang.hitch(this, function (val) {
-          if (val) {
-            this._enableInputs();
-          } else {
-            this._disableInputs();
-          }
-        })));
-
-        this.intervalUnits = new Select({
-          options: this._unitsOptions,
-          "disabled": true,
-          "class": "interval-units"
-        }, this.intervalUnits);
-
-        this._disableInputs();
-
-        this.inherited(arguments);
-      },
-
-      setConfig: function (config) {
-        if (!config) {
-          return;
-        }
-
-        this.autoRefresh.setValue(config.isAutoRefresh);
-        this.intervalNumber.setValue(config.interval);
-        this.intervalUnits.setValue(config.unit);
-      },
-
-      isValid: function () {
-
-      },
-
-      _disableInputs: function () {
-        this.intervalNumber.set("disabled", true);
-        this.intervalUnits.set("disabled", true);
-      },
-      _enableInputs: function () {
-        this.intervalNumber.set("disabled", false);
-        this.intervalUnits.set("disabled", false);
-      },
-
-      getConfig: function () {
-        var testConfig = {
-          isAutoRefresh: this.autoRefresh.getValue(),// ture/false
-          interval: this.intervalNumber.getValue(),//number
-          unit: this.intervalUnits.getValue()
-        };
-        return testConfig;
+define(['dojo/_base/declare', 'dojo/_base/lang', "jimu/BaseWidgetSetting", "dijit/_WidgetsInTemplateMixin", 'dojo/on', "dojo/text!./AutoRefresh.html", "esri/layers/TimeInfo", "jimu/dijit/CheckBox", "dijit/form/Select", "dijit/form/ValidationTextBox"], function (declare, lang, BaseWidgetSetting, _WidgetsInTemplateMixin, on, template, esriTimeInfo, CheckBox, Select) {
+  var clazz = declare([BaseWidgetSetting, _WidgetsInTemplateMixin], {
+    templateString: template,
+    /*
+      configFromat = {
+        isAutoRefresh: false,// ture/false
+        interval:0,//number
+        unit:""
       }
-    });
-    return clazz;
+    */
+    postCreate: function postCreate() {
+      this._unitsOptions = [{
+        "label": window.jimuNls.timeUnit.days,
+        "value": esriTimeInfo.UNIT_DAYS
+      }, {
+        "label": window.jimuNls.timeUnit.hours,
+        "value": esriTimeInfo.UNIT_HOURS
+      }, {
+        "label": window.jimuNls.timeUnit.minutes,
+        "value": esriTimeInfo.UNIT_MINUTES
+      }, {
+        "label": window.jimuNls.timeUnit.seconds,
+        "value": esriTimeInfo.UNIT_SECONDS
+      }];
+
+      this.autoRefresh = new CheckBox({
+        label: this.nls.autoRefresh,
+        checked: false
+      }, this.autoRefreshCheckBox);
+      this.autoRefresh.startup();
+      this.own(on(this.autoRefresh, "change", lang.hitch(this, function (val) {
+        if (val) {
+          this._enableInputs();
+        } else {
+          this._disableInputs();
+        }
+      })));
+
+      this.intervalUnits = new Select({
+        options: this._unitsOptions,
+        "disabled": true,
+        "class": "interval-units"
+      }, this.intervalUnits);
+
+      this._disableInputs();
+
+      this.inherited(arguments);
+    },
+
+    setConfig: function setConfig(config) {
+      if (!config) {
+        return;
+      }
+
+      this.autoRefresh.setValue(config.isAutoRefresh);
+      this.intervalNumber.setValue(config.interval);
+      this.intervalUnits.setValue(config.unit);
+    },
+
+    isValid: function isValid() {},
+
+    _disableInputs: function _disableInputs() {
+      this.intervalNumber.set("disabled", true);
+      this.intervalUnits.set("disabled", true);
+    },
+    _enableInputs: function _enableInputs() {
+      this.intervalNumber.set("disabled", false);
+      this.intervalUnits.set("disabled", false);
+    },
+
+    getConfig: function getConfig() {
+      var testConfig = {
+        isAutoRefresh: this.autoRefresh.getValue(), // ture/false
+        interval: this.intervalNumber.getValue(), //number
+        unit: this.intervalUnits.getValue()
+      };
+      return testConfig;
+    }
   });
+  return clazz;
+});
+//# sourceMappingURL=AutoRefresh.js.map
