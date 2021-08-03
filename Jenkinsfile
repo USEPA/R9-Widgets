@@ -1,5 +1,10 @@
 node {
   try {
+      env.FIRE_BRANCH = env.BRANCH_NAME
+            if (env.BRANCH_NAME == 'master') {
+                env.FIRE_BRANCH = 'main'
+            }
+            
     stage('build') {
       dir('cop') {
         try {
@@ -15,14 +20,14 @@ node {
       }
       dir('firemap') {
         try {
-          git branch: env.BRANCH_NAME,
+          git branch: env.FIRE_BRANCH,
           credentialsId: 'd68c969d-4750-418f-aec5-9fc2e194fc4f',
           url: 'https://github.com/Innovate-Inc/r9-fire-rwma.git'
         } catch(Exception ex) {
           git branch: 'main',
           credentialsId: 'd68c969d-4750-418f-aec5-9fc2e194fc4f',
           url: 'https://github.com/Innovate-Inc/r9-fire-rwma.git'
-          sh "git checkout -b ${env.BRANCH_NAME}"
+          sh "git checkout -b ${env.FIRE_BRANCH}"
         }
       }
       dir('widgets') {
@@ -58,7 +63,7 @@ node {
           sh "git add --no-all widgets/."
           sh "git commit -a -m '${env.GIT_COMMIT_MSG}'"
           sh 'git config --local credential.helper "!f() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; f"'
-          sh "git push -u origin ${env.BRANCH_NAME}"
+          sh "git push -u origin ${env.FIRE_BRANCH}"
         }
       }
     }
