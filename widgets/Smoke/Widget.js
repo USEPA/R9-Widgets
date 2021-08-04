@@ -66,10 +66,10 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/
 
           var map_image = new MapImage({
             extent: {
-              'xmin': -13803616.86,
-              'xmax': -12690421.95,
-              'ymax': 5160979.44,
-              'ymin': 3829123.84,
+              'xmin': -14304554.57,
+              'xmax': -12189484.24,
+              'ymax': 5909489.86,
+              'ymin': 3606802.48,
               'spatialReference': { 'wkid': 3857 }
             },
             href: string.substitute(vm.root_url, {
