@@ -14,14 +14,7 @@
 // limitations under the License.
 ///////////////////////////////////////////////////////////////////////////
 
-define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/array', 'dojo/_base/fx',
-  "jimu/WidgetManager", 'dojo/dnd/move', 'dojo/on', 'dojo/query', 'dojo/Deferred', 'dojo/dom-geometry',
-  'jimu/LayerInfos/LayerInfos', 'jimu/BaseWidget', 'esri/TimeExtent', 'esri/dijit/TimeSlider', './SpeedMenu',
-  'jimu/utils', './TimeProcesser', './utils', "dojo/throttle", 'esri/moment', 'dojo/request',
-  'esri/layers/MapImageLayer', 'esri/layers/MapImage', 'dojo/string', 'jimu/PanelManager', 'dojo/dom-construct'],
-  function (declare, lang, html, array, baseFx, WidgetManager, Move, on, query, Deferred, domGeometry, LayerInfos,
-            BaseWidget, TimeExtent, TimeSlider, SpeedMenu, jimuUtils, TimeProcesser, utils, throttle, moment, request,
-            MapImageLayer, MapImage, string, PanelManager, domConstruct) {
+define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/array', 'dojo/_base/fx', "jimu/WidgetManager", 'dojo/dnd/move', 'dojo/on', 'dojo/query', 'dojo/Deferred', 'dojo/dom-geometry', 'jimu/LayerInfos/LayerInfos', 'jimu/BaseWidget', 'esri/TimeExtent', 'esri/dijit/TimeSlider', './SpeedMenu', 'jimu/utils', './TimeProcesser', './utils', "dojo/throttle", 'esri/moment', 'dojo/request', 'esri/layers/MapImageLayer', 'esri/layers/MapImage', 'dojo/string', 'jimu/PanelManager', 'dojo/dom-construct', 'dijit/Dialog', 'dojo/text!./WindDialog.html'], function (declare, lang, html, array, baseFx, WidgetManager, Move, on, query, Deferred, domGeometry, LayerInfos, BaseWidget, TimeExtent, TimeSlider, SpeedMenu, jimuUtils, TimeProcesser, utils, throttle, moment, request, MapImageLayer, MapImage, string, PanelManager, domConstruct, Dialog, windDialogContent) {
 
   var clazz = declare([BaseWidget], {
     baseClass: 'smoke',
@@ -39,7 +32,8 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/
     root_url: 'https://r9.ercloud.org/r9wab/smoke_data/${start_timestamp}/${image_timestamp}.png',
     images: {},
     _getImages: function _getImages(start_timestamp, image_timestamp) {
-      var vm = this, deferred = new Deferred();
+      var vm = this,
+          deferred = new Deferred();
       if (image_timestamp === undefined) {
         image_timestamp = start_timestamp.clone();
         image_timestamp.add(1, 'hour');
@@ -135,6 +129,18 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/
       this.own(on(this.map, 'resize', lang.hitch(this, this._onMapResize)));
       //close btn
       this.own(on(this.closeBtn, 'click', lang.hitch(this, this._closeHanlder)));
+
+      //dw start
+      this.executiveSummaryDialog = new Dialog({
+        title: "Wind Widget Information",
+        content: windDialogContent,
+        style: "width: 30%"
+      });
+      this.own(on(this.infoBtn, 'click', lang.hitch(this, this.openDialog)));
+
+      html.removeClass(this.domNode, 'mini-mode');
+      //dw end
+
       //toggle mini-mode(desktop)
       this.own(on(this.domNode, 'mouseover', lang.hitch(this, function () {
         if (!utils.isRunInMobile()) {
@@ -387,7 +393,7 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/
       var vm = this;
       this.timeSlider.on('time-extent-change', function (timeExtent) {
         vm.mapImageLayer.removeAllImages();
-        vm.mapImageLayer.addImage(vm.images[moment.utc(timeExtent.endTime).format('YYYYMMDDHHmm')]);        var label = moment(timeExtent.endTime).format('ll hA');
+        vm.mapImageLayer.addImage(vm.images[moment.utc(timeExtent.endTime).format('YYYYMMDDHHmm')]);var label = moment(timeExtent.endTime).format('ll hA');
         vm.timeSliceLabelNode.innerHTML = label;
         html.setAttr(vm.timeSliceLabelNode, 'title', label);
       });
@@ -574,7 +580,8 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/
           } else {
             html.addClass(this.playBtn, "pause");
             if (utils.isRunInMobile()) {
-              html.addClass(this.domNode, 'mini-mode');
+              //DW
+              //html.addClass(this.domNode, 'mini-mode');
               this._adaptResponsive();
             }
           }
@@ -851,7 +858,8 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/
     _setMiniModeTimer: function _setMiniModeTimer() {
       var time = utils.isRunInMobile() ? 5000 : 2000;
       this._miniModeTimer = setTimeout(lang.hitch(this, function () {
-        html.addClass(this.domNode, 'mini-mode');
+        //DW
+        //html.addClass(this.domNode, 'mini-mode');
         this._adaptResponsive();
       }), time);
     },
@@ -967,7 +975,12 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/
           clearInterval(vm.legend_update_interval);
         }
       }, 200);
+    },
+    //dw start
+    openDialog: function openDialog() {
+      this.executiveSummaryDialog.show();
     }
+    //dw end
   });
   return clazz;
 });
