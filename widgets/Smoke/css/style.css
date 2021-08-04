@@ -191,6 +191,22 @@
 	top:14px;
 	z-index: 1;
 }
+
+/*dw start*/
+.smoke .info-btn {
+  height: 15px;
+  width: 15px;
+  background: url("../images/info.svg") no-repeat;
+  background-position: 50% 50%;
+  background-size: 15px 15px;
+  cursor: pointer;
+  vertical-align: middle;
+  position: absolute;
+  right: 10px;
+  bottom: 40px;
+  z-index: 1; }
+/*dw end*/
+
 .jimu-rtl .smoke .close-btn{
 	right:auto;
 	left:14px;
