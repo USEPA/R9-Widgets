@@ -50,7 +50,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         var currentDate = vs._getCurrentDate();
         //Identify default fire layers and visisblity
         //get perimeter buffer feature layer
-        vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/ArcGIS/rest/services/R9_Fire_Perimeter_Buffers/FeatureServer/0", {
+        // vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/ArcGIS/rest/services/R9_Fire_Perimeter_Buffers/FeatureServer/0", {
+        vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9Notifiable/FeatureServer/0", {
           // definitionExpression: "display = 1 AND acres >= 10 AND RETRIEVED >= " + "'" + currentDate + "'"
           definitionExpression: "display = 1"
         });
@@ -61,10 +62,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         var queryTask = new QueryTask(vs.perimeterbufferFC.url);
 
         // query.where = "display = 1 AND acres >= 10 and RETRIEVED >= " + "'" + currentDate + "'";
-        query.where = "display = 1";
+        query.where = "Display = 1";
         query.outSpatialReference = {wkid: 102100};
         query.returnGeometry = true;
-        query.orderByFields = ["IncidentName ASC"];
+        query.orderByFields = ["Name ASC"];
         query.outFields = ["*"];
         return queryTask.execute(query, this._QueryFiresResults, vs._QueryfireResultsError).then(function () {
           vs.busyHandle.hide();
@@ -101,18 +102,21 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         for (var fire in vs.all_fires) {
 
           //Acres and PercentContained
-          var percentContained = vs.all_fires[fire].attributes.PercentContained ? vs.all_fires[fire].attributes.PercentContained : 0;
-          var dailyAcres = vs.all_fires[fire].attributes.DailyAcres ? vs.all_fires[fire].attributes.DailyAcres : 0;
-          var gisAcres = vs.all_fires[fire].attributes.GISAcres ? vs.all_fires[fire].attributes.GISAcres : 0;
-          var incidentName = vs.all_fires[fire].attributes.IncidentName.toUpperCase();
-          var counties = JSON.parse(vs.all_fires[fire].attributes.counties);
-          var facilities = JSON.parse(vs.all_fires[fire].attributes.facilities);
-          var rmpFacilities = facilities.facilities && facilities.facilities["Active RMP Facilities"] ? facilities.facilities["Active RMP Facilities"] : 0;
-          var nplFacilities = facilities.facilities && facilities.facilities["NationalPriorityListPoint_R9_2019_R9"] ? facilities.facilities["NationalPriorityListPoint_R9_2019_R9"] : 0;
-          var tribes = JSON.parse(vs.all_fires[fire].attributes.tribes);
+          // todo fix these fields
+          var fireData = JSON.parse(vs.all_fires[fire].attributes.Data);
+          var dailyAcres = fireData.acres? fireData.acres: vs.all_fires[fire].attributes.DailyAcres ? vs.all_fires[fire].attributes.DailyAcres : 0;
+          var gisAcres = fireData.acres? fireData.acres: vs.all_fires[fire].attributes.GISAcres ? vs.all_fires[fire].attributes.GISAcres : 0;
+          var percentContained = fireData.percent_contained? fireData.percent_contained: vs.all_fires[fire].attributes.PercentContained ? vs.all_fires[fire].attributes.PercentContained : 0;
+          var incidentName = vs.all_fires[fire].attributes.Name? vs.all_fires[fire].attributes.Name.toUpperCase(): vs.all_fires[fire].attributes.IncidentName.toUpperCase();
+          var counties = fireData.counties? fireData.counties.split(","): JSON.parse(vs.all_fires[fire].attributes.counties);
+          var facilities = fireData.current_results? fireData.current_results.facilities: undefined;
+          var rmpFacilities = facilities && facilities["Active RMP Facilities"] ? facilities["Active RMP Facilities"] : 0;
+          var nplFacilities = facilities && facilities["NationalPriorityListPoint_R9_2019_R9"] ? facilities["NationalPriorityListPoint_R9_2019_R9"] : 0;
+          // todo - tribes
+          var tribes = fireData.tribes? fireData.tribes: "";
 
           //If dailyAcres is 0 then look at GISAcres
-          var reportingAcres
+          var reportingAcres;
           if (dailyAcres == 0) {
             reportingAcres = gisAcres;
           } else {
@@ -139,7 +143,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           }
 
           var acresFacilitySubText = '';
-          if (facilities.facilities) {
+          if (facilities) {
             acresFacilitySubText = `<div class='acresTxt'>(${parseFloat(reportingAcres).toLocaleString('en')} acres${rmp}${npl}${t})</div>`;
           }
           //Incident Name with acres
@@ -178,7 +182,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           }).placeAt(layerDivNode).startup();
           domConstruct.place(layerDivNode, vs.fireList);
           //get fire attachment
-          if (facilities.facilities) {
+          if (facilities) {
             vs.perimeterbufferFC.queryAttachmentInfos(vs.all_fires[fire].attributes.OBJECTID, vs._queryFireAttachment, vs._QueryfireResultsError);
           }
           // setup zoom listener
@@ -205,6 +209,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         //Need to write a better error report
         vs.busyHandle.hide();
         console.log('error');
+        console.log(err);
       },
 
       _zoomToFire: (geometry) => (e) => {
@@ -286,6 +291,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
                 results.features = results.features.map(x => {
                   x.attributes.counties = JSON.stringify([x.attributes.POOCounty]);
                   x.attributes.facilities = '{}';
+                  x.attributes.Data = '{}';
                   x.attributes.tribes = '[]';
                   return x;
                 });
