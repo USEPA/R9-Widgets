@@ -108,12 +108,11 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           var gisAcres = fireData.acres? fireData.acres: vs.all_fires[fire].attributes.GISAcres ? vs.all_fires[fire].attributes.GISAcres : 0;
           var percentContained = fireData.percent_contained? fireData.percent_contained: vs.all_fires[fire].attributes.PercentContained ? vs.all_fires[fire].attributes.PercentContained : 0;
           var incidentName = vs.all_fires[fire].attributes.Name? vs.all_fires[fire].attributes.Name.toUpperCase(): vs.all_fires[fire].attributes.IncidentName.toUpperCase();
-          var counties = fireData.counties? fireData.counties.split(","): JSON.parse(vs.all_fires[fire].attributes.counties);
+          var counties = fireData.hasOwnProperty('counties')? fireData.counties.split(","): JSON.parse(vs.all_fires[fire].attributes.counties);
+          var tribes = fireData.hasOwnProperty('tribes')? fireData.tribes.split(",").filter(function(d) {return d !== "";}): undefined;
           var facilities = fireData.current_results? fireData.current_results.facilities: undefined;
           var rmpFacilities = facilities && facilities["Active RMP Facilities"] ? facilities["Active RMP Facilities"] : 0;
           var nplFacilities = facilities && facilities["NationalPriorityListPoint_R9_2019_R9"] ? facilities["NationalPriorityListPoint_R9_2019_R9"] : 0;
-          // todo - tribes
-          var tribes = fireData.tribes? fireData.tribes: "";
 
           //If dailyAcres is 0 then look at GISAcres
           var reportingAcres;
