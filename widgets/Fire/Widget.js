@@ -86,17 +86,6 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         console.log("Query Fire Results");
         vs.all_fires = results.features;
 
-        //get min and max acres
-        vs.acresArray = vs.all_fires.map(function (a) {
-          var dAcres = a.attributes.DailyAcres ? a.attributes.DailyAcres : 0;
-          var gAcres = a.attributes.GISAcres ? a.attributes.GISAcres : 0;
-          if (dAcres == 0) {
-            return gAcres;
-          } else {
-            return parseFloat(dAcres);
-          }
-        });
-
         //Loop through fires and add dom objects
         vs.fireList.replaceChildren("");
         for (var fire in vs.all_fires) {
@@ -113,6 +102,21 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           var rmpFacilities = facilities && facilities["Active RMP Facilities"] ? facilities["Active RMP Facilities"] : 0;
           var nplFacilities = facilities && facilities["NationalPriorityListPoint_R9_2019_R9"] ? facilities["NationalPriorityListPoint_R9_2019_R9"] : 0;
 
+          //get min and max acres
+          vs.acresArray = vs.all_fires.map(function (a) {
+            var fireData = JSON.parse(a.attributes.Data);
+            if (Object.keys(fireData).length !== 0) {
+              return fireData.acres;
+            } else {
+              var dAcres = a.attributes.DailyAcres? a.attributes.DailyAcres: 0;
+              var gAcres = a.attributes.GISAcres? a.attributes.GISAcres: 0;
+              if (dAcres === 0) {
+                return gAcres;
+              } else {
+                return parseFloat(dAcres);
+              }
+            }
+          });
           //If dailyAcres is 0 then look at GISAcres
           var reportingAcres;
           if (dailyAcres == 0) {
@@ -158,7 +162,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           var pcValue = Math.round(percentContained);
           var pcTitle = percentContained + '% Contained';
           //size of bar
-          var acresMin = 0
+          var acresMin = 0;
           var acresMax = Math.max.apply(Math, vs.acresArray);
           var acresRange = acresMax - acresMin;
           var scale = 300 / acresRange;
