@@ -100,9 +100,6 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         //Loop through fires and add dom objects
         vs.fireList.replaceChildren("");
         for (var fire in vs.all_fires) {
-
-          //Acres and PercentContained
-          // todo fix these fields
           var fireData = JSON.parse(vs.all_fires[fire].attributes.Data);
           vs.all_fires[fire].attributes['GeometryID'] = fireData? fireData.perimeter_id: vs.all_fires[fire].attributes.GeometryID;
           vs.all_fires[fire].attributes['IRWINID'] = fireData? fireData.IRWINID: vs.all_fires[fire].attributes.IrwinID;
@@ -123,7 +120,6 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           } else {
             reportingAcres = dailyAcres;
           }
-
           var rmp = '', npl = '';
           if (facilities) {
             rmp = `, ${rmpFacilities} RMP`;

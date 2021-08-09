@@ -4,7 +4,7 @@ node {
             if (env.BRANCH_NAME == 'master') {
                 env.FIRE_BRANCH = 'main'
             }
-            
+
     stage('build') {
       dir('cop') {
         try {
@@ -68,11 +68,11 @@ node {
       }
     }
   // success
-//   slackSend(channel:"#r9-service-alerts", message: "Widget Branch ${env.BRANCH_NAME} Build COMPLETE")
+  slackSend(channel:"#r9-service-alerts", message: "Widget Branch ${env.BRANCH_NAME} Build COMPLETE")
     echo "Widget Branch ${env.BRANCH_NAME} Build COMPLETE"
   } catch(Exception e) {
     echo "Widget Branch ${env.BRANCH_NAME} Build FAILED"
-//     slackSend(channel:"#r9-service-alerts", message: "Widget Branch ${env.BRANCH_NAME} Build FAILED")
+    slackSend(channel:"#r9-service-alerts", message: "Widget Branch ${env.BRANCH_NAME} Build FAILED")
   } finally {
     cleanWs()
   }
