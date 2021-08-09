@@ -104,6 +104,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           //Acres and PercentContained
           // todo fix these fields
           var fireData = JSON.parse(vs.all_fires[fire].attributes.Data);
+          vs.all_fires[fire].attributes['GeometryID'] = fireData? fireData.perimeter_id: vs.all_fires[fire].attributes.GeometryID;
+          vs.all_fires[fire].attributes['IRWINID'] = fireData? fireData.IRWINID: vs.all_fires[fire].attributes.IrwinID;
           var dailyAcres = fireData.acres? fireData.acres: vs.all_fires[fire].attributes.DailyAcres ? vs.all_fires[fire].attributes.DailyAcres : 0;
           var gisAcres = fireData.acres? fireData.acres: vs.all_fires[fire].attributes.GISAcres ? vs.all_fires[fire].attributes.GISAcres : 0;
           var percentContained = fireData.percent_contained? fireData.percent_contained: vs.all_fires[fire].attributes.PercentContained ? vs.all_fires[fire].attributes.PercentContained : 0;
