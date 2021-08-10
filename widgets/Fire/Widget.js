@@ -50,7 +50,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         var currentDate = vs._getCurrentDate();
         //Identify default fire layers and visisblity
         //get perimeter buffer feature layer
-        vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/ArcGIS/rest/services/R9_Fire_Perimeter_Buffers/FeatureServer/0", {
+        // vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/ArcGIS/rest/services/R9_Fire_Perimeter_Buffers/FeatureServer/0", {
+        vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9Notifiable/FeatureServer/0", {
           // definitionExpression: "display = 1 AND acres >= 10 AND RETRIEVED >= " + "'" + currentDate + "'"
           definitionExpression: "display = 1"
         });
@@ -61,10 +62,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         var queryTask = new QueryTask(vs.perimeterbufferFC.url);
 
         // query.where = "display = 1 AND acres >= 10 and RETRIEVED >= " + "'" + currentDate + "'";
-        query.where = "display = 1";
+        query.where = "Display = 1";
         query.outSpatialReference = {wkid: 102100};
         query.returnGeometry = true;
-        query.orderByFields = ["IncidentName ASC"];
+        query.orderByFields = ["Name ASC"];
         query.outFields = ["*"];
         return queryTask.execute(query, this._QueryFiresResults, vs._QueryfireResultsError).then(function () {
           vs.busyHandle.hide();
@@ -85,40 +86,46 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         console.log("Query Fire Results");
         vs.all_fires = results.features;
 
-        //get min and max acres
-        vs.acresArray = vs.all_fires.map(function (a) {
-          var dAcres = a.attributes.DailyAcres ? a.attributes.DailyAcres : 0;
-          var gAcres = a.attributes.GISAcres ? a.attributes.GISAcres : 0;
-          if (dAcres == 0) {
-            return gAcres;
-          } else {
-            return parseFloat(dAcres);
-          }
-        });
-
         //Loop through fires and add dom objects
         vs.fireList.replaceChildren("");
         for (var fire in vs.all_fires) {
+          var fireData = JSON.parse(vs.all_fires[fire].attributes.Data);
+          vs.all_fires[fire].attributes['GeometryID'] = fireData? fireData.perimeter_id: vs.all_fires[fire].attributes.GeometryID;
+          vs.all_fires[fire].attributes['IRWINID'] = fireData? fireData.IRWINID: vs.all_fires[fire].attributes.IrwinID;
+          var dailyAcres = fireData.acres? fireData.acres: vs.all_fires[fire].attributes.DailyAcres ? vs.all_fires[fire].attributes.DailyAcres : 0;
+          var gisAcres = fireData.acres? fireData.acres: vs.all_fires[fire].attributes.GISAcres ? vs.all_fires[fire].attributes.GISAcres : 0;
+          var percentContained = fireData.percent_contained? fireData.percent_contained: vs.all_fires[fire].attributes.PercentContained ? vs.all_fires[fire].attributes.PercentContained : 0;
+          var incidentName = vs.all_fires[fire].attributes.Name? vs.all_fires[fire].attributes.Name.toUpperCase(): vs.all_fires[fire].attributes.IncidentName.toUpperCase();
+          var counties = fireData.hasOwnProperty('counties')? fireData.counties.split(","): JSON.parse(vs.all_fires[fire].attributes.counties);
+          var tribes = fireData.hasOwnProperty('tribes')? fireData.tribes.split(",").filter(function(d) {return d !== "";}): undefined;
+          var facilities = fireData.current_results? fireData.current_results.facilities: undefined;
+          var rmpFacilities = facilities && facilities["Active RMP Facilities"] ? facilities["Active RMP Facilities"] : 0;
+          var nplPoints = facilities && facilities["NationalPriorityListPoint_R9_2019_R9"] ? facilities["NationalPriorityListPoint_R9_2019_R9"] : 0;
+          var nplPolys = facilities && facilities["NationalPriorityListBoundaryTypes_R9_2020_R9"] ? facilities["NationalPriorityListBoundaryTypes_R9_2020_R9"] : 0;
+          var nplFacilities = facilities? nplPoints+nplPolys: 0;
 
-          //Acres and PercentContained
-          var percentContained = vs.all_fires[fire].attributes.PercentContained ? vs.all_fires[fire].attributes.PercentContained : 0;
-          var dailyAcres = vs.all_fires[fire].attributes.DailyAcres ? vs.all_fires[fire].attributes.DailyAcres : 0;
-          var gisAcres = vs.all_fires[fire].attributes.GISAcres ? vs.all_fires[fire].attributes.GISAcres : 0;
-          var incidentName = vs.all_fires[fire].attributes.IncidentName.toUpperCase();
-          var counties = JSON.parse(vs.all_fires[fire].attributes.counties);
-          var facilities = JSON.parse(vs.all_fires[fire].attributes.facilities);
-          var rmpFacilities = facilities.facilities && facilities.facilities["Active RMP Facilities"] ? facilities.facilities["Active RMP Facilities"] : 0;
-          var nplFacilities = facilities.facilities && facilities.facilities["NationalPriorityListPoint_R9_2019_R9"] ? facilities.facilities["NationalPriorityListPoint_R9_2019_R9"] : 0;
-          var tribes = JSON.parse(vs.all_fires[fire].attributes.tribes);
-
+          //get min and max acres
+          vs.acresArray = vs.all_fires.map(function (a) {
+            var fireData = JSON.parse(a.attributes.Data);
+            if (Object.keys(fireData).length !== 0) {
+              return fireData.acres;
+            } else {
+              var dAcres = a.attributes.DailyAcres? a.attributes.DailyAcres: 0;
+              var gAcres = a.attributes.GISAcres? a.attributes.GISAcres: 0;
+              if (dAcres === 0) {
+                return gAcres;
+              } else {
+                return parseFloat(dAcres);
+              }
+            }
+          });
           //If dailyAcres is 0 then look at GISAcres
-          var reportingAcres
+          var reportingAcres;
           if (dailyAcres == 0) {
             reportingAcres = gisAcres;
           } else {
             reportingAcres = dailyAcres;
           }
-
           var rmp = '', npl = '';
           if (facilities) {
             rmp = `, ${rmpFacilities} RMP`;
@@ -139,7 +146,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           }
 
           var acresFacilitySubText = '';
-          if (facilities.facilities) {
+          if (facilities) {
             acresFacilitySubText = `<div class='acresTxt'>(${parseFloat(reportingAcres).toLocaleString('en')} acres${rmp}${npl}${t})</div>`;
           }
           //Incident Name with acres
@@ -157,7 +164,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           var pcValue = Math.round(percentContained);
           var pcTitle = percentContained + '% Contained';
           //size of bar
-          var acresMin = 0
+          var acresMin = 0;
           var acresMax = Math.max.apply(Math, vs.acresArray);
           var acresRange = acresMax - acresMin;
           var scale = 300 / acresRange;
@@ -178,7 +185,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           }).placeAt(layerDivNode).startup();
           domConstruct.place(layerDivNode, vs.fireList);
           //get fire attachment
-          if (facilities.facilities) {
+          if (facilities) {
             vs.perimeterbufferFC.queryAttachmentInfos(vs.all_fires[fire].attributes.OBJECTID, vs._queryFireAttachment, vs._QueryfireResultsError);
           }
           // setup zoom listener
@@ -205,6 +212,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         //Need to write a better error report
         vs.busyHandle.hide();
         console.log('error');
+        console.log(err);
       },
 
       _zoomToFire: (geometry) => (e) => {
@@ -236,6 +244,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         console.log('onOpen');
         this.loadFires().then(function () {
           vs.filterFires();
+          vs.fireLayerVisReset.forEach(x => {
+          if (x.isVisible()) { x.wasVisible=true;}
+          else {x.wasVisible=false;}
+        });
           //Check to see if perimeter buffer layer has been added
           var bufferLayerStatus = vs.map.getLayer(vs.perimeterbufferFC.id);
           if (!bufferLayerStatus) {
@@ -272,12 +284,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
               vs.fireLayerVisReset.push(layerNode);
             }
             // capture layerObject promise
-
           }
         });
       },
       resetFireFilter: function (loadAllFires) {
-
         vs.fireLayerFilterReset.forEach(x => {
           x.setFilter('');
           if (x.title === vs.irwinLabel && loadAllFires) {
@@ -286,6 +296,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
                 results.features = results.features.map(x => {
                   x.attributes.counties = JSON.stringify([x.attributes.POOCounty]);
                   x.attributes.facilities = '{}';
+                  x.attributes.Data = '{}';
                   x.attributes.tribes = '[]';
                   return x;
                 });
@@ -299,7 +310,11 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         console.log('onClose');
         //if the widget set visible on, then for that layer set visibility off
         this.resetFireFilter(false);
-        vs.fireLayerVisReset.forEach(x => x.hide());
+        vs.fireLayerVisReset.forEach(x => {
+          if (!x.wasVisible) {
+            x.hide();
+          }
+        });
         vs.map.removeLayer(vs.perimeterbufferFC);
         vs.fireLayerVisReset = [];
         vs.fireLayerFilterReset = [];
