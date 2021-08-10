@@ -12,8 +12,18 @@ defines the target app directory, and stemappDir.
 env.js example:
 ```
 module.exports = {
-  appDir: 'C:\\Data\\WebAppBuilderForArcGIS\\server\\apps\\2',
-  stemappDir: 'C:\\Data\\WebAppBuilderForArcGIS\\client\\stemapp'
+  files: [
+          {
+            cwd: 'dist/',
+            src: '**',
+            dest: 'C:\\Data\\EPAWAB\\client\\stemapp'
+          },
+          {
+            cwd: 'dist/',
+            src: '**',
+            dest: 'C:\\Data\\EPAWAB\\server\\apps\\2'
+          }
+        ]
 };
 ```
 
