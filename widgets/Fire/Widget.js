@@ -242,6 +242,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         console.log('onOpen');
         this.loadFires().then(function () {
           vs.filterFires();
+          vs.fireLayerVisReset.forEach(x => {
+          if (x.isVisible()) { x.wasVisible=true;}
+          else {x.wasVisible=false;}
+        });
           //Check to see if perimeter buffer layer has been added
           var bufferLayerStatus = vs.map.getLayer(vs.perimeterbufferFC.id);
           if (!bufferLayerStatus) {
@@ -278,12 +282,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
               vs.fireLayerVisReset.push(layerNode);
             }
             // capture layerObject promise
-
           }
         });
       },
       resetFireFilter: function (loadAllFires) {
-
         vs.fireLayerFilterReset.forEach(x => {
           x.setFilter('');
           if (x.title === vs.irwinLabel && loadAllFires) {
@@ -306,7 +308,11 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         console.log('onClose');
         //if the widget set visible on, then for that layer set visibility off
         this.resetFireFilter(false);
-        vs.fireLayerVisReset.forEach(x => x.hide());
+        vs.fireLayerVisReset.forEach(x => {
+          if (!x.wasVisible) {
+            x.hide();
+          }
+        });
         vs.map.removeLayer(vs.perimeterbufferFC);
         vs.fireLayerVisReset = [];
         vs.fireLayerFilterReset = [];
