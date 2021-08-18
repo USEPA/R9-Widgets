@@ -12,14 +12,30 @@ defines the target app directory, and stemappDir.
 env.js example:
 ```
 module.exports = {
-  appDir: 'C:\\Data\\WebAppBuilderForArcGIS\\server\\apps\\2',
-  stemappDir: 'C:\\Data\\WebAppBuilderForArcGIS\\client\\stemapp'
+  files: [
+          {
+            cwd: 'dist/',
+            src: '**',
+            dest: 'C:\\Data\\EPAWAB\\client\\stemapp'
+          },
+          {
+            cwd: 'dist/',
+            src: '**',
+            dest: 'C:\\Data\\EPAWAB\\server\\apps\\2'
+          }
+        ]
 };
 ```
 
 Running the app generator command ```yo esri-appbuilder-js``` that would normally create
 the grunt tasks and configure other project files is no longer necessary as this has been setup for you.
 However, the generator and its dependencies must still be installed to run these grunt tasks, or generate new widgets.
+
+To copy the built widgets into a WAB directory you must have the [grunt-cli](https://gruntjs.com/getting-started) installed. To install this, run:
+
+```
+npm install -g grunt-cli
+```
 
 * Setup
   1. Clone the repository (a fresh start is probably best)
