@@ -14,7 +14,7 @@
 // limitations under the License.
 ///////////////////////////////////////////////////////////////////////////
 
-define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/array', 'dojo/_base/fx', "jimu/WidgetManager", 'dojo/dnd/move', 'dojo/on', 'dojo/query', 'dojo/Deferred', 'dojo/dom-geometry', 'jimu/LayerInfos/LayerInfos', 'jimu/BaseWidget', 'esri/TimeExtent', 'esri/dijit/TimeSlider', './SpeedMenu', 'jimu/utils', './TimeProcesser', './utils', "dojo/throttle", 'esri/moment', 'dojo/request', 'esri/layers/MapImageLayer', 'esri/layers/MapImage', 'dojo/string', 'jimu/PanelManager', 'dojo/dom-construct', 'dijit/Dialog', 'dojo/text!./WindDialog.html'], function (declare, lang, html, array, baseFx, WidgetManager, Move, on, query, Deferred, domGeometry, LayerInfos, BaseWidget, TimeExtent, TimeSlider, SpeedMenu, jimuUtils, TimeProcesser, utils, throttle, moment, request, MapImageLayer, MapImage, string, PanelManager, domConstruct, Dialog, windDialogContent) {
+define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/array', 'dojo/_base/fx', "jimu/WidgetManager", 'dojo/dnd/move', 'dojo/on', 'dojo/query', 'dojo/Deferred', 'dojo/dom-geometry', 'jimu/LayerInfos/LayerInfos', 'jimu/BaseWidget', 'esri/TimeExtent', 'esri/dijit/TimeSlider', './SpeedMenu', 'jimu/utils', './TimeProcesser', './utils', "dojo/throttle", 'esri/moment', 'dojo/request', 'esri/layers/MapImageLayer', 'esri/layers/MapImage', 'dojo/string', 'jimu/PanelManager', 'dojo/dom-construct', 'dijit/Dialog', 'dojo/text!./SmokeInfo.html'], function (declare, lang, html, array, baseFx, WidgetManager, Move, on, query, Deferred, domGeometry, LayerInfos, BaseWidget, TimeExtent, TimeSlider, SpeedMenu, jimuUtils, TimeProcesser, utils, throttle, moment, request, MapImageLayer, MapImage, string, PanelManager, domConstruct, Dialog, smokeInfoDialog) {
 
   var clazz = declare([BaseWidget], {
     baseClass: 'smoke',
@@ -29,7 +29,10 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/
 
     _miniModeTimer: null,
 
-    root_url: 'https://r9.ercloud.org/r9wab/smoke_data/${start_timestamp}/${image_timestamp}.png',
+    // root_url: 'https://r9.ercloud.org/r9wab/smoke_data/${start_timestamp}/${image_timestamp}.png',
+    // root_url: '${start_timestamp}/${image_timestamp}.png',
+    // root_url: './',
+    root_url: 'https://r9.ercloud.org/r9wab/smoke_data/',
     images: {},
     _getImages: function _getImages(start_timestamp, image_timestamp) {
       var vm = this,
@@ -38,7 +41,7 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/
         image_timestamp = start_timestamp.clone();
         image_timestamp.add(1, 'hour');
         this.start = start_timestamp;
-        request(string.substitute(vm.root_url, {
+        request(string.substitute(vm.root_url+'${start_timestamp}/${image_timestamp}.png', {
           start_timestamp: start_timestamp.utc().format('YYYYMMDDHH'),
           image_timestamp: image_timestamp.utc().format('YYYYMMDDHHmm')
         })).then(function (response) {
@@ -72,7 +75,7 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/
               'ymin': 3829123.84,
               'spatialReference': { 'wkid': 3857 }
             },
-            href: string.substitute(vm.root_url, {
+            href: string.substitute(vm.root_url+'${start_timestamp}/${image_timestamp}.png', {
               start_timestamp: start_timestamp.utc().format('YYYYMMDDHH'),
               image_timestamp: image_timestamp.utc().format('YYYYMMDDHHmm')
             })
@@ -132,8 +135,8 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/
 
       //dw start
       this.executiveSummaryDialog = new Dialog({
-        title: "Wind Widget Information",
-        content: windDialogContent,
+        title: "Smoke Widget Information",
+        content: smokeInfoDialog,
         style: "width: 30%"
       });
       this.own(on(this.infoBtn, 'click', lang.hitch(this, this.openDialog)));
@@ -965,11 +968,13 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/
     },
     _addToLegend: function _addToLegend() {
       var vm = this;
+      const tzOffset = (new Date().getTimezoneOffset())/60;
       vm.legend_update_interval = setInterval(function () {
         //   var legendWidget = wm.getWidgetsByName('Legend');
         if (vm._legend.domNode.children.length === 2) {
           if (vm._legend.domNode.innerHTML.indexOf('id="smoke_widget_legend"') === -1) {
-            vm.wind_legend = domConstruct.toDom('<div style="display: block;" class="esriLegendService" id="smoke_widget_legend">' + '<table><tbody>' + '<tr><td align="left" colspan="2"><span class="esriLegendServiceLabel">Smoke Predictions*<br/>' + vm.start.clone().add(1, 'hour').format('ll hA') + ' to ' + vm.start.clone().add(69, 'hour').format('ll hA') + '</span></td></tr>' + '<tr><td colspan="2"><img style="max-width: 100%" src="https://r9.ercloud.org/r9wab/smoke_data/' + vm.start.format('YYYYMMDDHH') + '/legend.png"/>' + '<tr><td colspan="2">*Experimental Research Output provided by USFS R&D. Use at your own Risk. <a target="_blank" href="https://info.airfire.org/daily-run-viewer">More Info</a> ' + '</td></tr>' + '<tr><td colspan="2">*USFS <a target="_blank" href="https://tools.airfire.org/websky/v1#status">BlueSky Daily Runs.</a></td></tr>' + '</tbody></table></div>');
+            vm.wind_legend = domConstruct.toDom('<div style="display: block;" class="esriLegendService" ' +
+              'id="smoke_widget_legend">' + '<table><tbody>' + '<tr><td align="left" colspan="2"><span class="esriLegendServiceLabel">Smoke Predictions*<br/>' + vm.start.clone().add(1-tzOffset, 'hour').format('ll hA') + ' to ' + vm.start.clone().add(69-tzOffset, 'hour').format('ll hA') + '</span></td></tr>' + '<tr><td colspan="2"><img style="max-width: 100%" src="'+vm.root_url + vm.start.format('YYYYMMDDHH') + '/legend.png"/>' + '<tr><td colspan="2">*Experimental Research Output provided by USFS R&D. Use at your own Risk. <a target="_blank" href="https://info.airfire.org/daily-run-viewer">More Info</a> ' + '</td></tr>' + '<tr><td colspan="2">*USFS <a target="_blank" href="https://tools.airfire.org/websky/v1#status">BlueSky Daily Runs.</a></td></tr>' + '</tbody></table></div>');
             domConstruct.place(vm.wind_legend, vm._legend.domNode.children[1], 'first');
           }
           clearInterval(vm.legend_update_interval);
