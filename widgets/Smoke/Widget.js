@@ -29,7 +29,7 @@ define(['dojo/_base/declare', 'dojo/_base/lang', 'dojo/_base/html', 'dojo/_base/
 
     _miniModeTimer: null,
 
-    root_url: 'https://r9.ercloud.org/r9wab/smoke_data/',
+    root_url: 'https://r9data.response.epa.gov/apps/smoke_data/',
     images: {},
     _getImages: function _getImages(start_timestamp, image_timestamp) {
       var vm = this,
