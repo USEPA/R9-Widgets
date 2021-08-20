@@ -307,7 +307,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           x.setFilter('');
           if (x.title === vs.irwinLabel && loadAllFires) {
             x.getLayerObject().then(function (layerObject) {
-              layerObject.queryFeatures({where: '1=1', orderByFields: ['DailyAcres DESC']}).then(function (results) {
+              layerObject.queryFeatures({where: 'DailyAcres > 5', orderByFields: ['DailyAcres DESC']}).then(function (results) {
                 results.features = results.features.map(x => {
                   x.attributes.counties = JSON.stringify([x.attributes.POOCounty]);
                   x.attributes.facilities = '{}';
