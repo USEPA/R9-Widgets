@@ -38,13 +38,9 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         vs = this;
         this.inherited(arguments);
         console.log('startup');
-
-
         //set up busyIndicator
         vs.busyHandle = busyIndicator.create(vs.fireWidgetFrame);
         vs.busyHandle.show();
-
-
       },
 
       loadFires: function () {
@@ -125,7 +121,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           });
           //If dailyAcres is 0 then look at GISAcres
           var reportingAcres;
-          if (dailyAcres == 0) {
+          if (dailyAcres === 0) {
             reportingAcres = gisAcres;
           } else {
             reportingAcres = dailyAcres;
@@ -227,22 +223,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         } else {
           vs.map.centerAndZoom(geometry, 10);
         }
-        // var targetID = e.currentTarget.id.split('F');
-        // targetObjID = targetID[1];
-        // //get fire buffer extent
-        // var query = new Query();
-        // var queryTask = new QueryTask(vs.perimeterbufferFC.url);
-        // query.objectIds = [targetObjID];
-        // query.outSpatialReference = {wkid: 102100};
-        // query.returnGeometry = true;
-        // queryTask.execute(query, vs._queryFeatureResults);
       },
-
-      // _queryFeatureResults: function (results) {
-      //   //set map extent
-      //
-      //
-      // },
 
       onOpen: function () {
         console.log('onOpen');
