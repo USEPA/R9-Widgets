@@ -28,6 +28,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
 
       baseClass: 'jimu-widget-fire',
       irwinLabel: "Wildfire Reporting (IRWIN)",
+      perimeterLabel: "NIFS Current Wildfire Perimeters",
       postCreate: function () {
         this.inherited(arguments);
         console.log('postCreate');
@@ -53,9 +54,12 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         // vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/ArcGIS/rest/services/R9_Fire_Perimeter_Buffers/FeatureServer/0", {
         vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9Notifiable/FeatureServer/0", {
           // definitionExpression: "display = 1 AND acres >= 10 AND RETRIEVED >= " + "'" + currentDate + "'"
-          definitionExpression: "display = 1"
+          definitionExpression: "Display = 1"
         });
-        vs.map.addLayer(vs.perimeterbufferFC, 0);
+        var bufferLayerStatus = vs.map.getLayer(vs.perimeterbufferFC.id);
+        if (!bufferLayerStatus) {
+          vs.map.addLayer(vs.perimeterbufferFC, 0);
+        }
 
         //Query for fires
         var query = new Query();
@@ -242,19 +246,17 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
 
       onOpen: function () {
         console.log('onOpen');
+        vs.openVisState = vs.getFireLayerVis();
         this.loadFires().then(function () {
           vs.filterFires();
-          vs.fireLayerVisReset.forEach(x => {
-          if (x.isVisible()) { x.wasVisible=true;}
-          else {x.wasVisible=false;}
-        });
           //Check to see if perimeter buffer layer has been added
           var bufferLayerStatus = vs.map.getLayer(vs.perimeterbufferFC.id);
           if (!bufferLayerStatus) {
             vs.map.addLayer(vs.perimeterbufferFC);
           }
         });
-        //Make fire layers visible
+        //uncheck by default
+        dojo.byId("fire_toggle").checked=false;
 
       },
       filterFires: function () {
@@ -287,6 +289,19 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           }
         });
       },
+      getFireLayerVis: function() {
+        const lyrs = [];
+        var layerStructure = LayerStructure.getInstance();
+        layerStructure.traversal(function (layerNode) {
+          var fireLayer = Array(vs.irwinLabel, vs.perimeterLabel).find(x => x === layerNode.title);
+          if (fireLayer) {
+            if (layerNode.isVisible()){
+              lyrs.push(layerNode.title);
+            }
+          }
+        });
+        return lyrs;
+      },
       resetFireFilter: function (loadAllFires) {
         vs.fireLayerFilterReset.forEach(x => {
           x.setFilter('');
@@ -310,9 +325,12 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         console.log('onClose');
         //if the widget set visible on, then for that layer set visibility off
         this.resetFireFilter(false);
-        vs.fireLayerVisReset.forEach(x => {
-          if (!x.wasVisible) {
-            x.hide();
+
+        var layerStructure = LayerStructure.getInstance();
+        layerStructure.traversal(function (layerNode) {
+          var fireLayer = Array(vs.irwinLabel, vs.perimeterLabel).find(x => x === layerNode.title);
+          if (fireLayer){
+            if (vs.openVisState.includes(fireLayer)) {layerNode.show();} else {layerNode.hide();}
           }
         });
         vs.map.removeLayer(vs.perimeterbufferFC);
