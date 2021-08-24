@@ -244,7 +244,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
 
         vs.fireLayerNames = [
           {
-            label: "NIFS Current Wildfire Perimeters",
+            label: vs.perimeterLabel,
             filter: vs.all_fires.map(f => `GeometryID = '${f.attributes.GeometryID}'`).concat().join(" OR ")
           },
           {
@@ -358,11 +358,11 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
 
       showVertexCount: function (count) {
         this.vertexCount.innerHTML = 'The vertex count is: ' + count;
-      }
-      ,
-      loadAllFires: function () {
+      },
 
+      loadAllFires: function () {
       }
+
     });
   })
 ;
