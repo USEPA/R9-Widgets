@@ -295,10 +295,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
                 const q = new Query();
                 q.where = 'DailyAcres > 5';
                 q.geometry = r9Geom;
-                q.orderByFields = ['DailyAcres DESC'];
+                q.orderByFields = ['IncidentName ASC'];
                 q.spatialRelationship = "esriSpatialRelIntersects";
                 layerObject.queryFeatures(q).then(function(results) {
-                  console.log(results);
+                  // console.log(results);
                   results.features = results.features.map(x => {
                     x.attributes.counties = JSON.stringify([x.attributes.POOCounty]);
                     x.attributes.facilities = '{}';
