@@ -1,9 +1,9 @@
 node {
   try {
-      env.FIRE_BRANCH = env.BRANCH_NAME
-            if (env.BRANCH_NAME == 'master') {
-                env.FIRE_BRANCH = 'main'
-            }
+    env.FIRE_BRANCH = env.BRANCH_NAME
+      if (env.BRANCH_NAME == 'master') {
+          env.FIRE_BRANCH = 'main'
+      }
 
     stage('build') {
       dir('cop') {
@@ -15,6 +15,18 @@ node {
           git branch: 'master',
           credentialsId: 'd68c969d-4750-418f-aec5-9fc2e194fc4f',
           url: 'https://github.com/Innovate-Inc/r9-cop-rwma.git'
+          sh "git checkout -b ${env.BRANCH_NAME}"
+        }
+      }
+      dir('remedial') {
+        try {
+          git branch: env.BRANCH_NAME,
+          credentialsId: 'd68c969d-4750-418f-aec5-9fc2e194fc4f',
+          url: 'https://github.com/Innovate-Inc/r9-remedialsnapshot-rwma.git'
+        } catch(Exception ex) {
+          git branch: 'master',
+          credentialsId: 'd68c969d-4750-418f-aec5-9fc2e194fc4f',
+          url: 'https://github.com/Innovate-Inc/r9-remedialsnapshot-rwma.git'
           sh "git checkout -b ${env.BRANCH_NAME}"
         }
       }
@@ -46,25 +58,47 @@ node {
          }
         }
       }
-      dir('cop') {
-        withCredentials([usernamePassword(credentialsId: 'd68c969d-4750-418f-aec5-9fc2e194fc4f', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]){
-          sh "git config user.email '${env.GIT_AUTHOR_EMAIL}'"
-          sh "git config user.name '${env.GIT_AUTHOR}'"
-          sh "git add --no-all widgets/."
-          sh "git commit -a -m '${env.GIT_COMMIT_MSG}'"
-          sh 'git config --local credential.helper "!f() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; f"'
-          sh "git push -u origin ${env.BRANCH_NAME}"
+      try {
+        dir('cop') {
+          withCredentials([usernamePassword(credentialsId: 'd68c969d-4750-418f-aec5-9fc2e194fc4f', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]){
+            sh "git config user.email '${env.GIT_AUTHOR_EMAIL}'"
+            sh "git config user.name '${env.GIT_AUTHOR}'"
+            sh "git add --no-all widgets/."
+            sh "git commit -a -m '${env.GIT_COMMIT_MSG}'"
+            sh 'git config --local credential.helper "!f() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; f"'
+            sh "git push -u origin ${env.BRANCH_NAME}"
+          }
         }
+      } catch(Exception e) {
+      echo "Failed to update rwma cop widgets"
       }
-      dir('firemap') {
-        withCredentials([usernamePassword(credentialsId: 'd68c969d-4750-418f-aec5-9fc2e194fc4f', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]){
-          sh "git config user.email '${env.GIT_AUTHOR_EMAIL}'"
-          sh "git config user.name '${env.GIT_AUTHOR}'"
-          sh "git add --no-all widgets/."
-          sh "git commit -a -m '${env.GIT_COMMIT_MSG}'"
-          sh 'git config --local credential.helper "!f() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; f"'
-          sh "git push -u origin ${env.FIRE_BRANCH}"
+      try {
+        dir('remedial') {
+          withCredentials([usernamePassword(credentialsId: 'd68c969d-4750-418f-aec5-9fc2e194fc4f', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]){
+            sh "git config user.email '${env.GIT_AUTHOR_EMAIL}'"
+            sh "git config user.name '${env.GIT_AUTHOR}'"
+            sh "git add --no-all widgets/."
+            sh "git commit -a -m '${env.GIT_COMMIT_MSG}'"
+            sh 'git config --local credential.helper "!f() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; f"'
+            sh "git push -u origin ${env.BRANCH_NAME}"
+          }
         }
+      } catch(Exception e) {
+      echo "Failed to update remedial cop widgets"
+      }
+      try {
+        dir('firemap') {
+          withCredentials([usernamePassword(credentialsId: 'd68c969d-4750-418f-aec5-9fc2e194fc4f', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]){
+            sh "git config user.email '${env.GIT_AUTHOR_EMAIL}'"
+            sh "git config user.name '${env.GIT_AUTHOR}'"
+            sh "git add --no-all widgets/."
+            sh "git commit -a -m '${env.GIT_COMMIT_MSG}'"
+            sh 'git config --local credential.helper "!f() { echo username=\\$GIT_USERNAME; echo password=\\$GIT_PASSWORD; }; f"'
+            sh "git push -u origin ${env.FIRE_BRANCH}"
+          }
+        }
+      } catch(Exception e) {
+      echo "Failed to update firemap widgets"
       }
     }
   // success
