@@ -13,12 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 ///////////////////////////////////////////////////////////////////////////
+
 define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct', 'esri/tasks/QueryTask', 'esri/tasks/query',
     'dijit/ProgressBar', 'esri/layers/FeatureLayer', 'esri/dijit/util/busyIndicator', 'dojo/dom-style', 'dojo/on',
-    'esri/geometry/Extent', 'dijit/form/Button', 'jimu/LayerStructure'],
+    'esri/geometry/Extent', 'dijit/form/Button', 'jimu/LayerStructure', 'esri/geometry/geometryEngine', 'esri/geometry/Polygon'],
   function (declare, BaseWidget, dom, domConstruct, QueryTask, Query,
             ProgressBar, FeatureLayer, busyIndicator, domStyle, on,
-            Extent, Button, LayerStructure) {
+            Extent, Button, LayerStructure, geometryEngine, Polygon) {
     //To create a widget, you need to derive from BaseWidget.
     return declare([BaseWidget], {
       // DemoWidget code goes here
@@ -29,6 +30,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
       baseClass: 'jimu-widget-fire',
       irwinLabel: "Wildfire Reporting (IRWIN)",
       perimeterLabel: "NIFS Current Wildfire Perimeters",
+      boundariesUrl: 'https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/USA_States_Generalized/FeatureServer/0',
       postCreate: function () {
         this.inherited(arguments);
         console.log('postCreate');
@@ -41,6 +43,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         //set up busyIndicator
         vs.busyHandle = busyIndicator.create(vs.fireWidgetFrame);
         vs.busyHandle.show();
+        vs.r9Geom = vs.getGeometryUnion(vs.boundariesUrl, where = "STATE_ABBR='CA' OR STATE_ABBR='AZ' OR STATE_ABBR='NV'");
       },
 
       loadFires: function () {
@@ -60,7 +63,6 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         //Query for fires
         var query = new Query();
         var queryTask = new QueryTask(vs.perimeterbufferFC.url);
-
         // query.where = "display = 1 AND acres >= 10 and RETRIEVED >= " + "'" + currentDate + "'";
         query.where = "Display = 1";
         query.outSpatialReference = {wkid: 102100};
@@ -226,7 +228,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
       },
 
       onOpen: function () {
-        console.log('onOpen');
+        console.log('onOpen') ;
         vs.openVisState = vs.getFireLayerVis();
         this.loadFires().then(function () {
           vs.filterFires();
@@ -244,7 +246,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
 
         vs.fireLayerNames = [
           {
-            label: "NIFS Current Wildfire Perimeters",
+            label: vs.perimeterLabel,
             filter: vs.all_fires.map(f => `GeometryID = '${f.attributes.GeometryID}'`).concat().join(" OR ")
           },
           {
@@ -283,29 +285,71 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         });
         return lyrs;
       },
-      resetFireFilter: function (loadAllFires) {
+      resetFireFilter: function (loadAllFires, close=false) {
         vs.fireLayerFilterReset.forEach(x => {
           x.setFilter('');
           if (x.title === vs.irwinLabel && loadAllFires) {
             x.getLayerObject().then(function (layerObject) {
-              layerObject.queryFeatures({where: 'DailyAcres > 5', orderByFields: ['DailyAcres DESC']}).then(function (results) {
-                results.features = results.features.map(x => {
-                  x.attributes.counties = JSON.stringify([x.attributes.POOCounty]);
-                  x.attributes.facilities = '{}';
-                  x.attributes.Data = '{}';
-                  x.attributes.tribes = '[]';
-                  return x;
+
+              vs.r9Geom.then(r9Geom => {
+                const q = new Query();
+                q.where = 'DailyAcres > 5';
+                q.geometry = r9Geom;
+                q.orderByFields = ['IncidentName ASC'];
+                q.spatialRelationship = "esriSpatialRelIntersects";
+                layerObject.queryFeatures(q).then(function(results) {
+                  // console.log(results);
+                  results.features = results.features.map(x => {
+                    x.attributes.counties = JSON.stringify([x.attributes.POOCounty]);
+                    x.attributes.facilities = '{}';
+                    x.attributes.Data = '{}';
+                    x.attributes.tribes = '[]';
+                    return x;
+                  });
+                  vs._QueryFiresResults(results);
+                }, error => {
+                  console.log(error);
                 });
-                vs._QueryFiresResults(results);
               });
             });
           }
         });
+        if (!close) {
+          vs.r9Geom.then(r9Geom => {
+            var layerStructure = LayerStructure.getInstance();
+              layerStructure.traversal(function (layerNode) {
+                var fireLayer = Array(vs.irwinLabel, vs.perimeterLabel).find(x => x === layerNode.title);
+                if (fireLayer) {
+                  const isIrwin = fireLayer === vs.irwinLabel? true: false;
+                  let filter = isIrwin? 'DailyAcres >= 5': 'GISAcres >= 5';
+                  // layerNode.getLayerObject()
+                  const fl = FeatureLayer(layerNode.getUrl());
+                  const q = new Query();
+                  q.where = '2=2';
+                  q.geometry = r9Geom;
+                  q.spatialRelationship = "esriSpatialRelIntersects";
+                  fl.queryIds(q).then(results => {
+                    if (results) {
+                      const idStr = 'OBJECTID' + " IN(" + results.join(',') + ")";
+                      filter += ' AND ' + idStr;
+                    }
+                    layerNode.setFilter(filter);
+                  });
+                  // layerNode.getUrl();
+                  // console.log(filter);
+                  // layerNode.setFilter(filter);
+                  // layerNode.setFilter("IncidentName = 'LAVA'");
+
+                }
+              });
+
+          });
+        }
       },
       onClose: function () {
         console.log('onClose');
         //if the widget set visible on, then for that layer set visibility off
-        this.resetFireFilter(false);
+        this.resetFireFilter(false, close=true);
 
         var layerStructure = LayerStructure.getInstance();
         layerStructure.traversal(function (layerNode) {
@@ -348,21 +392,66 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
       onSignIn: function (credential) {
         /* jshint unused:false*/
         console.log('onSignIn');
-      }
-      ,
+      },
+
 
       onSignOut: function () {
         console.log('onSignOut');
-      }
-      ,
+      },
+
 
       showVertexCount: function (count) {
         this.vertexCount.innerHTML = 'The vertex count is: ' + count;
-      }
-      ,
-      loadAllFires: function () {
+      },
 
-      }
+      loadAllFires: function () {
+      },
+
+      // queryIdsByGeometry: function(geomLayerUrl, targetLayerUrl, geomLayerWhere, targetLayerWhere='1=1', outSR = 102100){
+      //   const srcGeometry = getGeometryUnion(geomLayerUrl);
+      //   const newQuery = new Query();
+      //   const targetFl = new FeatureLayer(targetLayerUrl);
+      //   newQuery.where = targetLayerWhere;
+      //   newQuery.geometry = srcGeometry;
+      //   newQuery.outSpatialReference = {wkid: outSR};
+      //   newQuery.returnGeometry = true;
+      //   newQuery.spatialRelationship='SPATIAL_REL_INTERSECTS';
+      //   newQuery.outFields = ['*'];
+      //   targetFl.queryIds(newQuery).then(ids => {
+      //     return ids;
+      //   });
+      //
+      // },
+
+      getGeometryUnion: function(layerUrl, where='1=1', outFields=['*'], outSR = 4326) {
+        const newQuery = new Query();
+        const qTask = new QueryTask(layerUrl);
+        newQuery.where = where;
+        newQuery.outSpatialReference = {wkid: outSR};
+        newQuery.returnGeometry = true;
+        newQuery.outFields = outFields;
+        return qTask.execute(newQuery).then(results => {
+          if (results.features) {
+            return geometryEngine.union(results.features.map(g => g.geometry));
+          }
+        });
+      },
+
+      // createFuncLocLayer: function () {
+      //   this.funcLocLayer = new FeatureLayer(this.config.functionalLocationLayer);
+      //   this.workplanBoundaryLayer.queryFeatures(this.queryWorkplanLayer(), lang.hitch(this, function (result) {
+      //     var wpGeometry = geometryEngine.geodesicBuffer(result.features[0].geometry, -20, "meters");
+      //     var query = new Query();
+      //     query.geometry = wpGeometry;
+      //     // Add other necessary query prperties such as spatial relationship
+      //     this.funcLocLayer.queryIds(query, lang.hitch(this,function(objectIds) {
+      //       var qStr = this.funcLocLayer.objectIdField + " IN(" +objectIds.join(',') + ")";
+      //       this.funcLocLayer.setDefinitionExpression(qStr );
+      //     }));
+      //   }));
+      // }‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍‍
+
+
     });
   })
 ;
