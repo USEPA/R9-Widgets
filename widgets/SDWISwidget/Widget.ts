@@ -113,7 +113,7 @@ class Widget implements IWidget {
 
     this.symbol = new SimpleMarkerSymbol();
     this.symbol.setSize(16);
-    this.symbol.setColor(new Color([255, 0, 255, 0.5]));
+    this.symbol.setColor(new Color([255, 255, 0, 0.5]));
 
     let self: any = this;
     this.inherited(arguments);
