@@ -1,4 +1,0 @@
-{
-  "proxyUrl": "http://localhost:5000/webeoc_authproxy",
-  "serviceUrl": "https://utility.arcgis.com/usrsvcs/servers/0043716fc0794dce99b4cf6e78b55d7b/rest/services/WebEOC/WebEOCHotlineLogGeoJSON/MapServer/0"
-}

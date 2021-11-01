@@ -1,0 +1,7 @@
+{
+  "name": "epa-r9-widgets",
+  "type": "exb-web-extension-repo",
+  "description": "This is a sample extension repository, put your extensions here.",
+  "copyright": "",
+  "license": "http://www.apache.org/licenses/LICENSE-2.0"
+}

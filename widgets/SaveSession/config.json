@@ -1,6 +1,0 @@
-{
-    "useServerToDownloadFile": false,
-    "saveToFileUrl": "http://localhost/Service/SaveToFile/",
-    "fileNameForAllSessions": "COGMAP_Sessions.json",
-    "fileNameTplForSession": "COGMAP_Sessions_${name}.json"
-}

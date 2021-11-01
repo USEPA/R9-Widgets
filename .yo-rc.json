@@ -1,7 +1,0 @@
-{
-  "generator-esri-appbuilder-js": {
-    "widgetsType": "is2d",
-    "useSass": true,
-    "jsVersion": "TypeScript"
-  }
-}
