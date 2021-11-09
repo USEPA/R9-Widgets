@@ -331,8 +331,8 @@ class Widget implements IWidget {
     console.log('SDWISwidget::onClose');
     var self: any = this;
     this.clickHandler.pause();
-    this.map.removeLayer(this.featureLayer);
-    this.map.removeLayer(this.featureLayerPWS)
+    // this.map.removeLayer(this.featureLayer);
+    // this.map.removeLayer(this.featureLayerPWS)
     this.graphicsLayer.clear();
   };
 
