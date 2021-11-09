@@ -146,6 +146,8 @@ class Widget implements IWidget {
       this.loadingError = true;
     });
 
+    this.map.addLayers([this.featureLayer, this.featureLayerPWS]);
+
     this.clickHandler = this._clickHandler();
   };
 
@@ -155,8 +157,8 @@ class Widget implements IWidget {
       this.loadingShelter.show();
 
       var query = new Query();
-      // this.sdwisLayer.show();
-      //this.sdwisPWS.show();
+      this.featureLayer.show();
+      this.featureLayerPWS.show();
       query.where = '1=1';
       console.log('SDWISwidget::onOpen');
 
@@ -170,9 +172,6 @@ class Widget implements IWidget {
 
         this.loadingShelter.hide();
       });
-
-      // add layers to map here so it happens each time widget is loaded
-      this.map.addLayers([this.featureLayer, this.featureLayerPWS]);
 
       this.clickHandler.resume();
       this.map.setInfoWindowOnClick(false);
@@ -327,13 +326,13 @@ class Widget implements IWidget {
 
   private onClose(): void {
     // turn off facilities
-    // this.sdwisLayer.hide();
-    //this.sdwisPWS.hide();
+    this.featureLayer.hide();
+    this.featureLayerPWS.hide();
     console.log('SDWISwidget::onClose');
     var self: any = this;
     this.clickHandler.pause();
-    this.map.removeLayer(this.featureLayer);
-    this.map.removeLayer(this.featureLayerPWS)
+    // this.map.removeLayer(this.featureLayer);
+    // this.map.removeLayer(this.featureLayerPWS)
     this.graphicsLayer.clear();
   };
 
