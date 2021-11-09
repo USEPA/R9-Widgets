@@ -7,7 +7,7 @@ node {
         }
         dir("D:/R9Web/ArcGISExperienceBuilder/client") {
 
-            cmd "npm run build:dev"
+            bat "npm run build:dev"
         }
 
     }
