@@ -1,0 +1,15 @@
+.layerDiv {
+    padding: 10px 5px 10px 5px;
+    border-bottom: #333333;
+    border-bottom-style: solid;
+    border-bottom-width: thin;
+}
+
+.layerDiv:hover {
+    background-color: whitesmoke;
+    cursor: pointer;
+}
+
+.progress-bar-track  {
+    height: 20px !important;
+}

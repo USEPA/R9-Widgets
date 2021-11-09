@@ -37,18 +37,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
     openVisState: any[] = [];
     child;
 
-    // state = {
-    //     jimuMapView: null,
-    //     fires: null,
-    //     extent: ""
-    // }
-
     constructor(props) {
         super(props);
 
         // this.state = {};
         this.perimeterbufferFC = new FeatureLayer({
             url: "https://services.arcgis.com/cJ9YHowT8TU7DUyn/ArcGIS/rest/services/R9_Fire_Perimeter_Buffers/FeatureServer/0",
+            // url: "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9Notifiable/FeatureServer/0",
             definitionExpression: "display = 1"
         });
 
@@ -145,9 +140,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
             <div className="widget-addLayers jimu-widget p-2" style={{overflow: "auto"}}>
                 <div style={{marginBottom: 10}}>These wildfires are greater than 10 acres and within 10 miles of
                     EPA-monitored facilities.
-                    To learn about why these incidents are included, visit the
-                    <a href={"https://usepa.sharepoint.com/sites/R9_Community/R9GIS/SitePages/Notification-System.aspx"}
-                       target="_blank"> Region 9 Notification System</a> page.
+                    To learn about why these incidents are included, visit the <a
+                        href={"https://usepa.sharepoint.com/sites/R9_Community/R9GIS/SitePages/Notification-System.aspx"}
+                        target="_blank">Region 9 Notification System</a> page.
 
                     Data in this widget are updated hourly.
                 </div>
@@ -248,9 +243,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
 
         //Loop through fires and add dom objects
         // this.fireList.replaceChildren("");
-        for (var fire in this.all_fires) {
-        }
-
+        console.log(results.features);
         this.setState({fires: results.features})
     }
 
@@ -410,6 +403,16 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
 }
 
 class Fire extends Component<any, any, any> {
+    BarWidth: number;
+    Counties: any;
+    PercentContained: any;
+    DailyAcres: any;
+    GISAcres: any;
+    IncidentName: string;
+    ReportingAcres: any;
+    PCLabel: string;
+    AcresFacilitySubText: string;
+
     constructor(private jimuMapView: JimuMapView) {
         super(jimuMapView);
         this.zoomToFire = this.zoomToFire.bind(this);
@@ -422,29 +425,30 @@ class Fire extends Component<any, any, any> {
     }
 
     componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<any>, snapshot?: any) {
-        this.init();
+        // this.init();
     }
 
     init() {
         //     Acres and PercentContained
-        this.props.fire.attributes.PercentContained = this.props.fire.attributes.PercentContained ? this.props.fire.attributes.PercentContained : 0;
+        this.setState({})
+        this.PercentContained = this.props.fire.attributes.PercentContained ? this.props.fire.attributes.PercentContained : 0;
         // var dailyAcres = this.all_fires[fire].attributes.DailyAcres ? this.all_fires[fire].attributes.DailyAcres : 0;
-        this.props.fire.attributes.DailyAcres = this.props.fire.attributes.DailyAcres ? this.props.fire.attributes.DailyAcres : 0;
+        this.DailyAcres = this.props.fire.attributes.DailyAcres ? this.props.fire.attributes.DailyAcres : 0;
         // var gisAcres = this.all_fires[fire].attributes.GISAcres ? this.all_fires[fire].attributes.GISAcres : 0;
-        this.props.fire.attributes.GISAcres = this.props.fire.attributes.GISAcres ? this.props.fire.attributes.GISAcres : 0;
+        this.GISAcres = this.props.fire.attributes.GISAcres ? this.props.fire.attributes.GISAcres : 0;
         // this.all_fires[fire].attributes.IncidentName = this.all_fires[fire].attributes.IncidentName.toUpperCase();
-        this.props.fire.attributes.IncidentName = this.props.fire.attributes.IncidentName.toUpperCase();
-        this.props.fire.counties = JSON.parse(this.props.fire.attributes.counties);
+        this.IncidentName = this.props.fire.attributes.IncidentName.toUpperCase();
+        this.Counties = JSON.parse(this.props.fire.attributes.counties);
         let facilities = JSON.parse(this.props.fire.attributes.facilities);
         let rmpFacilities = facilities.facilities && facilities.facilities["Active RMP Facilities"] ? facilities.facilities["Active RMP Facilities"] : 0;
         let nplFacilities = facilities.facilities && facilities.facilities["NationalPriorityListPoint_R9_2019_R9"] ? facilities.facilities["NationalPriorityListPoint_R9_2019_R9"] : 0;
         var tribes = JSON.parse(this.props.fire.attributes.tribes);
         //
         // //If dailyAcres is 0 then look at GISAcres
-        if (this.props.fire.attributes.DailyAcres == 0) {
-            this.props.fire.reportingAcres = this.props.fire.attributes.GISAcres;
+        if (this.DailyAcres == 0) {
+            this.ReportingAcres = this.GISAcres;
         } else {
-            this.props.fire.reportingAcres = this.props.fire.attributes.DailyAcres;
+            this.ReportingAcres = this.DailyAcres;
         }
 
 
@@ -458,56 +462,46 @@ class Fire extends Component<any, any, any> {
             t = `, ${tribes.length} tribes`;
         }
         var c = '';
-        if (this.props.fire.counties) {
-            if (this.props.fire.counties.length > 1) {
+        if (this.Counties) {
+            if (this.Counties.length > 1) {
                 c = 'Counties';
             } else {
                 c = 'County';
             }
-            this.props.fire.counties = `${c}: ` + this.props.fire.counties.join(', ');
+            this.Counties = `${c}: ` + this.Counties.join(', ');
         }
 
-        var acresFacilitySubText = '';
+        this.AcresFacilitySubText = '';
         if (facilities.facilities) {
-            acresFacilitySubText = `<div class='acresTxt'>(${parseFloat(this.props.fire.reportingAcres).toLocaleString('en')} acres${rmp}${npl}${t})</div>`;
+            this.AcresFacilitySubText = parseFloat(this.ReportingAcres).toLocaleString('en') +" acres" + rmp + npl + t
         }
-        //Incident Name with acres
-        // var layerDivNode = domConstruct.toDom(``);
 
-        //add percent containment bar
-
-
-        this.props.fire.pclabel = parseFloat(this.props.fire.reportingAcres).toLocaleString('en') + " acres";
+        this.PCLabel = parseFloat(this.ReportingAcres).toLocaleString('en') + " acres";
 
         // var pcTitle = percentContained + '% Contained';
         // //size of bar
-        var acresMin = 0
-        var acresMax = Math.max.apply(Math, this.props.acresArray);
-        var acresRange = acresMax - acresMin;
-        var scale = 300 / acresRange;
-        var scaledPixels = (this.props.fire.reportingAcres - acresMin) * (300 / acresRange);
-        var bar;
+        let acresMin = 0
+        let acresMax = Math.max.apply(Math, this.props.acresArray);
+        let acresRange = acresMax - acresMin;
+        // var scale = 300 / acresRange;
+        let scaledPixels = (this.ReportingAcres - acresMin) * (300 / acresRange);
         if (scaledPixels < 100) {
-            bar = 100;
+            this.BarWidth = 100;
         } else {
-            bar = scaledPixels;
+            this.BarWidth = scaledPixels;
         }
-        this.props.fire.barWidth = bar;
 
-        // var myProgressBar = new ProgressBar({
-        //     title: pcTitle,
-        //     value: pcValue,
-        //     label: pclabel,
-        //     style: "width: " + barWidth
-        // }).placeAt(layerDivNode).startup();
-        // // domConstruct.place(layerDivNode, this.fireList);
-        // // get fire attachment
-        // if (facilities.facilities) {
-        //     this.perimeterbufferFC.queryAttachments(this.all_fires[fire].attributes.OBJECTID, this._queryFireAttachment, this._QueryfireResultsError);
-        // }
-        // setup zoom listener
-        // on(dom.byId(`F${this.all_fires[fire].attributes.OBJECTID}`), "click", this._zoomToFire(this.all_fires[fire].geometry));
-        this.render();
+        this.setState({
+            barWidth: this.BarWidth,
+            counties: this.Counties,
+            PercentContained: this.PercentContained,
+            DailyAcres: this.DailyAcres,
+            GISAcres: this.GISAcres,
+            IncidentName: this.IncidentName,
+            ReportingAcres: this.ReportingAcres,
+            PCLabel: this.PCLabel,
+            AcresFacilitySubText: this.AcresFacilitySubText,
+        });
     }
 
     zoomToFire() {
@@ -553,11 +547,12 @@ class Fire extends Component<any, any, any> {
                     onClick={this.zoomToFire}>
             <div id='r{props.objectIDString}' className='report-button' title='Get Report'></div>
             <div className='attLink'></div>
-            <div className='fireNameTxt'><b>{this.props.fire.attributes.IncidentName.toUpperCase()}</b></div>
-            <div className='acresTxt' title={`${this.props.fire.counties}`}>{this.props.fire.counties}</div>
-            {this.props.fire.acresFacilitySubText}
-            <Progress showProgress={true} className='fireProgress' style={{width: this.props.fire.barWidth}}
-                      color={'primary'} value={Math.round(this.props.fire.attributes.PercentContained)}>
+            <div className='fireNameTxt'><b>{this.IncidentName}</b></div>
+            <div className='acresTxt' title={`${this.Counties}`}>{this.Counties}</div>
+            {this.AcresFacilitySubText}
+            <Progress showProgress={true} className='fireProgress' style={{width: this.BarWidth}}
+                      color={'primary'} value={Math.round(this.PercentContained)}>
+                {this.PCLabel}
             </Progress>
         </div>;
     }
