@@ -10,6 +10,18 @@
     cursor: pointer;
 }
 
-.progress-bar-track  {
+.progress-bar-track {
     height: 20px !important;
+}
+
+.report-button {
+    outline: none;
+    float: right;
+}
+
+.fireNameTxt {
+    font-weight: bold;
+    font-size: larger;
+    max-width: 250px;
+    margin-bottom: 5px;
 }

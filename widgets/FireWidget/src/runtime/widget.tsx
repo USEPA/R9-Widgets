@@ -7,7 +7,7 @@ import {IMConfig} from "../config";
 
 // import { TabContent, TabPane, Nav, NavItem, NavLink, Button} from 'jimu-ui';
 // import defaultMessages from "./translations/default";
-import {Progress, Switch} from 'jimu-ui';
+import {Progress, Switch, Button, Icon} from 'jimu-ui';
 import React, {Component} from 'react';
 import {JimuMapView, JimuMapViewComponent, MapViewManager} from 'jimu-arcgis';
 import FeatureLayer from 'esri/layers/FeatureLayer';
@@ -15,8 +15,6 @@ import query from "esri/rest/query";
 import SpatialReference from "esri/geometry/SpatialReference";
 import Query from "esri/rest/support/Query";
 import geometryEngine from "esri/geometry/geometryEngine";
-// import Progress from 'reactstrap'
-
 
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { jimuMapView: JimuMapView, fires: any[], acresArray: any[], checked: boolean }> {
     all_fires: any[] = [];
@@ -59,7 +57,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
     }
 
     componentDidMount() {
-        console.log('did mount')
         this.loadFires().then(() => {
             this.filterFires();
         });
@@ -180,7 +177,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
     }
 
     _QueryFiresResults(results) {
-        console.log("Query Fire Results");
         this.setState({fires: []});
         this.all_fires = results.features;
         // this.setState({all_fires: results.features });
@@ -199,9 +195,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
                 }
             }
         });
-
-        //Loop through fires and add dom objects
-        // this.fireList.replaceChildren("");
         this.setState({fires: this.all_fires});
     }
 
@@ -416,7 +409,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
                                                                                               fire={x}
                                                                                               jmv={this.jmv}
                                                                                               acresArray={this.acresArray}
-                                                                                              perim={this.perimeterbufferFC}/>) : ''}
+                                                                                              perim={this.perimeterbufferFC}
+                                                                                              context={this.props.context}/>) : ''}
             </div>
         );
     }
@@ -561,7 +555,6 @@ class Fire extends Component<any, any, any> {
 
     _queryFireAttachment() {
         // todo: set download url to attribute on props
-        console.log('Attachment Query Results');
         let oid = this.props.fire.attributes.OBJECTID.toString()
         let attachQuery = {
             objectIds: oid,
@@ -577,27 +570,16 @@ class Fire extends Component<any, any, any> {
     }
 
     render() {
-        // const checked = this.props.checked;
-        // if (checked) {
-        //     // button
-        // }
-        // const progressStyle = css`
-        // width: ${this.props.fire.barWidth}px;
-        // `
-        // const pctContained = css`
-        // background-color: blue;
-        // `
-        // const uncontained = css`
-        // background-color:: red;
-        // `
-
         return <div className='layerDiv' id={this.props.fire.attributes.OBJECTID}
                     title="Click to zoom"
                     onClick={this.zoomToFire}>
-            <div id='r{props.objectIDString}' className='report-button' title='Get Report'></div>
-            <div className='attLink'onClick={this._queryFireAttachment}>
-            get report
-            </div>
+            {JSON.parse(this.props.fire.attributes.Data).hasOwnProperty('IncidentName') &&
+            <Button title='Get Report' aria-label="Button" htmlType="button" icon className='report-button'
+                    size="default" onClick={this._queryFireAttachment}>
+                <Icon className='report-button'
+                      icon={`${this.props.context.folderUrl}dist/runtime/assets/images/operation_normal.svg`} size='m'/>
+            </Button>
+            }
             <div className='fireNameTxt'><b>{this.IncidentName}</b></div>
             <div className='acresTxt' title={`${this.Counties}`}>{this.Counties}</div>
             {this.AcresFacilitySubText}
