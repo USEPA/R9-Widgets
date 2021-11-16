@@ -1,15 +1,10 @@
 /** @jsx jsx */
 import './assets/style.css';
-
 import {AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState} from "jimu-core";
 import {IMConfig} from "../config";
-
-
-// import { TabContent, TabPane, Nav, NavItem, NavLink, Button} from 'jimu-ui';
-// import defaultMessages from "./translations/default";
 import {Progress, Switch, Button, Icon} from 'jimu-ui';
 import React, {Component} from 'react';
-import {JimuMapView, JimuMapViewComponent, MapViewManager} from 'jimu-arcgis';
+import {JimuMapView, JimuMapViewComponent} from 'jimu-arcgis';
 import FeatureLayer from 'esri/layers/FeatureLayer';
 import query from "esri/rest/query";
 import SpatialReference from "esri/geometry/SpatialReference";
