@@ -98,7 +98,7 @@ class Widget implements IWidget {
     // setup proxy rules for internal
     urlUtils.addProxyRule({
       proxyUrl: "https://gis.r09.epa.gov/api/portal_proxy/",
-      "urlPrefix": "https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer"
+      "urlPrefix": "https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS/FeatureServer"
     })
     esriRequest.setRequestPreCallback((ioArgs: any) => {
       if (ioArgs.url.indexOf("https://gis.r09.epa.gov/api/portal_proxy/") === 0) {
@@ -126,18 +126,18 @@ class Widget implements IWidget {
 
 
     this.featureLayer = new FeatureLayer(
-      'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/0',
+      'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS/FeatureServer/0',
       {outFields: ['*']});
     this.supportsAdvancedQueries = true
     this.featureLayerPWS = new FeatureLayer(
-      'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/1',
+      'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS/FeatureServer/1',
       {outFields: ['*']});
     this.supportsAdvancedQueries = true
     this.featureLayerTable = new FeatureLayer(
-      'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/3',
+      'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS/FeatureServer/3',
       {outFields: ['*']});
     this.featureLayerAdmin = new FeatureLayer(
-      'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/5',
+      'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS/FeatureServer/5',
       {outFields: ['*']});
 
     this.featureLayer.on('error', e => {
