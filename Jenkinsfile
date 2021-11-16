@@ -6,7 +6,7 @@ node {
             checkout scm
         }
         dir("D:/R9Web/ArcGISExperienceBuilder/client") {
-
+            bat "npm i"
             bat "npm run build:dev"
         }
 
