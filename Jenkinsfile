@@ -4,6 +4,7 @@ node {
 
             // todo: deal with branching
             checkout scm
+             bat "npm i"
         }
         dir("D:/R9Web/ArcGISExperienceBuilder/client") {
             bat "npm i"

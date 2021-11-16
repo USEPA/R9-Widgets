@@ -1,0 +1,19 @@
+{
+  "name": "epa-widgets",
+  "version": "1.0.0",
+  "description": "",
+  "main": "n/a",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/USEPA/R9-Widgets.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/USEPA/R9-Widgets/issues"
+  },
+  "homepage": "https://github.com/USEPA/R9-Widgets#readme",
+  "dependencies": {
+    "moment": "^2.29.1"
+  }
+}

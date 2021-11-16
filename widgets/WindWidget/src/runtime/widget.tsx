@@ -1,7 +1,6 @@
 /** @jsx jsx */
 import {AllWidgetProps, BaseWidget, getAppStore, jsx, WidgetState} from "jimu-core";
 import {IMConfig} from "../config";
-import './assets/current_wind_gfs.json';
 
 import {
     Button,
@@ -34,13 +33,13 @@ import {
 export default class WindWidget extends BaseWidget<AllWidgetProps<IMConfig>, {}> {
 
     // wind data urls
-    // hrrr: https://r9data.response.epa.gov/apps/wind_data/current_wind_hrrr.json
-    // nam: https://r9data.response.epa.gov/apps/wind_data/current_wind_nam.json
-    // gfs: https://r9data.response.epa.gov/apps/wind_data/current_wind_gfs.json
+    hrrrUrl = 'https://r9data.response.epa.gov/apps/wind_data/current_wind_hrrr.json'
+    namUrl = 'https://r9data.response.epa.gov/apps/wind_data/current_wind_nam.json'
+    gfsUrl = 'https://r9data.response.epa.gov/apps/wind_data/current_wind_gfs.json'
     // locally stored JSONs for testing
-    hrrrUrl = `${this.props.context.folderUrl}dist/runtime/assets/current_wind_hrrr.json`
-    namUrl = `${this.props.context.folderUrl}/dist/runtime/assets/current_wind_nam.json`;
-    gfsUrl = `${this.props.context.folderUrl}/dist/runtime/assets/current_wind_gfs.json`;
+    // hrrrUrl = `${this.props.context.folderUrl}dist/runtime/assets/current_wind_hrrr.json`
+    // namUrl = `${this.props.context.folderUrl}/dist/runtime/assets/current_wind_nam.json`;
+    // gfsUrl = `${this.props.context.folderUrl}/dist/runtime/assets/current_wind_gfs.json`;
     displayOptions: DisplayOptions = {
         maxVelocity: 15
     }
