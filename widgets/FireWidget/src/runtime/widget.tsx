@@ -30,19 +30,21 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
     openVisState: any[] = [];
     child;
     first: boolean = false;
+    perimeterBufferFC: FeatureLayer;
+
 
     constructor(props) {
         super(props);
-
+        // make this more testable by moving the FeatureLayer setup into a function, can then mock/spyOn that function
         // this.state = {};
-        this.perimeterbufferFC = new FeatureLayer({
-            url: "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9Notifiable/FeatureServer/0",
-            definitionExpression: "display = 1"
-        });
-
-        this.boundaries = new FeatureLayer({
-            url: 'https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/USA_States_Generalized/FeatureServer/0',
-        });
+        // this.perimeterbufferFC = new FeatureLayer({
+        //     url: "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9Notifiable/FeatureServer/0",
+        //     definitionExpression: "display = 1"
+        // });
+        //
+        // this.boundaries = new FeatureLayer({
+        //     url: 'https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/USA_States_Generalized/FeatureServer/0',
+        // });
 
         this.checked = false;
         this.fireSwitchActive = this.fireSwitchActive.bind(this);
@@ -52,6 +54,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
     }
 
     componentDidMount() {
+        this.setUpFeatureLayers({
+            url: "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9Notifiable/FeatureServer/0",
+            definitionExpression: "display = 1"
+        },
+            {
+            url: 'https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/USA_States_Generalized/FeatureServer/0',
+        })
         this.loadFires().then(() => {
             this.filterFires();
         });
@@ -193,7 +202,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
         this.setState({fires: this.all_fires});
     }
 
-
     _QueryfireResultsError(err) {
         //Need to write a better error report
         // this.busyHandle.hide();
@@ -301,7 +309,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
     }
 
     filterFires() {
-
         this.fireLayerNames = [{
             label: this.perimeterLabel,
             filter: this.all_fires.map(function (f) {
@@ -354,11 +361,23 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
         const appState: any = window._appState;
         // Loop through all the widgets in the config and find the "first"
         // that has the type (uri) of "arcgis-map"
-        const arbitraryFirstMapWidgetInfo: { [key: string]: any } = Object.values(appState.appConfig.widgets).find((widgetInfo: any) => {
+        if (appState) {
+            const arbitraryFirstMapWidgetInfo: { [key: string]: any } = Object.values(appState.appConfig.widgets).find((widgetInfo: any) => {
             return widgetInfo.uri === 'widgets/arcgis/arcgis-map/'
         });
 
         return arbitraryFirstMapWidgetInfo.id;
+        }
+
+    }
+
+    setUpFeatureLayers(perimFLInfo: {url: string, definitionExpression: string}, boundariesFLInfo: {url: string}) {
+        this.perimeterbufferFC = new FeatureLayer({
+            url: perimFLInfo.url,
+            definitionExpression: perimFLInfo.definitionExpression,
+        });
+
+        this.boundaries = new FeatureLayer({url: boundariesFLInfo.url});
     }
 
     render() {
@@ -392,9 +411,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
                     <label style={{display: 'flex', marginRight: 20}}>
                         Show R9 Fires {'>'} 5 acres
                     </label>
-                    <Switch
-                        checked={this.checked}
-                        onChange={this.fireSwitchActive}
+                    <Switch data-testid="fire-switch" id='switch'
+                            checked={this.checked}
+                            onChange={this.fireSwitchActive}
                     />
                 </div>
                 <JimuMapViewComponent useMapWidgetId={this.getArbitraryFirstMapWidgetId()}
