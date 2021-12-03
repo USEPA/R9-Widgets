@@ -4,7 +4,8 @@ The SDWIS widget is used to display Safe Drinking Water Data in a WAB environmen
 
 To configure the widget, first add the SDWIS portal service to the map. This service requires EPA Intranet access and the R9 COP requires an EPA GeoPlatform (GPO) account.  These instructions are in-progress.
 
-[SDWISR9COPWidget](https://user-images.githubusercontent.com/54416878/144653134-3c391183-73de-4130-b3b6-7d11a8d3fb20.png)
+![SDWISR9COPWidget](https://user-images.githubusercontent.com/54416878/144653134-3c391183-73de-4130-b3b6-7d11a8d3fb20.png)
+
 #Image of Configuration Here!
 
 ### Contact Information
