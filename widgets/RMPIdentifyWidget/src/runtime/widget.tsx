@@ -12,11 +12,14 @@ import geometryEngine from "esri/geometry/geometryEngine";
 import GraphicsLayer from "esri/layers/GraphicsLayer";
 import Extent from "esri/geometry/Extent";
 import Sublayer from "esri/layers/support/Sublayer";
-import RelationshipQuery from "esri/tasks/support/RelationshipQuery";
+import RelationshipQuery from "esri/rest/support/RelationshipQuery";
 import Graphic from "esri/Graphic";
 import FeatureLayer from "esri/layers/FeatureLayer";
+import moment from "Moment";
+import {Modal} from "jimu-ui"
+import FeatureTable from "esri/widgets/FeatureTable";
 
-export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { jimuMapView: JimuMapView, landingText: string }> {
+export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { jimuMapView: JimuMapView, landingText: string, mainText: boolean, mapIdNode: any }> {
     jmv: JimuMapView;
     rmpLayer: MapImageLayer;
     symbol: PictureMarkerSymbol;
@@ -29,13 +32,19 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
     tblS1Facilities: any;
     baseurl = "https://utility.arcgis.com/usrsvcs/servers/a9dda0a4ba0a433992ce3bdffd89d35a/rest/services/SharedServices/RMPFacilities/MapServer";
     multipleRMPs: boolean;
-    ExecutiveSummaries: any;
+    ExecutiveSummaries: FeatureLayer;
+    executiveSummaryDialog;
 
     constructor(props) {
         super(props);
 
         this.mainText = true;
+
         // this.landingText = "";
+    }
+
+    mapIdNode = () => {
+        return
     }
 
     componentDidMount() {
@@ -48,8 +57,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
             width: "11px",
             height: "20px"
         });
-
-        // this.rmpLayer.
 
         this.graphicLayer = new GraphicsLayer();
 
@@ -66,16 +73,38 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
                 // return lyr
             });
 
-
-
             this.facilities.createFeatureLayer().then((res) => {
                 res.load();
                 res.when(() => {
                     this.loadRelated(res);
+                    this.facilities = res;
                 });
+            });
+
+            this.rmpLayer.sublayers.forEach(lyr => {
+                if (lyr.title != "Active RMP Facilities") {
+                    lyr.createFeatureLayer().then((res) => {
+                    res.load();
+                    res.when(() => {
+                        this.loadRelated(res);
+                    });
+                });
+                }
 
             });
         });
+
+        this.ExecutiveSummaries = new FeatureLayer({
+            url: `${this.baseurl}/5`
+        });
+
+        this.ExecutiveSummaries.load().then(res => {
+            res.load()
+            res.when((res )=> {
+                this.ExecutiveSummaries = res
+            });
+        });
+
         //
         //
         // console.dir(this.facilities);
@@ -105,7 +134,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
             if (relationship.role === "origin") {
               this[relationship.name] = new FeatureLayer({url: this.baseurl + "/" + relationship.relatedTableId});
               this[relationship.name].relationshipId = relationship.id;
-              this[relationship.name].on('load', (e) => {
+              this[relationship.name].load().then((e) => {
+                  console.log(e)
+                  this[relationship.name] = e;
+                  // note may need to redo this a little so it uses load() to feth the rest of the table sublayers
                 if (this[relationship.name].relationships.length > 0) {
                   this.loadRelated(this[relationship.name]);
                 }
@@ -225,58 +257,59 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
         this.facilities.queryFeatures(featureQuery).then(featureSet => {
             console.dir(featureSet)
 
-            // if (featureSet.features.length === 1) {
-            //   this.loadRMPs(featureSet.features[0]);
-            //   // noneFound.push(false);
-            // } else if (featureSet.features.length > 1) {
-            //   mapIdNode.innerHTML = '<h3>Multiple Facilities at that location</h3><br/><h5>Select one to continue</h5>' +
-            //     '<div id="gridDiv" style="width:100%;"></div>';
-            //   var data = {
-            //     identifier: 'OBJECTID',
-            //     items: []
-            //   };
-            //     dojo.forEach(featureSet.features, function (feature) {
-            //       var attrs = dojo.mixin({}, feature.attributes);
-            //       data.items.push(attrs);
-            //     });
-            //
-            //     var store = new ItemFileWriteStore({data: data});
-            //     store.data = data;
-            //
-            //     var grid = dijit.byId("grid");
-            //
-            //     if (grid !== undefined) {
-            //       grid.destroy();
-            //     }
-            //
-            //     var layout = [
-            //       {'name': 'Name', 'field': 'FacilityName', 'width': '100%'}
-            //     ];
-            //     grid = new DataGrid({
-            //       id: 'grid',
-            //       store: store,
-            //       structure: layout,
-            //       //rowSelector: '20px',
-            //       autoHeight: true
-            //     });
-            //
-            //     grid.placeAt("gridDiv");
-            //
-            //     grid.on('RowClick', function (e) {
-            //       var rowItem = grid.getItem(e.rowIndex);
-            //       var facility = array.filter(featureSet.features, function (feature) {
-            //         return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
-            //       });
-            //       that.loadRMPs(facility[0]);
-            //     });
-            //
-            //     grid.startup();
-            //     that.loadingShelter.hide();
-            //     // noneFound.push(false);
-            //   } else {
-            //     mapIdNode.innerHTML = '<h3>No facilities found at this location</h3><br/>';
-            //     that.loadingShelter.hide();
-            //   }
+            if (featureSet.features.length === 1) {
+              this.loadRMPs(featureSet.features[0]);
+              // noneFound.push(false);
+            } else if (featureSet.features.length > 1) {
+              // mapIdNode.innerHTML = '<h3>Multiple Facilities at that location</h3><br/><h5>Select one to continue</h5>' +
+              //   '<div id="gridDiv" style="width:100%;"></div>';
+              var data = {
+                identifier: 'OBJECTID',
+                items: []
+              };
+                featureSet.features.forEach((feature) => {
+                  // var attrs = dojo.mixin({}, feature.attributes);
+                  var attrs = feature.attributes;
+                  data.items.push(attrs);
+                });
+
+                // var store = new ItemFileWriteStore({data: data});
+                // store.data = data;
+                //
+                // var grid = dijit.byId("grid");
+                //
+                // if (grid !== undefined) {
+                //   grid.destroy();
+                // }
+                //
+                // var layout = [
+                //   {'name': 'Name', 'field': 'FacilityName', 'width': '100%'}
+                // ];
+                // grid = new DataGrid({
+                //   id: 'grid',
+                //   store: store,
+                //   structure: layout,
+                //   //rowSelector: '20px',
+                //   autoHeight: true
+                // });
+
+                // grid.placeAt("gridDiv");
+                //
+                // grid.on('RowClick', function (e) {
+                //   var rowItem = grid.getItem(e.rowIndex);
+                //   var facility = array.filter(featureSet.features, function (feature) {
+                //     return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
+                //   });
+                //   that.loadRMPs(facility[0]);
+                // });
+                //
+                // grid.startup();
+                // that.loadingShelter.hide();
+                // noneFound.push(false);
+              } else {
+                // mapIdNode.innerHTML = '<h3>No facilities found at this location</h3><br/>';
+                // that.loadingShelter.hide();
+              }
         });
 
 
@@ -302,64 +335,69 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
               this.multipleRMPs = false;
               this.loadFeature(features[0]);
             } else {
+                this.loadFeature(features[0]);
               this.multipleRMPs = true;
-              this.mapIdNode.innerHTML = '<h3>Multiple RMPs Found for ' + attributes.FacilityName + '</h3>' +
-                '<h4 id="facilityStatus"></h4><br/>' +
-                '<h5>Select one to continue</h5>' +
-                '<div id="rmpGridDiv" style="width:100%;"></div><br/><br/>' +
-                '<h3 style="text-decoration: underline;">Location Metadata</h3>' +
-                '<div style="width:100%" id="location_metadata"></div><br/><br/>';
+              // hide the landing text
+              this.mainText = false;
+              this.setState({
+                  mainText: this.mainText
+              });
+
+              // this.mapIdNode.innerHTML = '<h3>Multiple RMPs Found for ' + attributes.FacilityName + '</h3>' +
+              //   '<h4 id="facilityStatus"></h4><br/>' +
+              //   '<h5>Select one to continue</h5>' +
+              //   '<div id="rmpGridDiv" style="width:100%;"></div><br/><br/>' +
+              //   '<h3 style="text-decoration: underline;">Location Metadata</h3>' +
+              //   '<div style="width:100%" id="location_metadata"></div><br/><br/>';
               var data = {
                 identifier: 'OBJECTID',
                 items: []
               };
-              dojo.forEach(features, function (feature) {
-                feature.attributes.CompletionCheckDate = stamp.toISOString(new Date(feature.attributes.CompletionCheckDate), {
-                  selector: "date",
-                  zulu: true
-                });
+              features.forEach((feature) => {
+                feature.attributes.CompletionCheckDate = moment(feature.attributes.CompletionCheckDate).utc().toISOString();
 
-                var attrs = dojo.mixin({}, feature.attributes);
+                // var attrs = dojo.mixin({}, feature.attributes);
+                var attrs = feature.attributes;
                 data.items.push(attrs);
               });
 
-              var store = new ItemFileWriteStore({data: data});
-              store.data = data;
-
-              var grid = dijit.byId("rmpGrid");
-
-              if (grid !== undefined) {
-                grid.destroy();
-              }
-
-              var layout = [
-                {'name': 'Name', 'field': 'FacilityName', 'width': '75%'},
-                {'name': 'Completion Date', 'field': 'CompletionCheckDate', 'width': '25%'}
-              ];
-              grid = new DataGrid({
-                id: 'rmpGrid',
-                store: store,
-                structure: layout,
-                //rowSelector: '20px',
-                autoHeight: true,
-                sortInfo: '-2'
-              });
-
-              grid.placeAt("rmpGridDiv");
-
-              grid.on('RowClick', function (e) {
-                var rowItem = grid.getItem(e.rowIndex);
-                var facility = array.filter(features, function (feature) {
-                  return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
-                });
-                that.loadFeature(facility[0]);
-              });
-
-              grid.startup();
+              // var store = new ItemFileWriteStore({data: data});
+              // store.data = data;
+              //
+              // var grid = dijit.byId("rmpGrid");
+              //
+              // if (grid !== undefined) {
+              //   grid.destroy();
+              // }
+              //
+              // var layout = [
+              //   {'name': 'Name', 'field': 'FacilityName', 'width': '75%'},
+              //   {'name': 'Completion Date', 'field': 'CompletionCheckDate', 'width': '25%'}
+              // ];
+              // grid = new DataGrid({
+              //   id: 'rmpGrid',
+              //   store: store,
+              //   structure: layout,
+              //   //rowSelector: '20px',
+              //   autoHeight: true,
+              //   sortInfo: '-2'
+              // });
+              //
+              // grid.placeAt("rmpGridDiv");
+              //
+              // grid.on('RowClick', function (e) {
+              //   var rowItem = grid.getItem(e.rowIndex);
+              //   var facility = array.filter(features, function (feature) {
+              //     return feature.attributes.OBJECTID === rowItem.OBJECTID[0];
+              //   });
+              //   that.loadFeature(facility[0]);
+              // });
+              //
+              // grid.startup();
 
               //get most recent record to display deregistration status
               var mostRecentRMP = features[0].attributes;
-              dojo.forEach(features, function (feature) {
+              features.forEach((feature) => {
                 if (feature.attributes.CompletionCheckDate > mostRecentRMP.CompletionCheckDate) {
                   mostRecentRMP = feature.attributes;
                 }
@@ -368,47 +406,47 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
               if (mostRecentRMP.DeRegistrationEffectiveDate) {
                 status = 'De-registered';
                 var reason = (mostRecentRMP.DeregistrationReasonCode !== '04' ?
-                  that.tblS1Facilities.getDomain('DeregistrationReasonCode').getName(mostRecentRMP.DeregistrationReasonCode) :
+                  this.tblS1Facilities.getDomain('DeregistrationReasonCode').getName(mostRecentRMP.DeregistrationReasonCode) :
                   mostRecentRMP.DeregistrationReasonOtherText);
                 var date = mostRecentRMP.DeRegistrationEffectiveDate;
               } else {
                 status = 'Active';
               }
 
-
-              var row = domConstruct.toDom('Facility Status: ' + status +
-                (reason ? '<br/>De-registration Reason: ' + reason : '') +
-                (date ? '<br/>De-registration Effective Date: ' + stamp.toISOString(new Date(date), {
-                  selector: "date",
-                  zulu: true
-                }) : '')
-              );
-              domConstruct.place(row, 'facilityStatus');
-
-              if (mostRecentRMP.ValidLatLongFlag) {
-                var location_string = 'RMP Validated Location Used' +
-                  '<br/>Description: ' + that.tblS1Facilities.getDomain('LatLongDescription').getName(mostRecentRMP.LatLongDescription) +
-                  '<br/>Method: ' + that.tblS1Facilities.getDomain('LatLongMethod').getName(mostRecentRMP.LatLongMethod);
-              } else if (!mostRecentRMP.ValidLatLongFlag && mostRecentRMP.FRS_Lat !== undefined && mostRecentRMP.FRS_long !== undefined) {
-                var location_string = 'FRS Location Used' +
-                  '<br/>Description: ' + that.tblS1Facilities.getDomain('FRS_Description').getName(mostRecentRMP.FRS_Description) +
-                  '<br/>Method: ' + that.tblS1Facilities.getDomain('FRS_Method').getName(mostRecentRMP.FRS_Method);
-              } else {
-                var location_string = 'Location Not Validated' +
-                  '<br/>Description: ' + that.tblS1Facilities.getDomain('LatLongDescription').getName(mostRecentRMP.LatLongDescription) +
-                  '<br/>Method: ' + that.tblS1Facilities.getDomain('LatLongMethod').getName(mostRecentRMP.LatLongMethod);
-              }
-
-              if (mostRecentRMP.HorizontalAccMeasure) {
-                location_string += '<br/>Horizontal Accuracy (m): ' + mostRecentRMP.HorizontalAccMeasure +
-                  '<br/>Horizontal Datum: ' + that.tblS1Facilities.getDomain('HorizontalRefDatumCode').getName(mostRecentRMP.HorizontalRefDatumCode) +
-                  (mostRecentRMP.SourceMapScaleNumber ? '<br/>Source Map Scale: ' + mostRecentRMP.SourceMapScaleNumber : '')
-              }
-
-              var row = domConstruct.toDom(location_string);
-              domConstruct.place(row, 'location_metadata');
-
-              that.loadingShelter.hide();
+              //
+              // var row = domConstruct.toDom('Facility Status: ' + status +
+              //   (reason ? '<br/>De-registration Reason: ' + reason : '') +
+              //   (date ? '<br/>De-registration Effective Date: ' + stamp.toISOString(new Date(date), {
+              //     selector: "date",
+              //     zulu: true
+              //   }) : '')
+              // );
+              // domConstruct.place(row, 'facilityStatus');
+              //
+              // if (mostRecentRMP.ValidLatLongFlag) {
+              //   var location_string = 'RMP Validated Location Used' +
+              //     '<br/>Description: ' + that.tblS1Facilities.getDomain('LatLongDescription').getName(mostRecentRMP.LatLongDescription) +
+              //     '<br/>Method: ' + that.tblS1Facilities.getDomain('LatLongMethod').getName(mostRecentRMP.LatLongMethod);
+              // } else if (!mostRecentRMP.ValidLatLongFlag && mostRecentRMP.FRS_Lat !== undefined && mostRecentRMP.FRS_long !== undefined) {
+              //   var location_string = 'FRS Location Used' +
+              //     '<br/>Description: ' + that.tblS1Facilities.getDomain('FRS_Description').getName(mostRecentRMP.FRS_Description) +
+              //     '<br/>Method: ' + that.tblS1Facilities.getDomain('FRS_Method').getName(mostRecentRMP.FRS_Method);
+              // } else {
+              //   var location_string = 'Location Not Validated' +
+              //     '<br/>Description: ' + that.tblS1Facilities.getDomain('LatLongDescription').getName(mostRecentRMP.LatLongDescription) +
+              //     '<br/>Method: ' + that.tblS1Facilities.getDomain('LatLongMethod').getName(mostRecentRMP.LatLongMethod);
+              // }
+              //
+              // if (mostRecentRMP.HorizontalAccMeasure) {
+              //   location_string += '<br/>Horizontal Accuracy (m): ' + mostRecentRMP.HorizontalAccMeasure +
+              //     '<br/>Horizontal Datum: ' + that.tblS1Facilities.getDomain('HorizontalRefDatumCode').getName(mostRecentRMP.HorizontalRefDatumCode) +
+              //     (mostRecentRMP.SourceMapScaleNumber ? '<br/>Source Map Scale: ' + mostRecentRMP.SourceMapScaleNumber : '')
+              // }
+              //
+              // var row = domConstruct.toDom(location_string);
+              // domConstruct.place(row, 'location_metadata');
+              //
+              // that.loadingShelter.hide();
             }
           }
         );
@@ -417,7 +455,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
     loadFeature(feature) {
 
       // that.loadingShelter.show();
-      var attributes = feature.attributes, processDeferred = new Deferred(), accidentDeferred = new Deferred;
+      var attributes = feature.attributes
+          // processDeferred = new Deferred(), accidentDeferred = new Deferred;
 
       var selectedGraphic = new Graphic({geometry: feature.geometry, symbol: this.symbol});
 
@@ -432,57 +471,94 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
         var date = attributes.DeRegistrationEffectiveDate;
         var status_string = status +
           (reason ? '<br/>De-registration Reason: ' + reason : '') +
-          (date ? '<br/>De-registration Effective Date: ' + stamp.toISOString(new Date(date), {
-            selector: "date",
-            zulu: true
-          }) : '') + '<br/><br/>';
+          (date ? '<br/>De-registration Effective Date: ' + moment(date).utc().toISOString() : '') + '<br/><br/>';
       } else {
         status_string = 'Active<br/><br/>';
       }
 
-      this.mapIdNode.innerHTML = (this.multipleRMPs ? '<a id="backLink" style="text-decoration:underline; cursor: pointer;">< Back</a>' : '') +
-        '<h1>' + attributes.FacilityName + '</h1>' +
-        '<h4 id="registration_status">Status: ' + status_string + '</h4>' +
-        '<table><tbody id="tierii_facility">' +
-        '<tr><td>Address: <br/>' + attributes.FacilityStr1 + '<br/>' + (attributes.FacilityStr2 ? attributes.FacilityStr2 + '<br/>' : '') +
-        attributes.FacilityCity + ', ' + attributes.FacilityState + ' ' + attributes.FacilityZipCode + '</td></tr>' +
-        '<tr><td>Phone: ' + (attributes.FacilityPhoneNumber ? attributes.FacilityPhoneNumber : 'Not Reported') + '</td></tr>' +
-        '<tr><td>Website: ' + (attributes.FacilityURL ? attributes.FacilityURL : 'Not Reported') + '</td></tr>' +
-        '<tr><td>Email: ' + (attributes.FacilityEmailAddress ? attributes.FacilityEmailAddress : 'Not Reported') + '</td></tr>' +
-        '<tr><td>Full Time Employees: ' + attributes.FTE + '</td></tr>' +
-        '<tr><td>RMP Completion Date: ' + stamp.toISOString(new Date(feature.attributes.CompletionCheckDate), {
-          selector: "date",
-          zulu: true
-        }) + '</td></tr>' +
-        '<tr><td>Parent Company(s): ' + (attributes.ParentCompanyName ? attributes.ParentCompanyName : 'Not Reported') + (attributes.Company2Name ? ', ' + attributes.Company2Name : '') + '</td></tr>' +
-        '<tr><td><a id="summaryLink" style="text-decoration: underline; cursor: pointer;">View Executive Summary</a></td></tr></tbody></table>' +
-        '<br/><h3 style="text-decoration: underline;">Contacts</h3>' +
-        '<table><tbody><tr><td><b>Operator</b></td></tr>' +
-        '<tr><td>Name: ' + attributes.OperatorName + '</td></tr>' +
-        '<tr><td>Phone: ' + attributes.OperatorPhone + '</td></tr>' +
-        '<tr><td><b>Emergency Contact</b></td></tr>' +
-        '<tr><td>Name: ' + attributes.EmergencyContactName + '</td></tr>' +
-        '<tr><td>Title: ' + attributes.EmergencyContactTitle + '</td></tr>' +
-        '<tr><td>Phone: ' + attributes.EmergencyContactPhone + (attributes.EmergencyContactExt_PIN ? ' x' + attributes.EmergencyContactExt_PIN : '') + '</td></tr>' +
-        '<tr><td>24 HR Phone: ' + attributes.Phone24 + '</td></tr>' +
-        '<tr><td></td></tr>' +
-        '</tbody></table>' +
-        '<table><tbody id="tierii_contacts"></tbody></table><br/>' +
-        '<h3 style="text-decoration: underline;">Processes</h3>' +
-        '<div style="width:100%" id="processes"></div><br/>' +
-        '<h3 style="text-decoration: underline;">Accidents</h3>' +
-        '<div style="width:100%" id="accidents"></div><br/>' +
-        '<h3 style="text-decoration: underline;">Emergency Reponse Plan</h3>' +
-        '<div style="width:100%" id="emergency_plan"></div><br/>' +
-        (this.multipleRMPs ? '' : '<h3 style="text-decoration: underline;">Location Metadata</h3>' +
-          '<div style="width:100%" id="location_metadata"></div><br/><br/>');
+      this.mapIdNode = () => {
+          return (
+              <div>
+                  {this.multipleRMPs ?
+                      <a id="backLink" style={{textDecoration: "underline", cursor: "pointer"}}> Back</a> : ''}
+          <h1> {attributes.FacilityName}</h1>
+          <h4 id="registration_status">Status: {status_string}</h4>
+          <table><tbody id="tierii_facility">
+          <tr><td>Address: <br/> {attributes.FacilityStr1}<br/> {attributes.FacilityStr2 ? attributes.FacilityStr2 +  <br/> : ''}
+              {attributes.FacilityCity + ', ' + attributes.FacilityState + ' ' + attributes.FacilityZipCode} </td></tr>
+          <tr><td>Phone: {attributes.FacilityPhoneNumber ? attributes.FacilityPhoneNumber : 'Not Reported'}</td></tr>
+          <tr><td>Website: {attributes.FacilityURL ? attributes.FacilityURL : 'Not Reported'}</td></tr>
+          <tr><td>Email: {attributes.FacilityEmailAddress ? attributes.FacilityEmailAddress : 'Not Reported'}</td></tr>
+          <tr><td>Full Time Employees: {attributes.FTE}</td></tr>
+          <tr><td>RMP Completion Date: {moment(feature.attributes.CompletionCheckDate).utc().toISOString()}</td></tr>
+          <tr><td>Parent Company(s): {attributes.ParentCompanyName ? attributes.ParentCompanyName : 'Not Reported'} {attributes.Company2Name ? ', ' + attributes.Company2Name : ''}</td></tr>
+          <tr><td><a id="summaryLink" style={{textDecoration: "underline", cursor: "pointer"}}>View Executive Summary</a></td></tr></tbody></table>
+          <br/><h3 style={{textDecoration: "underline"}}>Contacts</h3>
+          <table><tbody><tr><td><b>Operator</b></td></tr>
+          <tr><td>Name: {attributes.OperatorName}</td></tr>
+          <tr><td>Phone: {attributes.OperatorPhone}</td></tr>
+          <tr><td><b>Emergency Contact</b></td></tr>
+          <tr><td>Name: {attributes.EmergencyContactName}</td></tr>
+          <tr><td>Title: {attributes.EmergencyContactTitle}</td></tr>
+          <tr><td>Phone: {attributes.EmergencyContactPhone} {attributes.EmergencyContactExt_PIN ? ' x' + attributes.EmergencyContactExt_PIN : ''}</td></tr>
+          <tr><td>24 HR Phone: {attributes.Phone24}</td></tr>
+          <tr><td></td></tr>
+          </tbody></table>
+          <table><tbody id="tierii_contacts"></tbody></table><br/>
+          <h3 style={{textDecoration: 'underline'}}>Processes</h3>
+                  <div style={{width: '100%'}} id="processes"></div><br/>
+          <h3 style={{textDecoration: "underline"}}>Accidents</h3>
+          <div style={{width: '100%'}} id="accidents"></div><br/>
+          <h3 style={{textDecoration: "underline"}}>Emergency Reponse Plan</h3>
+          <div style={{width: '100%'}} id="emergency_plan"></div><br/>
+          ({this.multipleRMPs ? '' : <div><h3 style={{textDecoration: "underline"}}>Location Metadata</h3>
+              <div style={{width: '100%'}} id="location_metadata"></div><br/><br/></div>}
+                  </div>
+      )}
 
-      document.getElementById('summaryLink').onclick = () => {
-        this.executiveSummaryDialog.show();
-      };
-      document.getElementById('backLink').onclick = () => {
-         this.loadRMPs(this.currentFacility);
-      };
+      // this.mapIdNode = () => {} (this.multipleRMPs ? '<a id="backLink" style="text-decoration:underline; cursor: pointer;">< Back</a>' : '') +
+      //   '<h1>' + attributes.FacilityName + '</h1>' +
+      //   '<h4 id="registration_status">Status: ' + status_string + '</h4>' +
+      //   '<table><tbody id="tierii_facility">' +
+      //   '<tr><td>Address: <br/>' + attributes.FacilityStr1 + '<br/>' + (attributes.FacilityStr2 ? attributes.FacilityStr2 + '<br/>' : '') +
+      //   attributes.FacilityCity + ', ' + attributes.FacilityState + ' ' + attributes.FacilityZipCode + '</td></tr>' +
+      //   '<tr><td>Phone: ' + (attributes.FacilityPhoneNumber ? attributes.FacilityPhoneNumber : 'Not Reported') + '</td></tr>' +
+      //   '<tr><td>Website: ' + (attributes.FacilityURL ? attributes.FacilityURL : 'Not Reported') + '</td></tr>' +
+      //   '<tr><td>Email: ' + (attributes.FacilityEmailAddress ? attributes.FacilityEmailAddress : 'Not Reported') + '</td></tr>' +
+      //   '<tr><td>Full Time Employees: ' + attributes.FTE + '</td></tr>' +
+      //   '<tr><td>RMP Completion Date: ' + moment(feature.attributes.CompletionCheckDate).utc().toISOString() + '</td></tr>' +
+      //   '<tr><td>Parent Company(s): ' + (attributes.ParentCompanyName ? attributes.ParentCompanyName : 'Not Reported') + (attributes.Company2Name ? ', ' + attributes.Company2Name : '') + '</td></tr>' +
+      //   '<tr><td><a id="summaryLink" style="text-decoration: underline; cursor: pointer;">View Executive Summary</a></td></tr></tbody></table>' +
+      //   '<br/><h3 style="text-decoration: underline;">Contacts</h3>' +
+      //   '<table><tbody><tr><td><b>Operator</b></td></tr>' +
+      //   '<tr><td>Name: ' + attributes.OperatorName + '</td></tr>' +
+      //   '<tr><td>Phone: ' + attributes.OperatorPhone + '</td></tr>' +
+      //   '<tr><td><b>Emergency Contact</b></td></tr>' +
+      //   '<tr><td>Name: ' + attributes.EmergencyContactName + '</td></tr>' +
+      //   '<tr><td>Title: ' + attributes.EmergencyContactTitle + '</td></tr>' +
+      //   '<tr><td>Phone: ' + attributes.EmergencyContactPhone + (attributes.EmergencyContactExt_PIN ? ' x' + attributes.EmergencyContactExt_PIN : '') + '</td></tr>' +
+      //   '<tr><td>24 HR Phone: ' + attributes.Phone24 + '</td></tr>' +
+      //   '<tr><td></td></tr>' +
+      //   '</tbody></table>' +
+      //   '<table><tbody id="tierii_contacts"></tbody></table><br/>' +
+      //   '<h3 style="text-decoration: underline;">Processes</h3>' +
+      //   '<div style="width:100%" id="processes"></div><br/>' +
+      //   '<h3 style="text-decoration: underline;">Accidents</h3>' +
+      //   '<div style="width:100%" id="accidents"></div><br/>' +
+      //   '<h3 style="text-decoration: underline;">Emergency Reponse Plan</h3>' +
+      //   '<div style="width:100%" id="emergency_plan"></div><br/>' +
+      //   (this.multipleRMPs ? '' : '<h3 style="text-decoration: underline;">Location Metadata</h3>' +
+      //     '<div style="width:100%" id="location_metadata"></div><br/><br/>');
+
+      this.setState({
+          mapIdNode: this.mapIdNode
+      })
+      // document.getElementById('summaryLink').onclick = () => {
+      //   this.executiveSummaryDialog.show();
+      // };
+      // document.getElementById('backLink').onclick = () => {
+      //    this.loadRMPs(this.currentFacility);
+      // };
       // get executive summary for dialog box
       var executiveSummaryQuery = new RelationshipQuery();
       executiveSummaryQuery.outFields = ['*'];
@@ -497,7 +573,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
         summary_parts.forEach((summary_part) => {
           summary += summary_part.attributes.SummaryText.replace(/(?:\r\n|\r|\n)/g, '<br />');
         });
-        this.executiveSummaryDialog.set("content", summary);
+        // this.executiveSummaryDialog.set("content", summary);
       });
 
       var processQuery = new RelationshipQuery();
@@ -506,260 +582,263 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
       processQuery.objectIds = [attributes.OBJECTID];
 
       this.tblS1Facilities.queryRelatedFeatures(processQuery).then((featureSet) => {
-        featureSet[attributes.OBJECTID].features.forEach((process) => {
-          var row = domConstruct.toDom('' +
-            '<div><b>Name: ' + (process.attributes.AltID ? process.attributes.AltID : 'not reported') + '</b></div>' +
-            '<div>Description(s): <span id="process_' + process.attributes.ProcessID + '_naics"></span></div>' +
-            '<div>Program Level: ' + process.attributes.ProgramLevel + '</span></div>' +
-            '<table><tbody id="process_' + process.attributes.ProcessID + '"><tr><th colspan="2">Chemical</th><th>Quantity (lbs)</th></tr></tbody></table>');
-          domConstruct.place(row, "processes");
-
-          var naicsQuery = new RelationshipQuery();
-          naicsQuery.outFields = ['*'];
-          naicsQuery.relationshipId = this.tblS1Process_NAICS.relationshipId;
-          naicsQuery.objectIds = [process.attributes.OBJECTID];
-
-          this.tblS1Processes.queryRelatedFeatures(naicsQuery).then(naicsCodes => {
-            var s = [];
-            naicsCodes[process.attributes.OBJECTID].features.forEach((naics, i) => {
-              s.push(this.tblS1Process_NAICS.getDomain('NAICSCode').getName(naics.attributes.NAICSCode));
-
-            });
-            var row = domConstruct.toDom(s.join(','));
-            domConstruct.place(row, 'process_' + process.attributes.ProcessID + '_naics');
-          });
-
-
-          var processChemicalsQuery = new RelationshipQuery();
-          processChemicalsQuery.outFields = ['*'];
-          processChemicalsQuery.relationshipId = this.tblS1ProcessChemicals.relationshipId;
-          processChemicalsQuery.objectIds = [process.attributes.OBJECTID];
-
-          this.tblS1Processes.queryRelatedFeatures(processChemicalsQuery).then(e => {
-            e[process.attributes.OBJECTID].features.forEach((processChemical) => {
-
-              var chemicalQuery = new RelationshipQuery();
-
-              chemicalQuery.outFields = ['*'];
-              chemicalQuery.relationshipId = this.tlkpChemicals.relationshipId;
-              chemicalQuery.objectIds = [processChemical.attributes.OBJECTID];
-
-              this.tblS1ProcessChemicals.queryRelatedFeatures(chemicalQuery).then( (e) => {
-                e[processChemical.attributes.OBJECTID].features.forEach((chemical) => {
-                  if (chemical.attributes.CASNumber === '00-11-11') {
-                    var flammableMixtureQuery = new RelationshipQuery();
-                    flammableMixtureQuery.outFields = ['*'];
-                    flammableMixtureQuery.relationshipId = this.tblS1FlammableMixtureChemicals.relationshipId;
-                    flammableMixtureQuery.objectIds = [processChemical.attributes.OBJECTID];
-
-                    this.tblS1ProcessChemicals.queryRelatedFeatures(flammableMixtureQuery).then((e) => {
-                      var chemicalOBJECTIDS = [];
-                      e[processChemical.attributes.OBJECTID].features.forEach((item) => {
-                        chemicalOBJECTIDS.push(item.attributes.OBJECTID)
-                      });
-
-                      var chemicalLookup = new RelationshipQuery();
-                      chemicalLookup.outFields = ['*'];
-                      chemicalLookup.relationshipId = this.FlammableChemicals.relationshipId;
-                      chemicalLookup.objectIds = chemicalOBJECTIDS;
-
-                      this.tblS1FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup).then((e) => {
-                        var row_string = '<tr><td colspan="2">' + chemical.attributes.ChemicalName + '</td><td class="quantity">' + number.format(processChemical.attributes.Quantity) + '</td></tr>';
-                        chemicalOBJECTIDS.forEach((objectid) => {
-                          e[objectid].features.forEach((mixtureChemical) => {
-                            row_string += '<tr><td>&#187;</td><td>' + mixtureChemical.attributes.ChemicalName + '</td><td></td></tr>';
-
-                          })
-                        });
-                        var row = domConstruct.toDom(row_string);
-                        domConstruct.place(row, "process_" + process.attributes.ProcessID);
-                      })
-                    })
-                  } else {
-                    var row = domConstruct.toDom('<tr><td colspan="2">' + chemical.attributes.ChemicalName + '</td><td class="quantity">' + number.format(processChemical.attributes.Quantity) + '</td></tr>');
-                    domConstruct.place(row, "process_" + process.attributes.ProcessID);
-                  }
-                });
-                processDeferred.resolve();
-              });
-            });
-          });
-        });
+          console.dir(featureSet);
+        // featureSet[attributes.OBJECTID].features.forEach((process) => {
+        //   var row = domConstruct.toDom('' +
+        //     '<div><b>Name: ' + (process.attributes.AltID ? process.attributes.AltID : 'not reported') + '</b></div>' +
+        //     '<div>Description(s): <span id="process_' + process.attributes.ProcessID + '_naics"></span></div>' +
+        //     '<div>Program Level: ' + process.attributes.ProgramLevel + '</span></div>' +
+        //     '<table><tbody id="process_' + process.attributes.ProcessID + '"><tr><th colspan="2">Chemical</th><th>Quantity (lbs)</th></tr></tbody></table>');
+        //   domConstruct.place(row, "processes");
+        //
+        //   var naicsQuery = new RelationshipQuery();
+        //   naicsQuery.outFields = ['*'];
+        //   naicsQuery.relationshipId = this.tblS1Process_NAICS.relationshipId;
+        //   naicsQuery.objectIds = [process.attributes.OBJECTID];
+        //
+        //   this.tblS1Processes.queryRelatedFeatures(naicsQuery).then(naicsCodes => {
+        //     var s = [];
+        //     naicsCodes[process.attributes.OBJECTID].features.forEach((naics, i) => {
+        //       s.push(this.tblS1Process_NAICS.getDomain('NAICSCode').getName(naics.attributes.NAICSCode));
+        //
+        //     });
+        //     var row = domConstruct.toDom(s.join(','));
+        //     domConstruct.place(row, 'process_' + process.attributes.ProcessID + '_naics');
+        //   });
+        //
+        //
+        //   var processChemicalsQuery = new RelationshipQuery();
+        //   processChemicalsQuery.outFields = ['*'];
+        //   processChemicalsQuery.relationshipId = this.tblS1ProcessChemicals.relationshipId;
+        //   processChemicalsQuery.objectIds = [process.attributes.OBJECTID];
+        //
+        //   this.tblS1Processes.queryRelatedFeatures(processChemicalsQuery).then(e => {
+        //     e[process.attributes.OBJECTID].features.forEach((processChemical) => {
+        //
+        //       var chemicalQuery = new RelationshipQuery();
+        //
+        //       chemicalQuery.outFields = ['*'];
+        //       chemicalQuery.relationshipId = this.tlkpChemicals.relationshipId;
+        //       chemicalQuery.objectIds = [processChemical.attributes.OBJECTID];
+        //
+        //       this.tblS1ProcessChemicals.queryRelatedFeatures(chemicalQuery).then( (e) => {
+        //         e[processChemical.attributes.OBJECTID].features.forEach((chemical) => {
+        //           if (chemical.attributes.CASNumber === '00-11-11') {
+        //             var flammableMixtureQuery = new RelationshipQuery();
+        //             flammableMixtureQuery.outFields = ['*'];
+        //             flammableMixtureQuery.relationshipId = this.tblS1FlammableMixtureChemicals.relationshipId;
+        //             flammableMixtureQuery.objectIds = [processChemical.attributes.OBJECTID];
+        //
+        //             this.tblS1ProcessChemicals.queryRelatedFeatures(flammableMixtureQuery).then((e) => {
+        //               var chemicalOBJECTIDS = [];
+        //               e[processChemical.attributes.OBJECTID].features.forEach((item) => {
+        //                 chemicalOBJECTIDS.push(item.attributes.OBJECTID)
+        //               });
+        //
+        //               var chemicalLookup = new RelationshipQuery();
+        //               chemicalLookup.outFields = ['*'];
+        //               chemicalLookup.relationshipId = this.FlammableChemicals.relationshipId;
+        //               chemicalLookup.objectIds = chemicalOBJECTIDS;
+        //
+        //               this.tblS1FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup).then((e) => {
+        //                 var row_string = '<tr><td colspan="2">' + chemical.attributes.ChemicalName + '</td><td class="quantity">' + number.format(processChemical.attributes.Quantity) + '</td></tr>';
+        //                 chemicalOBJECTIDS.forEach((objectid) => {
+        //                   e[objectid].features.forEach((mixtureChemical) => {
+        //                     row_string += '<tr><td>&#187;</td><td>' + mixtureChemical.attributes.ChemicalName + '</td><td></td></tr>';
+        //
+        //                   })
+        //                 });
+        //                 var row = domConstruct.toDom(row_string);
+        //                 domConstruct.place(row, "process_" + process.attributes.ProcessID);
+        //               })
+        //             })
+        //           } else {
+        //             var row = domConstruct.toDom('<tr><td colspan="2">' + chemical.attributes.ChemicalName + '</td><td class="quantity">' + number.format(processChemical.attributes.Quantity) + '</td></tr>');
+        //             domConstruct.place(row, "process_" + process.attributes.ProcessID);
+        //           }
+        //         });
+        //         processDeferred.resolve();
+        //       });
+        //     });
+        //   });
+        // });
       });
 
-      var accidentQuery = new RelationshipQuery();
-      accidentQuery.outFields = ['*'];
-      accidentQuery.relationshipId = this.tblS6AccidentHistory.relationshipId;
-      accidentQuery.objectIds = [attributes.OBJECTID];
-
-      this.tblS1Facilities.queryRelatedFeatures(accidentQuery).then((featureSet) => {
-        if (featureSet.hasOwnProperty(attributes.OBJECTID)) {
-          featureSet[attributes.OBJECTID].features.forEach((accident) => {
-            var release_event = [];
-            accident.attributes.RE_Gas ? release_event.push('Gas') : null;
-            accident.attributes.RE_Spill ? release_event.push('Spill') : null;
-            accident.attributes.RE_Fire ? release_event.push('Fire') : null;
-            accident.attributes.RE_Explosion ? release_event.push('Explosion') : null;
-            accident.attributes.RE_ReactiveIncident ? release_event.push('Reactive Incident') : null;
-
-            var release_source = [];
-            accident.attributes.RS_StorageVessel ? release_source.push('Storage Vessel') : null;
-            accident.attributes.RS_Piping ? release_source.push('Piping') : null;
-            accident.attributes.RS_ProcessVessel ? release_source.push('Process Vessel') : null;
-            accident.attributes.RS_TransferHose ? release_source.push('Transfer Hose') : null;
-            accident.attributes.RS_Valve ? release_source.push('Valve') : null;
-            accident.attributes.RS_Pump ? release_source.push('Pump') : null;
-            accident.attributes.RS_Joint ? release_source.push('Joint') : null;
-            accident.attributes.OtherReleaseSource ? release_source.push('Other') : null;
-
-            var row = domConstruct.toDom('' +
-              '<div style="padding-top:10px;"><b>Date: ' + stamp.toISOString(new Date(accident.attributes.AccidentDate), {
-                selector: "date",
-                zulu: true
-              }) + '</b></div>' +
-              '<div>Duration (HHH:MM): ' + accident.attributes.AccidentReleaseDuration.substring(0, 3) + ':' + accident.attributes.AccidentReleaseDuration.substring(3, 5) + '</div>' +
-              '<div>Release Event(s): ' + release_event.join(',') + '</span></div>' +
-              '<div>Release Source(s): ' + release_source.join(',') + '</span></div>' +
-              '<table><tbody id="accident_' + accident.attributes.AccidentHistoryID + '"><tr><th colspan="2">Chemical(s)</th><th>Quantity (lbs)</th></tr></tbody></table>');
-            domConstruct.place(row, "accidents");
-
-            var accidentChemicalQuery = new RelationshipQuery();
-            accidentChemicalQuery.outFields = ['*'];
-            accidentChemicalQuery.relationshipId = this.AccidentChemicals.relationshipId;
-            accidentChemicalQuery.objectIds = [accident.attributes.OBJECTID];
-
-            this.tblS6AccidentHistory.queryRelatedFeatures(accidentChemicalQuery).then((e) => {
-              e[accident.attributes.OBJECTID].features.forEach((accidentChemical) => {
-
-                var chemicalQuery = new RelationshipQuery();
-                chemicalQuery.outFields = ['*'];
-                chemicalQuery.relationshipId = this.tblS6AccidentChemicals.relationshipId;
-                chemicalQuery.objectIds = [accidentChemical.attributes.OBJECTID];
-
-                this.tblS6AccidentChemicals.queryRelatedFeatures(chemicalQuery).then((e) => {
-                  e[accidentChemical.attributes.OBJECTID].features.forEach((chemical) => {
-                    if (chemical.attributes.CASNumber === '00-11-11') {
-                      var flammableMixtureQuery = new RelationshipQuery();
-                      flammableMixtureQuery.outFields = ['*'];
-                      flammableMixtureQuery.relationshipId = this.tblS6FlammableMixtureChemicals.relationshipId;
-                      flammableMixtureQuery.objectIds = [accidentChemical.attributes.OBJECTID];
-
-                      this.tblS6AccidentChemicals.queryRelatedFeatures(flammableMixtureQuery).then(e => {
-                        var chemicalOBJECTIDS = [];
-                        e[accidentChemical.attributes.OBJECTID].features.forEach((item) => {
-                          chemicalOBJECTIDS.push(item.attributes.OBJECTID)
-                        });
-
-                        var chemicalLookup = new RelationshipQuery();
-                        chemicalLookup.outFields = ['*'];
-                        chemicalLookup.relationshipId = this.AccidentFlamMixChem.relationshipId;
-                        chemicalLookup.objectIds = chemicalOBJECTIDS;
-
-                        this.tblS6FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup).then(e => {
-                          var row_string = '<tr><td colspan="2">' + chemical.attributes.ChemicalName + '</td><td class="quantity">' + number.format(accidentChemical.attributes.QuantityReleased) + '</td></tr>';
-                          chemicalOBJECTIDS.forEach((objectid) => {
-                            e[objectid].features.forEach((mixtureChemical) => {
-                              row_string += '<tr><td>&#187;</td><td>' + mixtureChemical.attributes.ChemicalName + '</td><td></td></tr>';
-
-                            })
-                          });
-                          var row = domConstruct.toDom(row_string);
-                          domConstruct.place(row, "accident_" + accident.attributes.AccidentHistoryID);
-                        });
-                      });
-                    } else {
-                      var row = domConstruct.toDom('<tr><td colspan="2">' + chemical.attributes.ChemicalName + '</td><td class="quantity">' + number.format(accidentChemical.attributes.QuantityReleased) + '</td></tr>');
-                      domConstruct.place(row, "accident_" + accident.attributes.AccidentHistoryID);
-                    }
-                  });
-                });
-              });
-            });
-          })
-        } else {
-          domConstruct.place(domConstruct.toDom('<b>Not Accidents Reported</b>'), "accidents");
-        }
-        accidentDeferred.resolve();
-      });
-
-      var ERQuery = new RelationshipQuery();
-      ERQuery.outFields = ['*'];
-      ERQuery.relationshipId = this.tblS9EmergencyResponses.relationshipId;
-      ERQuery.objectIds = [attributes.OBJECTID];
-
-      this.tblS1Facilities.queryRelatedFeatures(ERQuery).then( (e) => {
-        var er_plans = e[attributes.OBJECTID].features[0];
-        var row_string =
-          '<table><tbody id="er_plan_table">' +
-          '<tr><td>Is facility included in written community ER plan?</td><td>' + (er_plans.attributes.ER_CommunityPlan ? 'Yes' : 'No') + '</td></tr>' +
-          '<tr><td>Does facility have its own written ER plan?</td><td>' + (er_plans.attributes.ER_FacilityPlan ? 'Yes' : 'No') + '</td></tr>' +
-          '<tr><td colspan="2"></td></tr>' +
-          '<tr><td colspan="2"><b>Does facility\'s ER plan include ...</b></td></tr>' +
-          '<tr><td class="nested">specific actions to be take in response to accidental release of regulated substance(s)?</td><td>' + (er_plans.attributes.ER_ResponseActions ? 'Yes' : 'No') + '</td></tr>' +
-          '<tr><td class="nested">procedures for informing the public and local agencies responding to accident releases?</td><td>' + (er_plans.attributes.ER_PublicInfoProcedures ? 'Yes' : 'No') + '</td></tr>' +
-          '<tr><td class="nested">information on emergency health care?</td><td>' + (er_plans.attributes.ER_EmergencyHealthCare ? 'Yes' : 'No') + '</td></tr>' +
-          '<tr><td></td></tr>' +
-          '<tr><td colspan="2"><b>Date of most recent ...</b></td></tr>' +
-          '<tr><td colspan="2" class="nested">review or update of facility\'s ER plan?  ' + (er_plans.attributes.ER_ReviewDate ? stamp.toISOString(new Date(er_plans.attributes.ER_ReviewDate), {
-            selector: "date",
-            zulu: true
-          }) : 'Not Reported') + '</td></tr>' +
-          '<tr><td colspan="2" class="nested">ER training for facility\'s ER employees?  ' + (er_plans.attributes.ERTrainingDate ? stamp.toISOString(new Date(er_plans.attributes.ERTrainingDate), {
-            selector: "date",
-            zulu: true
-          }) : 'Not Reported') + '</td></tr>' +
-          '<tr><td></td></tr>' +
-          '<tr><td colspan="2"><b>Local agency with which facility\'s ER plan ore response activities are coordinated</b></td></tr>' +
-          '<tr><td colspan="2" class="nested">Name: ' + (er_plans.attributes.CoordinatingAgencyName ? er_plans.attributes.CoordinatingAgencyName : 'Not Reported') +
-          '<br/>Number:' + (er_plans.attributes.CoordinatingAgencyPhone ? er_plans.attributes.CoordinatingAgencyPhone : 'Not Reported') + '</td></tr>' +
-          '<tr><td colspan="2"></td></tr>' +
-          '<tr><td colspan="2"><b>Subject to ...</b></td></tr>' +
-          '<tr><td class="nested">OSHA Regulations at 29 CFR 1910.38?</td><td>' + (er_plans.attributes.FR_OSHA1910_38 ? 'Yes' : 'No') + '</td></tr>' +
-          '<tr><td class="nested">OSHA Regulations at 29 CFR 1910.120?</td><td>' + (er_plans.attributes.FR_OSHA1910_120 ? 'Yes' : 'No') + '</td></tr>' +
-          '<tr><td class="nested">Clean Water Act Regulations at 40 CFR 112?</td><td>' + (er_plans.attributes.FR_SPCC ? 'Yes' : 'No') + '</td></tr>' +
-          '<tr><td class="nested">RCRA Regulations at 40 CFR 264, 265, and 279.52?</td><td>' + (er_plans.attributes.FR_RCRA ? 'Yes' : 'No') + '</td></tr>' +
-          '<tr><td class="nested">OPA 90 Regulations at 40 CFR 112, 33 CFR 154, 49 CFR 194, or 30 CFR 254?</td><td>' + (er_plans.attributes.FR_OPA90 ? 'Yes' : 'No') + '</td></tr>' +
-          '<tr><td class="nested">State EPCRA Rules or Laws?</td><td>' + (er_plans.attributes.FR_EPCRA ? 'Yes' : 'No') + '</td></tr>' +
-          '<tr><td colspan="2" style="padding-left:10px;">Other: ' + er_plans.attributes.FR_OtherRegulation + '</td></tr>' +
-          '</tbody></table>';
-        var row = domConstruct.toDom(row_string);
-        domConstruct.place(row, 'emergency_plan');
-      });
-
-      if (!this.multipleRMPs) {
-        if (attributes.ValidLatLongFlag) {
-          var location_string = 'RMP Validated Location Used' +
-            '<br/>Description: ' + this.tblS1Facilities.getDomain('LatLongDescription').getName(attributes.LatLongDescription) +
-            '<br/>Method: ' + this.tblS1Facilities.getDomain('LatLongMethod').getName(attributes.LatLongMethod);
-        } else if (!attributes.ValidLatLongFlag && attributes.FRS_Lat !== undefined && attributes.FRS_long !== undefined) {
-          var location_string = 'FRS Location Used' +
-            '<br/>Description: ' + this.tblS1Facilities.getDomain('FRS_Description').getName(attributes.FRS_Description) +
-            '<br/>Method: ' + this.tblS1Facilities.getDomain('FRS_Method').getName(attributes.FRS_Method);
-        } else {
-          var location_string = 'Location Not Validated' +
-            '<br/>Description: ' + this.tblS1Facilities.getDomain('LatLongDescription').getName(attributes.LatLongDescription) +
-            '<br/>Method: ' + this.tblS1Facilities.getDomain('LatLongMethod').getName(attributes.LatLongMethod);
-        }
-
-        if (attributes.HorizontalAccMeasure) {
-          location_string += '<br/>Horizontal Accuracy (m): ' + attributes.HorizontalAccMeasure +
-            '<br/>Horizontal Datum: ' + this.tblS1Facilities.getDomain('HorizontalRefDatumCode').getName(attributes.HorizontalRefDatumCode) +
-            (attributes.SourceMapScaleNumber ? '<br/>Source Map Scale: ' + attributes.SourceMapScaleNumber : '')
-        }
-
-        var row = domConstruct.toDom(location_string);
-        domConstruct.place(row, 'location_metadata');
-      }
-
-      all([processDeferred.promise, accidentDeferred.promise]).then(function () {
-        that.loadingShelter.hide();
-      });
+      // var accidentQuery = new RelationshipQuery();
+      // accidentQuery.outFields = ['*'];
+      // accidentQuery.relationshipId = this.tblS6AccidentHistory.relationshipId;
+      // accidentQuery.objectIds = [attributes.OBJECTID];
+      //
+      // this.tblS1Facilities.queryRelatedFeatures(accidentQuery).then((featureSet) => {
+      //   if (featureSet.hasOwnProperty(attributes.OBJECTID)) {
+      //     featureSet[attributes.OBJECTID].features.forEach((accident) => {
+      //       var release_event = [];
+      //       accident.attributes.RE_Gas ? release_event.push('Gas') : null;
+      //       accident.attributes.RE_Spill ? release_event.push('Spill') : null;
+      //       accident.attributes.RE_Fire ? release_event.push('Fire') : null;
+      //       accident.attributes.RE_Explosion ? release_event.push('Explosion') : null;
+      //       accident.attributes.RE_ReactiveIncident ? release_event.push('Reactive Incident') : null;
+      //
+      //       var release_source = [];
+      //       accident.attributes.RS_StorageVessel ? release_source.push('Storage Vessel') : null;
+      //       accident.attributes.RS_Piping ? release_source.push('Piping') : null;
+      //       accident.attributes.RS_ProcessVessel ? release_source.push('Process Vessel') : null;
+      //       accident.attributes.RS_TransferHose ? release_source.push('Transfer Hose') : null;
+      //       accident.attributes.RS_Valve ? release_source.push('Valve') : null;
+      //       accident.attributes.RS_Pump ? release_source.push('Pump') : null;
+      //       accident.attributes.RS_Joint ? release_source.push('Joint') : null;
+      //       accident.attributes.OtherReleaseSource ? release_source.push('Other') : null;
+      //
+      //       var row = domConstruct.toDom('' +
+      //         '<div style="padding-top:10px;"><b>Date: ' + stamp.toISOString(new Date(accident.attributes.AccidentDate), {
+      //           selector: "date",
+      //           zulu: true
+      //         }) + '</b></div>' +
+      //         '<div>Duration (HHH:MM): ' + accident.attributes.AccidentReleaseDuration.substring(0, 3) + ':' + accident.attributes.AccidentReleaseDuration.substring(3, 5) + '</div>' +
+      //         '<div>Release Event(s): ' + release_event.join(',') + '</span></div>' +
+      //         '<div>Release Source(s): ' + release_source.join(',') + '</span></div>' +
+      //         '<table><tbody id="accident_' + accident.attributes.AccidentHistoryID + '"><tr><th colspan="2">Chemical(s)</th><th>Quantity (lbs)</th></tr></tbody></table>');
+      //       domConstruct.place(row, "accidents");
+      //
+      //       var accidentChemicalQuery = new RelationshipQuery();
+      //       accidentChemicalQuery.outFields = ['*'];
+      //       accidentChemicalQuery.relationshipId = this.AccidentChemicals.relationshipId;
+      //       accidentChemicalQuery.objectIds = [accident.attributes.OBJECTID];
+      //
+      //       this.tblS6AccidentHistory.queryRelatedFeatures(accidentChemicalQuery).then((e) => {
+      //         e[accident.attributes.OBJECTID].features.forEach((accidentChemical) => {
+      //
+      //           var chemicalQuery = new RelationshipQuery();
+      //           chemicalQuery.outFields = ['*'];
+      //           chemicalQuery.relationshipId = this.tblS6AccidentChemicals.relationshipId;
+      //           chemicalQuery.objectIds = [accidentChemical.attributes.OBJECTID];
+      //
+      //           this.tblS6AccidentChemicals.queryRelatedFeatures(chemicalQuery).then((e) => {
+      //             e[accidentChemical.attributes.OBJECTID].features.forEach((chemical) => {
+      //               if (chemical.attributes.CASNumber === '00-11-11') {
+      //                 var flammableMixtureQuery = new RelationshipQuery();
+      //                 flammableMixtureQuery.outFields = ['*'];
+      //                 flammableMixtureQuery.relationshipId = this.tblS6FlammableMixtureChemicals.relationshipId;
+      //                 flammableMixtureQuery.objectIds = [accidentChemical.attributes.OBJECTID];
+      //
+      //                 this.tblS6AccidentChemicals.queryRelatedFeatures(flammableMixtureQuery).then(e => {
+      //                   var chemicalOBJECTIDS = [];
+      //                   e[accidentChemical.attributes.OBJECTID].features.forEach((item) => {
+      //                     chemicalOBJECTIDS.push(item.attributes.OBJECTID)
+      //                   });
+      //
+      //                   var chemicalLookup = new RelationshipQuery();
+      //                   chemicalLookup.outFields = ['*'];
+      //                   chemicalLookup.relationshipId = this.AccidentFlamMixChem.relationshipId;
+      //                   chemicalLookup.objectIds = chemicalOBJECTIDS;
+      //
+      //                   this.tblS6FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup).then(e => {
+      //                     var row_string = '<tr><td colspan="2">' + chemical.attributes.ChemicalName + '</td><td class="quantity">' + number.format(accidentChemical.attributes.QuantityReleased) + '</td></tr>';
+      //                     chemicalOBJECTIDS.forEach((objectid) => {
+      //                       e[objectid].features.forEach((mixtureChemical) => {
+      //                         row_string += '<tr><td>&#187;</td><td>' + mixtureChemical.attributes.ChemicalName + '</td><td></td></tr>';
+      //
+      //                       })
+      //                     });
+      //                     var row = domConstruct.toDom(row_string);
+      //                     domConstruct.place(row, "accident_" + accident.attributes.AccidentHistoryID);
+      //                   });
+      //                 });
+      //               } else {
+      //                 var row = domConstruct.toDom('<tr><td colspan="2">' + chemical.attributes.ChemicalName + '</td><td class="quantity">' + number.format(accidentChemical.attributes.QuantityReleased) + '</td></tr>');
+      //                 domConstruct.place(row, "accident_" + accident.attributes.AccidentHistoryID);
+      //               }
+      //             });
+      //           });
+      //         });
+      //       });
+      //     })
+      //   } else {
+      //     domConstruct.place(domConstruct.toDom('<b>Not Accidents Reported</b>'), "accidents");
+      //   }
+      //   accidentDeferred.resolve();
+      // });
+      //
+      // var ERQuery = new RelationshipQuery();
+      // ERQuery.outFields = ['*'];
+      // ERQuery.relationshipId = this.tblS9EmergencyResponses.relationshipId;
+      // ERQuery.objectIds = [attributes.OBJECTID];
+      //
+      // this.tblS1Facilities.queryRelatedFeatures(ERQuery).then( (e) => {
+      //   var er_plans = e[attributes.OBJECTID].features[0];
+      //   var row_string =
+      //     '<table><tbody id="er_plan_table">' +
+      //     '<tr><td>Is facility included in written community ER plan?</td><td>' + (er_plans.attributes.ER_CommunityPlan ? 'Yes' : 'No') + '</td></tr>' +
+      //     '<tr><td>Does facility have its own written ER plan?</td><td>' + (er_plans.attributes.ER_FacilityPlan ? 'Yes' : 'No') + '</td></tr>' +
+      //     '<tr><td colspan="2"></td></tr>' +
+      //     '<tr><td colspan="2"><b>Does facility\'s ER plan include ...</b></td></tr>' +
+      //     '<tr><td class="nested">specific actions to be take in response to accidental release of regulated substance(s)?</td><td>' + (er_plans.attributes.ER_ResponseActions ? 'Yes' : 'No') + '</td></tr>' +
+      //     '<tr><td class="nested">procedures for informing the public and local agencies responding to accident releases?</td><td>' + (er_plans.attributes.ER_PublicInfoProcedures ? 'Yes' : 'No') + '</td></tr>' +
+      //     '<tr><td class="nested">information on emergency health care?</td><td>' + (er_plans.attributes.ER_EmergencyHealthCare ? 'Yes' : 'No') + '</td></tr>' +
+      //     '<tr><td></td></tr>' +
+      //     '<tr><td colspan="2"><b>Date of most recent ...</b></td></tr>' +
+      //     '<tr><td colspan="2" class="nested">review or update of facility\'s ER plan?  ' + (er_plans.attributes.ER_ReviewDate ? stamp.toISOString(new Date(er_plans.attributes.ER_ReviewDate), {
+      //       selector: "date",
+      //       zulu: true
+      //     }) : 'Not Reported') + '</td></tr>' +
+      //     '<tr><td colspan="2" class="nested">ER training for facility\'s ER employees?  ' + (er_plans.attributes.ERTrainingDate ? stamp.toISOString(new Date(er_plans.attributes.ERTrainingDate), {
+      //       selector: "date",
+      //       zulu: true
+      //     }) : 'Not Reported') + '</td></tr>' +
+      //     '<tr><td></td></tr>' +
+      //     '<tr><td colspan="2"><b>Local agency with which facility\'s ER plan ore response activities are coordinated</b></td></tr>' +
+      //     '<tr><td colspan="2" class="nested">Name: ' + (er_plans.attributes.CoordinatingAgencyName ? er_plans.attributes.CoordinatingAgencyName : 'Not Reported') +
+      //     '<br/>Number:' + (er_plans.attributes.CoordinatingAgencyPhone ? er_plans.attributes.CoordinatingAgencyPhone : 'Not Reported') + '</td></tr>' +
+      //     '<tr><td colspan="2"></td></tr>' +
+      //     '<tr><td colspan="2"><b>Subject to ...</b></td></tr>' +
+      //     '<tr><td class="nested">OSHA Regulations at 29 CFR 1910.38?</td><td>' + (er_plans.attributes.FR_OSHA1910_38 ? 'Yes' : 'No') + '</td></tr>' +
+      //     '<tr><td class="nested">OSHA Regulations at 29 CFR 1910.120?</td><td>' + (er_plans.attributes.FR_OSHA1910_120 ? 'Yes' : 'No') + '</td></tr>' +
+      //     '<tr><td class="nested">Clean Water Act Regulations at 40 CFR 112?</td><td>' + (er_plans.attributes.FR_SPCC ? 'Yes' : 'No') + '</td></tr>' +
+      //     '<tr><td class="nested">RCRA Regulations at 40 CFR 264, 265, and 279.52?</td><td>' + (er_plans.attributes.FR_RCRA ? 'Yes' : 'No') + '</td></tr>' +
+      //     '<tr><td class="nested">OPA 90 Regulations at 40 CFR 112, 33 CFR 154, 49 CFR 194, or 30 CFR 254?</td><td>' + (er_plans.attributes.FR_OPA90 ? 'Yes' : 'No') + '</td></tr>' +
+      //     '<tr><td class="nested">State EPCRA Rules or Laws?</td><td>' + (er_plans.attributes.FR_EPCRA ? 'Yes' : 'No') + '</td></tr>' +
+      //     '<tr><td colspan="2" style="padding-left:10px;">Other: ' + er_plans.attributes.FR_OtherRegulation + '</td></tr>' +
+      //     '</tbody></table>';
+      //   var row = domConstruct.toDom(row_string);
+      //   domConstruct.place(row, 'emergency_plan');
+      // });
+      //
+      // if (!this.multipleRMPs) {
+      //   if (attributes.ValidLatLongFlag) {
+      //     var location_string = 'RMP Validated Location Used' +
+      //       '<br/>Description: ' + this.tblS1Facilities.getDomain('LatLongDescription').getName(attributes.LatLongDescription) +
+      //       '<br/>Method: ' + this.tblS1Facilities.getDomain('LatLongMethod').getName(attributes.LatLongMethod);
+      //   } else if (!attributes.ValidLatLongFlag && attributes.FRS_Lat !== undefined && attributes.FRS_long !== undefined) {
+      //     var location_string = 'FRS Location Used' +
+      //       '<br/>Description: ' + this.tblS1Facilities.getDomain('FRS_Description').getName(attributes.FRS_Description) +
+      //       '<br/>Method: ' + this.tblS1Facilities.getDomain('FRS_Method').getName(attributes.FRS_Method);
+      //   } else {
+      //     var location_string = 'Location Not Validated' +
+      //       '<br/>Description: ' + this.tblS1Facilities.getDomain('LatLongDescription').getName(attributes.LatLongDescription) +
+      //       '<br/>Method: ' + this.tblS1Facilities.getDomain('LatLongMethod').getName(attributes.LatLongMethod);
+      //   }
+      //
+      //   if (attributes.HorizontalAccMeasure) {
+      //     location_string += '<br/>Horizontal Accuracy (m): ' + attributes.HorizontalAccMeasure +
+      //       '<br/>Horizontal Datum: ' + this.tblS1Facilities.getDomain('HorizontalRefDatumCode').getName(attributes.HorizontalRefDatumCode) +
+      //       (attributes.SourceMapScaleNumber ? '<br/>Source Map Scale: ' + attributes.SourceMapScaleNumber : '')
+      //   }
+      //
+      //   var row = domConstruct.toDom(location_string);
+      //   domConstruct.place(row, 'location_metadata');
+      // }
+      // todo: figure out loading shelter and deferred
+      // all([processDeferred.promise, accidentDeferred.promise]).then(function () {
+      //   that.loadingShelter.hide();
+      // });
     }
 
     render() {
         return (
             <div className="widget-addLayers jimu-widget p-2" style={{overflow: "auto", height: "97%"}}>
+                {/*<div>{this.mapIdNode()}</div>*/}
                 {this.mainText ? this.LandingText() : null}
+
                 <JimuMapViewComponent useMapWidgetId={this.getArbitraryFirstMapWidgetId()}
                                       onActiveViewChange={this.onActiveViewChange}/>
             </div>
