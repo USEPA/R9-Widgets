@@ -19,6 +19,11 @@ import moment from "Moment";
 import {Modal} from "jimu-ui"
 import FeatureTable from "esri/widgets/FeatureTable";
 import {DataSourceSelectionGuide} from "../../../../../jimu-ui/basic/lib/guide";
+import FeatureSet from "esri/tasks/support/FeatureSet";
+
+interface Row {
+    OBJECTID: 'OBJECTID'
+}
 
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { jimuMapView: JimuMapView, landingText: string, mainText: boolean, mapIdNode: any, columns: any, rows: any, showGrid: boolean }> {
 
@@ -42,6 +47,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
     columns: any[] = [];
     rows: any[] = [];
     showGrid: boolean = false;
+    featureSet: any;
 
     // columns = [
     //     {key: 'id', name: 'ID'},
@@ -57,8 +63,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
         super(props);
 
         this.mainText = true;
+        // bind this to function
         this.FacilityText = this.FacilityText.bind(this);
-        // this.grid = this.grid.bind(this);
+        this.Grid = this.Grid.bind(this);
+        this.rowClick = this.rowClick.bind(this);
     }
 
     componentDidMount() {
@@ -226,7 +234,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
     private status_string: any;
 
     FacilityText() {
-        if (this.attributes) {
+        if (this.attributes && !this.multipleRMPs) {
             let attributes = this.attributes
             if (attributes && Object.keys(attributes).length > 0) {
                 return (
@@ -257,7 +265,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
                             </tr>
                             <tr>
                                 <td>RMP Completion
-                                    Date: {moment(attributes.CompletionCheckDate).utc().toISOString()}</td>
+                                    Date: {moment(attributes.CompletionCheckDate).utc().toISOString().split('T')[0]}</td>
                             </tr>
                             <tr>
                                 <td>Parent
@@ -325,9 +333,24 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
         }
     }
 
-    // grid(cols, rows) {
-    //     return <DataGrid columns={cols} rows={rows}/>
-    // }
+    Grid() {
+        if (this.multipleRMPs) {
+            return (<div>
+                    <h3>Multiple RMPs Found for{this.attributes.FacilityName}</h3>
+                    <h4 id="facilityStatus"></h4><br/>
+                    <h5>Select one to continue</h5>
+                    <DataGrid columns={this.columns} rows={this.rows} onRowClick={this.rowClick}
+                              rowKeyGetter={this.rowKeyGetter}/>
+                    <br/><br/>
+                    <h3 style={{textDecoration: "underline"}}>Location Metadata</h3>
+                    <div style={{width: "100%"}} id="location_metadata"></div>
+                    <br/><br/>
+                </div>
+            )
+        } else {
+            return null
+        }
+    }
 
     mapClick = (e) => {
         this.mainText = false;
@@ -372,10 +395,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
         this.facilities.queryFeatures(featureQuery).then(featureSet => {
             console.dir(featureSet)
 
+            // this.featureSet = featureSet;
+
             if (featureSet.features.length === 1) {
                 this.loadRMPs(featureSet.features[0]);
                 // noneFound.push(false);
             } else if (featureSet.features.length > 1) {
+
                 this.loadRMPs(featureSet.features[0]);
                 // mapIdNode.innerHTML = '<h3>Multiple Facilities at that location</h3><br/><h5>Select one to continue</h5>' +
                 //   '<div id="gridDiv" style="width:100%;"></div>';
@@ -383,34 +409,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
                     identifier: 'OBJECTID',
                     items: []
                 };
+
                 featureSet.features.forEach((feature) => {
                     // var attrs = dojo.mixin({}, feature.attributes);
                     var attrs = feature.attributes;
                     data.items.push(attrs);
                 });
 
-                // var store = new ItemFileWriteStore({data: data});
-                // store.data = data;
-                //
-                // var grid = dijit.byId("grid");
-                //
-                // if (grid !== undefined) {
-                //   grid.destroy();
-                // }
-                //
-                // var layout = [
-                //   {'name': 'Name', 'field': 'FacilityName', 'width': '100%'}
-                // ];
-                // grid = new DataGrid({
-                //   id: 'grid',
-                //   store: store,
-                //   structure: layout,
-                //   //rowSelector: '20px',
-                //   autoHeight: true
-                // });
-
-                // grid.placeAt("gridDiv");
-                //
                 // grid.on('RowClick', function (e) {
                 //   var rowItem = grid.getItem(e.rowIndex);
                 //   var facility = array.filter(featureSet.features, function (feature) {
@@ -431,11 +436,24 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
 
     }
 
+    rowKeyGetter(row) {
+        return row;
+    }
+
+    rowClick(row) {
+        console.log(this.rows[row].OBJECTID);
+        let facility = this.featureSet.filter((feature) => {
+            return feature.attributes.OBJECTID === this.rows[row].OBJECTID;
+        });
+        this.loadRMPs(facility[0]);
+    }
+
     loadRMPs(feature) {
 
         this.currentFacility = feature;
         // this.loadingShelter.show();
         var attributes = feature.attributes;
+        this.attributes = attributes;
 
         var selectedGraphic = new Graphic({geometry: feature.geometry, symbol: this.symbol});
 
@@ -447,6 +465,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
         rmpQuery.relationshipId = this.tblS1Facilities.relationshipId;
         this.facilities.queryRelatedFeatures(rmpQuery).then((e) => {
                 var features = e[attributes.OBJECTID].features;
+                this.featureSet = features;
                 if (features.length === 1) {
                     this.multipleRMPs = false;
                     this.loadFeature(features[0]);
@@ -476,7 +495,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
                     let data = []
 
                     features.forEach((feature) => {
-                        feature.attributes.CompletionCheckDate = moment(feature.attributes.CompletionCheckDate).utc().toISOString();
+                        feature.attributes.CompletionCheckDate = moment(feature.attributes.CompletionCheckDate).utc().toISOString().split('T')[0];
 
                         // var attrs = dojo.mixin({}, feature.attributes);
                         var attrs = feature.attributes;
@@ -497,7 +516,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
                         rows: this.rows,
                         showGrid: this.showGrid
                     });
-
 
 
                     //todo: implement row click
@@ -528,6 +546,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
                         var date = mostRecentRMP.DeRegistrationEffectiveDate;
                     } else {
                         status = 'Active';
+                    }
+                    if (attributes && Object.keys(attributes).length > 0) {
+                        this.Grid();
                     }
 
                     //
@@ -588,7 +609,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
             var date = attributes.DeRegistrationEffectiveDate;
             var status_string = status +
                 (reason ? '<br/>De-registration Reason: ' + reason : '') +
-                (date ? '<br/>De-registration Effective Date: ' + moment(date).utc().toISOString() : '') + '<br/><br/>';
+                (date ? '<br/>De-registration Effective Date: ' + moment(date).utc().toISOString().split('T')[0] : '') + '<br/><br/>';
         } else {
             status_string = 'Active<br/><br/>';
         }
@@ -606,7 +627,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
 //   '<tr><td>Website: ' + (attributes.FacilityURL ? attributes.FacilityURL : 'Not Reported') + '</td></tr>' +
 //   '<tr><td>Email: ' + (attributes.FacilityEmailAddress ? attributes.FacilityEmailAddress : 'Not Reported') + '</td></tr>' +
 //   '<tr><td>Full Time Employees: ' + attributes.FTE + '</td></tr>' +
-//   '<tr><td>RMP Completion Date: ' + moment(feature.attributes.CompletionCheckDate).utc().toISOString() + '</td></tr>' +
+//   '<tr><td>RMP Completion Date: ' + moment(feature.attributes.CompletionCheckDate).utc().toISOString().split('T')[0] + '</td></tr>' +
 //   '<tr><td>Parent Company(s): ' + (attributes.ParentCompanyName ? attributes.ParentCompanyName : 'Not Reported') + (attributes.Company2Name ? ', ' + attributes.Company2Name : '') + '</td></tr>' +
 //   '<tr><td><a id="summaryLink" style="text-decoration: underline; cursor: pointer;">View Executive Summary</a></td></tr></tbody></table>' +
 //   '<br/><h3 style="text-decoration: underline;">Contacts</h3>' +
@@ -918,7 +939,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
         return (
             <div className="widget-addLayers jimu-widget p-2" style={{overflow: "auto", height: "97%"}}>
                 <this.FacilityText/>
-                {this.showGrid ? <DataGrid columns={this.columns} rows={this.rows}/>: null}
+                <this.Grid/>
+                {/*{this.showGrid ?  : null}*/}
                 {this.mainText ? this.LandingText() : null}
                 <JimuMapViewComponent useMapWidgetId={this.getArbitraryFirstMapWidgetId()}
                                       onActiveViewChange={this.onActiveViewChange}/>
