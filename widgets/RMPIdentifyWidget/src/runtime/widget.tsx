@@ -4,7 +4,7 @@ import {IMConfig} from "../config";
 import {JimuMapView, JimuMapViewComponent} from "jimu-arcgis";
 import PictureMarkerSymbol from "esri/symbols/PictureMarkerSymbol";
 import MapImageLayer from "esri/layers/MapImageLayer";
-import DataGrid from "react-data-grid";
+import DataGrid, {SelectColumn} from "react-data-grid";
 import Query from "esri/rest/support/Query";
 import SpatialReference from "esri/geometry/SpatialReference";
 import query from "esri/rest/query";
@@ -17,46 +17,55 @@ import FeatureLayer from "esri/layers/FeatureLayer";
 import moment from "Moment";
 import {Button, Modal, ModalBody, ModalFooter, ModalHeader} from "jimu-ui"
 import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
-import type {Column, SortColumn} from "react-data-grid";
+// import type {Column, SortColumn} from "react-data-grid";
+// import {useMemo, useState} from "react";
 
-type Comparator = (a: Row, b: Row) => number;
-function getComparator(sortColumn: string): Comparator {
-  switch (sortColumn) {
-    case 'assignee':
-    case 'title':
-    case 'client':
-    case 'area':
-    case 'country':
-    case 'contact':
-    case 'transaction':
-    case 'account':
-    case 'version':
-      return (a, b) => {
-        return a[sortColumn].localeCompare(b[sortColumn]);
-      };
-    case 'available':
-      return (a, b) => {
-        return a[sortColumn] === b[sortColumn] ? 0 : a[sortColumn] ? 1 : -1;
-      };
-    case 'id':
-    case 'progress':
-    case 'startTimestamp':
-    case 'endTimestamp':
-    case 'budget':
-      return (a, b) => {
-        return a[sortColumn] - b[sortColumn];
-      };
-    default:
-      throw new Error(`unsupported sortColumn: "${sortColumn}"`);
-  }
-}
+// interface Row {
+//     OBJECTID?: number,
+//     // if we have a facility
+//     CameoID?: any,
+//     EPAFacilityID?: string,
+//     Facility4DigitZipExt?: string,
+//     FacilityCity?: string,
+//     FacilityCountyFIPS?: string,
+//     FacilityLatDecDegs?: number,
+//     FacilityLongDecDegs?: number,
+//     FacilityName?: string,
+//     FacilityState?: string,
+//     FacilityStr1?: string,
+//     FacilityStr2?: string,
+//     FacilityZipCode?: string,
+//     MarplotID?: any,
+//     RMPID?: number,
+//     Status?: string,
+//
+//
+// }
+//
+// type Comparator = (a: any, b: any) => number;
+// const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([]);
+//
+// function getComparator(sortColumn: string): Comparator {
+//     switch (sortColumn) {
+//         case 'FacilityName':
+//             return (a, b) => {
+//                 return a[sortColumn].localeCompare(b[sortColumn]);
+//             };
+//         case 'CompletionCheckDate':
+//             return (a, b) => {
+//                 return a[sortColumn] - b[sortColumn];
+//             };
+//         default:
+//             throw new Error(`unsupported sortColumn: "${sortColumn}"`);
+//     }
+// }
 
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     jimuMapView: JimuMapView, landingText: string, mainText: boolean, mapIdNode: any,
     columns: any, rows: any, rmpGridClick: boolean, attributes: any, erTextAttr: any,
     location_string: any[], facilityStatus: any[], accidentText: any[], processText: any[],
     process: any, naicsText: any, accidentChems: any, nothingThere: any[], openModal: boolean,
-    executiveSummaryText: any[], multipleLocations: boolean,
+    executiveSummaryText: any[], multipleLocations: boolean, loading: boolean,
 }> {
 
     jmv: JimuMapView;
@@ -104,6 +113,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     executiveSummaryText: any[] = [];
     multipleLocations: boolean = false;
     status_string: string;
+    sortedRows: any[];
+    loading: boolean = false;
 
     constructor(props) {
         super(props);
@@ -169,6 +180,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             });
         });
         this.openModal = false;
+        this.loading = false;
 
         //  this.getGeometryUnion(this.boundaries.url, "STATE_ABBR='CA' OR STATE_ABBR='AZ' OR STATE_ABBR='NV'").then(res => {
         //     this.r9Geom = res;
@@ -285,14 +297,15 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             return arbitraryFirstMapWidgetInfo.id;
         }
     }
-    
 
     Facility() {
         if (this.attributes && !this.multipleRMPs) {
             if (Object.keys(this.attributes).length > 0) {
                 return (
                     <div>
-                        {this.featureSet.length > 1 ? <Button id="backLink" style={{textDecoration: "underline", cursor: "pointer"}} onClick={this.backLink}>Back</Button> : null}
+                        {this.featureSet.length > 1 ?
+                            <Button id="backLink" style={{textDecoration: "underline", cursor: "pointer"}}
+                                    onClick={this.backLink}>Back</Button> : null}
                         <h1> {this.attributes.FacilityName}</h1>
                         <h4 id="registration_status">Status: {this.status_string}</h4>
                         <table>
@@ -557,7 +570,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     <h3>Multiple Facilities at that Location</h3>
                     <h5>Select one to continue</h5>
                     <DataGrid columns={this.columns} rows={this.rows} onRowClick={this.rowClick}
-                              rowKeyGetter={this.rowKeyGetter}/>
+                              rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
+                        sortable: true,
+                        resizable: true
+                    }}/>
                 </div>
             )
 
@@ -658,13 +674,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 });
                 this.columns = [{key: 'FacilityName', name: 'Name'}];
                 this.rows = data;
-                this.rmpGridClick = false;
+
                 this.multipleLocations = true;
                 this.multipleRMPs = false;
                 this.setState({
                     columns: this.columns,
                     rows: this.rows,
-                    rmpGridClick: this.rmpGridClick,
                     // multipleLocations: this.multipleLocations,
                     // multipleRMPs: this.multipleRMPs,
                 });
@@ -702,6 +717,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     loadRMPs(feature) {
+        this.loading = true;
+        this.setState({
+            loading: this.loading
+        });
+
         this.multipleLocations = false;
         this.currentFacility = feature;
         // this.loadingShelter.show();
@@ -772,6 +792,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     } else {
                         status = 'Active';
                     }
+
                     if (attributes && Object.keys(attributes).length > 0) {
                         this.Grid();
                     }
@@ -809,10 +830,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                             Datum: {this.tblS1Facilities.getFieldDomain('HorizontalRefDatumCode').getName(mostRecentRMP.HorizontalRefDatumCode)} {mostRecentRMP.SourceMapScaleNumber ? scale : ''}
                         </div>)
                     }
+                    this.loading = false;
 
                     this.setState({
                         location_string: this.location_string,
                         facilityStatus: this.facilityStatus,
+                        loading: this.loading,
                     });
                 }
             }
@@ -820,17 +843,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     loadFeature(feature) {
+        let promises = [];
         this.erTextAttr = undefined;
-
-        // that.loadingShelter.show();
-        this.attributes = feature.attributes
-        let attributes = this.attributes
-        // processDeferred = new Deferred(), accidentDeferred = new Deferred;
-
+        this.attributes = feature.attributes;
+        let attributes = this.attributes;
         let selectedGraphic = new Graphic({geometry: feature.geometry, symbol: this.symbol});
-
         this.graphicLayer.add(selectedGraphic);
-
         let status, status_string;
 
         if (this.attributes.DeRegistrationEffectiveDate) {
@@ -847,7 +865,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             this.setState({
                 attributes: this.attributes,
             })
-            // this.Facility();
         }
 
         let executiveSummaryQuery = new RelationshipQuery();
@@ -855,7 +872,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         executiveSummaryQuery.relationshipId = this.ExecutiveSummaries.relationshipId;
         executiveSummaryQuery.objectIds = [this.attributes.OBJECTID];
         this.executiveSummaryText = [];
-        this.tblS1Facilities.queryRelatedFeatures(executiveSummaryQuery).then((e) => {
+        let executivePromise = this.tblS1Facilities.queryRelatedFeatures(executiveSummaryQuery).then((e) => {
             let summary = '';
             let summary_parts = e[this.attributes.OBJECTID].features.sort(function (obj1, obj2) {
                 return obj1.attributes.ESSeqNum - obj2.attributes.ESSeqNum
@@ -870,28 +887,28 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             this.setState({
                 executiveSummaryText: this.executiveSummaryText,
             });
+            console.dir(e)
         });
+        promises.push(executivePromise);
 
         let processQuery = new RelationshipQuery();
         processQuery.outFields = ['*'];
         processQuery.relationshipId = this.tblS1Processes.relationshipId;
         processQuery.objectIds = [this.attributes.OBJECTID];
-
-        this.tblS1Facilities.queryRelatedFeatures(processQuery).then((featureSet) => {
-            // console.dir(featureSet);
+        let naicsPromise, processChemPromise, chemQueryPromise, flammableMixPromise, chemLookupPromise;
+        promises.push(naicsPromise, processChemPromise, chemQueryPromise, flammableMixPromise, chemLookupPromise)
+        let facilitiesPromise = this.tblS1Facilities.queryRelatedFeatures(processQuery).then((featureSet) => {
             featureSet[this.attributes.OBJECTID].features.forEach((process) => {
                 let naicsQuery = new RelationshipQuery();
                 naicsQuery.outFields = ['*'];
                 naicsQuery.relationshipId = this.tblS1Process_NAICS.relationshipId;
                 naicsQuery.objectIds = [process.attributes.OBJECTID];
                 this.naicsText = [];
-                this.tblS1Processes.queryRelatedFeatures(naicsQuery).then(naicsCodes => {
+               naicsPromise = this.tblS1Processes.queryRelatedFeatures(naicsQuery).then(naicsCodes => {
                     naicsCodes[process.attributes.OBJECTID].features.forEach((naics, i) => {
                         this.naicsText.push(
                             <div>{this.tblS1Process_NAICS.getFieldDomain('NAICSCode').getName(naics.attributes.NAICSCode)}</div>);
                     });
-
-
                 });
 
                 let processChemicalsQuery = new RelationshipQuery();
@@ -899,7 +916,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 processChemicalsQuery.relationshipId = this.tblS1ProcessChemicals.relationshipId;
                 processChemicalsQuery.objectIds = [process.attributes.OBJECTID];
 
-                this.tblS1Processes.queryRelatedFeatures(processChemicalsQuery).then(e => {
+               processChemPromise =  this.tblS1Processes.queryRelatedFeatures(processChemicalsQuery).then(e => {
                     e[process.attributes.OBJECTID].features.forEach((processChemical) => {
 
                         let chemicalQuery = new RelationshipQuery();
@@ -908,7 +925,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         chemicalQuery.relationshipId = this.tlkpChemicals.relationshipId;
                         chemicalQuery.objectIds = [processChemical.attributes.OBJECTID];
 
-                        this.tblS1ProcessChemicals.queryRelatedFeatures(chemicalQuery).then((e) => {
+                       chemQueryPromise = this.tblS1ProcessChemicals.queryRelatedFeatures(chemicalQuery).then((e) => {
                             e[processChemical.attributes.OBJECTID].features.forEach((chemical) => {
                                 if (chemical.attributes.CASNumber === '00-11-11') {
                                     let flammableMixtureQuery = new RelationshipQuery();
@@ -916,7 +933,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                     flammableMixtureQuery.relationshipId = this.tblS1FlammableMixtureChemicals.relationshipId;
                                     flammableMixtureQuery.objectIds = [processChemical.attributes.OBJECTID];
 
-                                    this.tblS1ProcessChemicals.queryRelatedFeatures(flammableMixtureQuery).then((e) => {
+                                   flammableMixPromise = this.tblS1ProcessChemicals.queryRelatedFeatures(flammableMixtureQuery).then((e) => {
                                         let chemicalOBJECTIDS = [];
                                         e[processChemical.attributes.OBJECTID].features.forEach((item) => {
                                             chemicalOBJECTIDS.push(item.attributes.OBJECTID)
@@ -927,7 +944,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                         chemicalLookup.relationshipId = this.FlammableChemicals.relationshipId;
                                         chemicalLookup.objectIds = chemicalOBJECTIDS;
 
-                                        this.tblS1FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup).then((e) => {
+                                       chemLookupPromise = this.tblS1FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup).then((e) => {
                                             this.processText.push(<tr>
                                                 <td colSpan={2}>{chemical.attributes.ChemicalName}</td>
                                                 <td className="quantity">{this.numberFormatter(processChemical.attributes.Quantity)}</td>
@@ -963,13 +980,16 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
             });
         });
+        promises.push(facilitiesPromise);
 
         let accidentQuery = new RelationshipQuery();
         accidentQuery.outFields = ['*'];
         accidentQuery.relationshipId = this.tblS6AccidentHistory.relationshipId;
         accidentQuery.objectIds = [attributes.OBJECTID];
         this.accidentText = [];
-        this.tblS1Facilities.queryRelatedFeatures(accidentQuery).then((featureSet) => {
+        let accidentChemPromise, accidentChemQueryPromise, accidentFlamMixPromise, accidentChemLookupPromise;
+        promises.push(accidentChemPromise, accidentChemQueryPromise, accidentFlamMixPromise, accidentChemLookupPromise);
+        let accidentPromise = this.tblS1Facilities.queryRelatedFeatures(accidentQuery).then((featureSet) => {
             if (featureSet.hasOwnProperty(attributes.OBJECTID)) {
                 featureSet[attributes.OBJECTID].features.forEach((accident) => {
                     let release_event = [];
@@ -1007,7 +1027,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     accidentChemicalQuery.relationshipId = this.AccidentChemicals.relationshipId;
                     accidentChemicalQuery.objectIds = [accident.attributes.OBJECTID];
 
-                    this.tblS6AccidentHistory.queryRelatedFeatures(accidentChemicalQuery).then((e) => {
+                    accidentChemPromise = this.tblS6AccidentHistory.queryRelatedFeatures(accidentChemicalQuery).then((e) => {
                         e[accident.attributes.OBJECTID].features.forEach((accidentChemical) => {
 
                             let chemicalQuery = new RelationshipQuery();
@@ -1015,7 +1035,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                             chemicalQuery.relationshipId = this.tblS6AccidentChemicals.relationshipId;
                             chemicalQuery.objectIds = [accidentChemical.attributes.OBJECTID];
 
-                            this.tblS6AccidentChemicals.queryRelatedFeatures(chemicalQuery).then((e) => {
+                            accidentChemQueryPromise = this.tblS6AccidentChemicals.queryRelatedFeatures(chemicalQuery).then((e) => {
                                 e[accidentChemical.attributes.OBJECTID].features.forEach((chemical) => {
                                     if (chemical.attributes.CASNumber === '00-11-11') {
                                         let flammableMixtureQuery = new RelationshipQuery();
@@ -1023,7 +1043,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                         flammableMixtureQuery.relationshipId = this.tblS6FlammableMixtureChemicals.relationshipId;
                                         flammableMixtureQuery.objectIds = [accidentChemical.attributes.OBJECTID];
 
-                                        this.tblS6AccidentChemicals.queryRelatedFeatures(flammableMixtureQuery).then(e => {
+                                        accidentFlamMixPromise = this.tblS6AccidentChemicals.queryRelatedFeatures(flammableMixtureQuery).then(e => {
                                             let chemicalOBJECTIDS = [];
                                             e[accidentChemical.attributes.OBJECTID].features.forEach((item) => {
                                                 chemicalOBJECTIDS.push(item.attributes.OBJECTID)
@@ -1038,7 +1058,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                                 <th colSpan={2}>Chemical(s)</th>
                                                 <th>Quantity (lbs)</th>
                                             </tr>)
-                                            this.tblS6FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup).then(e => {
+                                           accidentChemLookupPromise = this.tblS6FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup).then(e => {
                                                 this.accidentChems.push(<tr>
                                                     <td colSpan={2}>{chemical.attributes.ChemicalName}</td>
                                                     <td className="quantity">{this.numberFormatter(accidentChemical.attributes.QuantityReleased)}</td>
@@ -1074,13 +1094,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 }
             )
         });
+        promises.push(accidentPromise);
 
         let ERQuery = new RelationshipQuery();
         ERQuery.outFields = ['*'];
         ERQuery.relationshipId = this.tblS9EmergencyResponses.relationshipId;
         ERQuery.objectIds = [attributes.OBJECTID];
-
-        this.tblS1Facilities.queryRelatedFeatures(ERQuery).then((e) => {
+        let emerRespPromise = this.tblS1Facilities.queryRelatedFeatures(ERQuery).then((e) => {
             this.erTextAttr = e[attributes.OBJECTID].features[0];
             this.setState({
                 erTextAttr: this.erTextAttr
@@ -1089,6 +1109,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             //     this.EmerRespPlan();
             // }
         });
+        promises.push(emerRespPromise)
+
         // if (!this.multipleRMPs) {
         //     if (attributes.ValidLatLongFlag) {
         //         let location_string = 'RMP Validated Location Used' +
@@ -1116,12 +1138,19 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 // todo: figure out loading shelter and deferred
 // all([processDeferred.promise, accidentDeferred.promise]).then(function () {
 //   that.loadingShelter.hide();
-
+        Promise.all(promises).then(() => {
+            this.loading = false;
+            this.setState({
+                loading: this.loading,
+            });
+            console.log('all resolved')
+        });
     }
 
     ExecModal() {
         return (
-            <Modal style={{width: "80%", maxWidth: "80%", overflow: "auto !important"}} isOpen={this.openModal} scrollable>
+            <Modal style={{width: "80%", maxWidth: "80%", overflow: "auto !important"}} isOpen={this.openModal}
+                   scrollable>
                 <ModalHeader toggle={this.modalVis}>
                     Executive Summary
                 </ModalHeader>
@@ -1135,8 +1164,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     numberFormatter(number: string | number) {
-        if(typeof number == "string") {
-        return   number.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        if (typeof number == "string") {
+            return number.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         } else {
             return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         }
@@ -1149,17 +1178,65 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         })
     }
 
+    // getColumns(facils: string[]) {
+    //     return [
+    //         SelectColumn,
+    //         {
+    //             key: 'FacilityName',
+    //             name: 'Name'
+    //         },
+    //         {
+    //             key: 'CompletionCheckDate',
+    //             name: 'Date'
+    //         }
+    //     ]
+    // }
+
+    // rowSorter() {
+    //     const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([]);
+    //
+    //     const facilities = useMemo(() => {
+    //         return [...new Set(this.rows.map(row => row.FacilityName))].sort(new Intl.Collator().compare);
+    //     }, []);
+    //
+    //     const columns = useMemo(() => this.getColumns(facilities), [facilities]);
+    //
+    //     this.sortedRows = useMemo(() => {
+    //         if (sortColumns.length === 0) return this.rows;
+    //         const sortedRows = [...this.rows];
+    //         sortedRows.sort((a, b) => {
+    //             for (let sort of sortColumns) {
+    //                 const comparator = getComparator(sort.columnKey);
+    //                 const compRes = comparator(a, b);
+    //                 if (compRes !== 0) {
+    //                     return sort.direction === 'ASC' ? compRes : -compRes;
+    //                 }
+    //             }
+    //             return 0
+    //         });
+    //     }, [this.rows, this.columns]);
+    //     return sortedRows;
+    // }
+
     render() {
         return (
+
             <div className="widget-addLayers jimu-widget p-2" style={{overflow: "auto", height: "97%"}}>
+                {/*<div id="loading" >*/}
                 <this.NothingFound/>
-                <this.Facility/>
-                <this.Process/>
-                <this.Accidents/>
-                <this.EmerRespPlan/>
                 <this.Grid/>
                 <this.LocationMetadata/>
-                <this.ExecModal/>
+                {this.loading ? <h2 style={{background: 'white'}}>Loading...</h2> :
+                    <div>
+                        <this.Facility/>
+                        <this.Process/>
+                        <this.Accidents/>
+                        <this.EmerRespPlan/>
+                        <this.ExecModal/>
+                    </div>
+                }
+                {/*</div>*/}
+
                 {this.mainText ? this.LandingText() : null}
                 <JimuMapViewComponent useMapWidgetId={this.getArbitraryFirstMapWidgetId()}
                                       onActiveViewChange={this.onActiveViewChange}/>
