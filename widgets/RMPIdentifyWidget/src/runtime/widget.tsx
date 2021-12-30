@@ -1,7 +1,7 @@
+import './assets/style.css';
 import {React, AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState} from "jimu-core";
 import {IMConfig} from "../config";
 import {JimuMapView, JimuMapViewComponent} from "jimu-arcgis";
-import {Component} from 'react';
 import PictureMarkerSymbol from "esri/symbols/PictureMarkerSymbol";
 import MapImageLayer from "esri/layers/MapImageLayer";
 import DataGrid from "react-data-grid";
@@ -11,23 +11,52 @@ import query from "esri/rest/query";
 import geometryEngine from "esri/geometry/geometryEngine";
 import GraphicsLayer from "esri/layers/GraphicsLayer";
 import Extent from "esri/geometry/Extent";
-import Sublayer from "esri/layers/support/Sublayer";
 import RelationshipQuery from "esri/rest/support/RelationshipQuery";
 import Graphic from "esri/Graphic";
 import FeatureLayer from "esri/layers/FeatureLayer";
 import moment from "Moment";
-import {Modal} from "jimu-ui"
-import FeatureTable from "esri/widgets/FeatureTable";
-import {DataSourceSelectionGuide} from "../../../../../jimu-ui/basic/lib/guide";
-import FeatureSet from "esri/tasks/support/FeatureSet";
+import {Button, Modal, ModalBody, ModalFooter, ModalHeader} from "jimu-ui"
 import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
+import type {Column, SortColumn} from "react-data-grid";
 
+type Comparator = (a: Row, b: Row) => number;
+function getComparator(sortColumn: string): Comparator {
+  switch (sortColumn) {
+    case 'assignee':
+    case 'title':
+    case 'client':
+    case 'area':
+    case 'country':
+    case 'contact':
+    case 'transaction':
+    case 'account':
+    case 'version':
+      return (a, b) => {
+        return a[sortColumn].localeCompare(b[sortColumn]);
+      };
+    case 'available':
+      return (a, b) => {
+        return a[sortColumn] === b[sortColumn] ? 0 : a[sortColumn] ? 1 : -1;
+      };
+    case 'id':
+    case 'progress':
+    case 'startTimestamp':
+    case 'endTimestamp':
+    case 'budget':
+      return (a, b) => {
+        return a[sortColumn] - b[sortColumn];
+      };
+    default:
+      throw new Error(`unsupported sortColumn: "${sortColumn}"`);
+  }
+}
 
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     jimuMapView: JimuMapView, landingText: string, mainText: boolean, mapIdNode: any,
     columns: any, rows: any, rmpGridClick: boolean, attributes: any, erTextAttr: any,
     location_string: any[], facilityStatus: any[], accidentText: any[], processText: any[],
-    process: any, naicsText: any, accidentChems: any, nothingThere: any[],
+    process: any, naicsText: any, accidentChems: any, nothingThere: any[], openModal: boolean,
+    executiveSummaryText: any[], multipleLocations: boolean,
 }> {
 
     jmv: JimuMapView;
@@ -43,7 +72,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     baseurl = "https://utility.arcgis.com/usrsvcs/servers/a9dda0a4ba0a433992ce3bdffd89d35a/rest/services/SharedServices/RMPFacilities/MapServer";
     multipleRMPs: boolean = false;
     executiveSummaryDialog;
-    mapIdNode: () => JSX.Element;
     tblS1Processes: any;
     tblS9EmergencyResponses: any;
     ExecutiveSummaries: any;
@@ -71,7 +99,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     process: any;
     naicsText: any;
     accidentChems: any[] = [];
-    nothingThere: any[] = []
+    nothingThere: any[] = [];
+    openModal: boolean = false;
+    executiveSummaryText: any[] = [];
+    multipleLocations: boolean = false;
+    status_string: string;
 
     constructor(props) {
         super(props);
@@ -85,6 +117,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.Accidents = this.Accidents.bind(this);
         this.Process = this.Process.bind(this);
         this.NothingFound = this.NothingFound.bind(this);
+        this.modalVis = this.modalVis.bind(this);
+        this.ExecModal = this.ExecModal.bind(this);
+        this.backLink = this.backLink.bind(this);
     }
 
     componentDidMount() {
@@ -133,7 +168,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 }
             });
         });
-
+        this.openModal = false;
 
         //  this.getGeometryUnion(this.boundaries.url, "STATE_ABBR='CA' OR STATE_ABBR='AZ' OR STATE_ABBR='NV'").then(res => {
         //     this.r9Geom = res;
@@ -184,7 +219,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 <br/><br/><u>Program Level 2</u>: Processes not eligible for Program 1 or subject to Program 3 are
                 placed in Program 2, which imposes streamlined prevention program requirements,
                 as well as additional hazard assessment, management, and emergency response requirements.
-                <br/><br/><u>Program Level 3</u>: Processes not eligible for Program 1 and either subject to OSHA\'s
+                <br/><br/><u>Program Level 3</u>: Processes not eligible for Program 1 and either subject to OSHA's
                 PSM standard under federal or state OSHA programs or classified in
                 one of ten specified North American Industrial Classification System (NAICS) codes are placed in
                 Program 3, which imposes OSHA’s PSM standard as the prevention program
@@ -250,15 +285,14 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             return arbitraryFirstMapWidgetInfo.id;
         }
     }
-    private status_string: any;
+    
 
     Facility() {
         if (this.attributes && !this.multipleRMPs) {
             if (Object.keys(this.attributes).length > 0) {
                 return (
                     <div>
-                        {this.multipleRMPs ?
-                            <a id="backLink" style={{textDecoration: "underline", cursor: "pointer"}}> Back</a> : ''}
+                        {this.featureSet.length > 1 ? <Button id="backLink" style={{textDecoration: "underline", cursor: "pointer"}} onClick={this.backLink}>Back</Button> : null}
                         <h1> {this.attributes.FacilityName}</h1>
                         <h4 id="registration_status">Status: {this.status_string}</h4>
                         <table>
@@ -290,8 +324,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                     Company(s): {this.attributes.ParentCompanyName ? this.attributes.ParentCompanyName : 'Not Reported'} {this.attributes.Company2Name ? ', ' + this.attributes.Company2Name : ''}</td>
                             </tr>
                             <tr>
-                                <td><a id="summaryLink" style={{textDecoration: "underline", cursor: "pointer"}}>View
-                                    Executive Summary</a></td>
+                                <td><Button id="summaryLink" style={{textDecoration: "underline", cursor: "pointer"}}
+                                            onClick={this.modalVis}>View
+                                    Executive Summary</Button></td>
                             </tr>
                             </tbody>
                         </table>
@@ -503,8 +538,30 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         }
     }
 
+    backLink() {
+        this.multipleRMPs = true;
+        this.multipleLocations = false;
+        this.attributes = undefined;
+        this.erTextAttr = undefined;
+        this.setState({
+            attributes: this.attributes,
+            erTextAttr: this.erTextAttr,
+        });
+        this.loadRMPs(this.currentFacility);
+    }
+
     Grid() {
-        if (this.multipleRMPs) {
+        if (this.multipleLocations) {
+            return (
+                <div>
+                    <h3>Multiple Facilities at that Location</h3>
+                    <h5>Select one to continue</h5>
+                    <DataGrid columns={this.columns} rows={this.rows} onRowClick={this.rowClick}
+                              rowKeyGetter={this.rowKeyGetter}/>
+                </div>
+            )
+
+        } else if (this.multipleRMPs) {
             return (<div>
                     <h3>Multiple RMPs Found for {this.attributes.FacilityName}</h3>
                     <h4 id="facilityStatus">
@@ -512,7 +569,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     </h4><br/>
                     <h5>Select one to continue</h5>
                     <DataGrid columns={this.columns} rows={this.rows} onRowClick={this.rowClick}
-                              rowKeyGetter={this.rowKeyGetter}/>
+                              rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
+                        sortable: true,
+                        resizable: true
+                    }}/>
                     <br/><br/>
                 </div>
             )
@@ -536,6 +596,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
     mapClick = (e) => {
         // clear it all
+        this.multipleRMPs = false;
+        this.multipleLocations = false;
         this.rmpGridClick = false;
         this.processText = [];
         this.accidentText = [];
@@ -578,16 +640,18 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
             this.featureSet = featureSet.features;
 
-            if (featureSet.features.length === 1) {
-                this.loadRMPs(featureSet.features[0]);
+            if (this.featureSet.length === 1) {
+
+                this.loadRMPs(this.featureSet[0]);
+
                 // noneFound.push(false);
-            } else if (featureSet.features.length > 1) {
+            } else if (this.featureSet.length > 1) {
 
                 // mapIdNode.innerHTML = '<h3>Multiple Facilities at that location</h3><br/><h5>Select one to continue</h5>' +
                 //   '<div id="gridDiv" style="width:100%;"></div>';
                 let data = []
 
-                featureSet.features.forEach((feature) => {
+                this.featureSet.forEach((feature) => {
                     // let attrs = dojo.mixin({}, feature.attributes);
                     let attrs = feature.attributes;
                     data.push(attrs);
@@ -595,10 +659,14 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 this.columns = [{key: 'FacilityName', name: 'Name'}];
                 this.rows = data;
                 this.rmpGridClick = false;
+                this.multipleLocations = true;
+                this.multipleRMPs = false;
                 this.setState({
                     columns: this.columns,
                     rows: this.rows,
                     rmpGridClick: this.rmpGridClick,
+                    // multipleLocations: this.multipleLocations,
+                    // multipleRMPs: this.multipleRMPs,
                 });
 
                 this.Grid();
@@ -634,6 +702,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     loadRMPs(feature) {
+        this.multipleLocations = false;
         this.currentFacility = feature;
         // this.loadingShelter.show();
         let attributes = feature.attributes;
@@ -781,30 +850,28 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             // this.Facility();
         }
 
-        // todo: back link and executive summary dialog
-// document.getElementById('summaryLink').onclick = () => {
-//   this.executiveSummaryDialog.show();
-// };
-// document.getElementById('backLink').onclick = () => {
-//    this.loadRMPs(this.currentFacility);
-// };
-// get executive summary for dialog box
         let executiveSummaryQuery = new RelationshipQuery();
         executiveSummaryQuery.outFields = ['*'];
         executiveSummaryQuery.relationshipId = this.ExecutiveSummaries.relationshipId;
         executiveSummaryQuery.objectIds = [this.attributes.OBJECTID];
-        //
-        // this.tblS1Facilities.queryRelatedFeatures(executiveSummaryQuery).then((e) => {
-        //     let summary = '';
-        //     let summary_parts = e[this.attributes.OBJECTID].features.sort(function (obj1, obj2) {
-        //         return obj1.attributes.ESSeqNum - obj2.attributes.ESSeqNum
-        //     });
-        //     summary_parts.forEach((summary_part) => {
-        //         summary += summary_part.attributes.SummaryText.replace(/(?:\r\n|\r|\n)/g, '<br />');
-        //     });
-        //     // this.executiveSummaryDialog.set("content", summary);
-        // });
-        //
+        this.executiveSummaryText = [];
+        this.tblS1Facilities.queryRelatedFeatures(executiveSummaryQuery).then((e) => {
+            let summary = '';
+            let summary_parts = e[this.attributes.OBJECTID].features.sort(function (obj1, obj2) {
+                return obj1.attributes.ESSeqNum - obj2.attributes.ESSeqNum
+            });
+            summary_parts.forEach((summary_part) => {
+                let regex = /(?:\r\n|\r|\n)/g;
+                let textArr = summary_part.attributes.SummaryText.split(regex);
+                textArr.map(str => {
+                    this.executiveSummaryText.push(<div>{str}<br/></div>);
+                });
+            });
+            this.setState({
+                executiveSummaryText: this.executiveSummaryText,
+            });
+        });
+
         let processQuery = new RelationshipQuery();
         processQuery.outFields = ['*'];
         processQuery.relationshipId = this.tblS1Processes.relationshipId;
@@ -863,7 +930,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                         this.tblS1FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup).then((e) => {
                                             this.processText.push(<tr>
                                                 <td colSpan={2}>{chemical.attributes.ChemicalName}</td>
-                                                <td className="quantity">{processChemical.attributes.Quantity}</td>
+                                                <td className="quantity">{this.numberFormatter(processChemical.attributes.Quantity)}</td>
                                             </tr>);
                                             chemicalOBJECTIDS.forEach((objectid) => {
                                                 e[objectid].features.forEach((mixtureChemical) => {
@@ -879,16 +946,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                 } else {
                                     this.processText.push(<tr>
                                         <td colSpan={2}>{chemical.attributes.ChemicalName}</td>
-                                        <td className="quantity">{processChemical.attributes.Quantity}</td>
+                                        <td className="quantity">{this.numberFormatter(processChemical.attributes.Quantity)}</td>
                                     </tr>);
                                 }
                             });
-                            //
-                            // this.setState({
-                            //     processText: this.processText,
-                            //     naicsText: this.naicsText,
-                            // })
-                            // processDeferred.resolve();
                             this.process = process;
                             this.setState({
                                 process: this.process,
@@ -980,7 +1041,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                             this.tblS6FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup).then(e => {
                                                 this.accidentChems.push(<tr>
                                                     <td colSpan={2}>{chemical.attributes.ChemicalName}</td>
-                                                    <td className="quantity">{accidentChemical.attributes.QuantityReleased}</td>
+                                                    <td className="quantity">{this.numberFormatter(accidentChemical.attributes.QuantityReleased)}</td>
                                                 </tr>);
                                                 chemicalOBJECTIDS.forEach((objectid) => {
                                                     e[objectid].features.forEach((mixtureChemical) => {
@@ -996,7 +1057,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                     } else {
                                         this.accidentChems.push(<tr>
                                             <td colSpan={2}>{chemical.attributes.ChemicalName}</td>
-                                            <td className="quantity">{accidentChemical.attributes.QuantityReleased}</td>
+                                            <td className="quantity">{this.numberFormatter(accidentChemical.attributes.QuantityReleased)}</td>
                                         </tr>)
                                     }
                                 });
@@ -1058,6 +1119,36 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
     }
 
+    ExecModal() {
+        return (
+            <Modal style={{width: "80%", maxWidth: "80%", overflow: "auto !important"}} isOpen={this.openModal} scrollable>
+                <ModalHeader toggle={this.modalVis}>
+                    Executive Summary
+                </ModalHeader>
+                <ModalBody>
+                    {this.executiveSummaryText}
+                </ModalBody>
+                <ModalFooter></ModalFooter>
+            </Modal>
+        )
+
+    }
+
+    numberFormatter(number: string | number) {
+        if(typeof number == "string") {
+        return   number.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        } else {
+            return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+    }
+
+    modalVis() {
+        this.openModal = !this.openModal;
+        this.setState({
+            openModal: this.openModal,
+        })
+    }
+
     render() {
         return (
             <div className="widget-addLayers jimu-widget p-2" style={{overflow: "auto", height: "97%"}}>
@@ -1068,6 +1159,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 <this.EmerRespPlan/>
                 <this.Grid/>
                 <this.LocationMetadata/>
+                <this.ExecModal/>
                 {this.mainText ? this.LandingText() : null}
                 <JimuMapViewComponent useMapWidgetId={this.getArbitraryFirstMapWidgetId()}
                                       onActiveViewChange={this.onActiveViewChange}/>

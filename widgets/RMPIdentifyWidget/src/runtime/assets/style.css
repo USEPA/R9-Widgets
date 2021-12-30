@@ -10,9 +10,21 @@ td.nested {
 
 
 tr > td.quantity {
-    padding-left: 10px;
+    padding-left: 10px !important;
 }
 
-td {
-    padding-left: 10px;
+/*td {*/
+/*    padding-left: 10px !important;*/
+/*}*/
+
+div.modal.jimu-outline-inside.fade.show {
+    overflow: auto;
+}
+
+.modal-open .modal {
+    overflow: auto !important;
+}
+
+[class*="modal"] {
+    overflow: auto !important;
 }
