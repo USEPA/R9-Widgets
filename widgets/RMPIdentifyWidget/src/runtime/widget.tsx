@@ -1,3 +1,4 @@
+/** @jsx jsx */
 import './assets/style.css';
 import {React, AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState} from "jimu-core";
 import {IMConfig} from "../config";
@@ -17,55 +18,52 @@ import FeatureLayer from "esri/layers/FeatureLayer";
 import moment from "Moment";
 import {Button, Modal, ModalBody, ModalFooter, ModalHeader} from "jimu-ui"
 import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
-// import type {Column, SortColumn} from "react-data-grid";
-// import {useMemo, useState} from "react";
+import type {Column, SortColumn} from "react-data-grid";
 
-// interface Row {
-//     OBJECTID?: number,
-//     // if we have a facility
-//     CameoID?: any,
-//     EPAFacilityID?: string,
-//     Facility4DigitZipExt?: string,
-//     FacilityCity?: string,
-//     FacilityCountyFIPS?: string,
-//     FacilityLatDecDegs?: number,
-//     FacilityLongDecDegs?: number,
-//     FacilityName?: string,
-//     FacilityState?: string,
-//     FacilityStr1?: string,
-//     FacilityStr2?: string,
-//     FacilityZipCode?: string,
-//     MarplotID?: any,
-//     RMPID?: number,
-//     Status?: string,
-//
-//
-// }
-//
-// type Comparator = (a: any, b: any) => number;
-// const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([]);
-//
-// function getComparator(sortColumn: string): Comparator {
-//     switch (sortColumn) {
-//         case 'FacilityName':
-//             return (a, b) => {
-//                 return a[sortColumn].localeCompare(b[sortColumn]);
-//             };
-//         case 'CompletionCheckDate':
-//             return (a, b) => {
-//                 return a[sortColumn] - b[sortColumn];
-//             };
-//         default:
-//             throw new Error(`unsupported sortColumn: "${sortColumn}"`);
-//     }
-// }
+interface Row {
+    // OBJECTID?: number,
+    // // if we have a facility
+    // CameoID?: any,
+    // EPAFacilityID?: string,
+    // Facility4DigitZipExt?: string,
+    // FacilityCity?: string,
+    // FacilityCountyFIPS?: string,
+    // FacilityLatDecDegs?: number,
+    // FacilityLongDecDegs?: number,
+    // FacilityName?: string,
+    // FacilityState?: string,
+    // FacilityStr1?: string,
+    // FacilityStr2?: string,
+    // FacilityZipCode?: string,
+    // MarplotID?: any,
+    // RMPID?: number,
+    // Status?: string,
+
+
+}
+
+function getComparator(sortColumn: string) {
+    switch (sortColumn) {
+        case 'FacilityName':
+            return (a, b) => {
+                return a[sortColumn].localeCompare(b[sortColumn]);
+            };
+        case 'CompletionCheckDate':
+            return (a, b) => {
+                // @ts-ignore
+                return new Date(a[sortColumn]) - new Date(b[sortColumn]);
+            };
+        default:
+            throw new Error(`unsupported sortColumn: "${sortColumn}"`);
+    }
+}
 
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     jimuMapView: JimuMapView, landingText: string, mainText: boolean, mapIdNode: any,
     columns: any, rows: any, rmpGridClick: boolean, attributes: any, erTextAttr: any,
     location_string: any[], facilityStatus: any[], accidentText: any[], processText: any[],
     process: any, naicsText: any, accidentChems: any, nothingThere: any[], openModal: boolean,
-    executiveSummaryText: any[], multipleLocations: boolean, loading: boolean,
+    executiveSummaryText: any[], multipleLocations: boolean, loading: boolean, sortColumns: SortColumn[], sortedRows: any[],
 }> {
 
     jmv: JimuMapView;
@@ -80,12 +78,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     tblS1Facilities: any;
     baseurl = "https://utility.arcgis.com/usrsvcs/servers/a9dda0a4ba0a433992ce3bdffd89d35a/rest/services/SharedServices/RMPFacilities/MapServer";
     multipleRMPs: boolean = false;
-    executiveSummaryDialog;
     tblS1Processes: any;
     tblS9EmergencyResponses: any;
     ExecutiveSummaries: any;
     attributes: any;
-    columns: any[] = [];
+    columns: Column<Row>[] = [];
     rows: any[] = [];
     showGrid: boolean = false;
     featureSet: any;
@@ -113,8 +110,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     executiveSummaryText: any[] = [];
     multipleLocations: boolean = false;
     status_string: string;
-    sortedRows: any[];
+    sortedRows: any[] = [];
     loading: boolean = false;
+    rowCopy: any[] = [];
+    sortColumns: SortColumn[] = [];
 
     constructor(props) {
         super(props);
@@ -131,6 +130,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.modalVis = this.modalVis.bind(this);
         this.ExecModal = this.ExecModal.bind(this);
         this.backLink = this.backLink.bind(this);
+        this.onSortColsChange = this.onSortColsChange.bind(this);
     }
 
     componentDidMount() {
@@ -179,6 +179,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 }
             });
         });
+
         this.openModal = false;
         this.loading = false;
 
@@ -189,7 +190,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
     onActiveViewChange = (jmv: JimuMapView) => {
         this.jmv = jmv;
-        // this.jmv.view.map.layers.add(this.rmpLayer);
         if (jmv) {
             this.setState({
                 jimuMapView: jmv
@@ -207,7 +207,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 this[relationship.name].relationshipId = relationship.id;
                 this[relationship.name].load().then((e) => {
                     this[relationship.name] = e;
-                    // note may need to redo this a little so it uses load() to feth the rest of the table sublayers
                     if (this[relationship.name].relationships.length > 0) {
                         this.loadRelated(this[relationship.name]);
                     }
@@ -257,12 +256,22 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         let widgetState: WidgetState;
         widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
 
+        // do anything on open/close of widget here
         if (widgetState == WidgetState.Opened) {
-
-        } else {
             if (this.first) {
-
+                this.rmpLayer.visible = true;
+                this.mainText = true;
+                this.nothingThere = [];
+                this.setState({
+                    mainText: this.mainText,
+                    nothingThere: this.nothingThere
+                });
             }
+            this.first = false;
+        } else {
+            this.first = true;
+            this.jmv.view.map.layers.remove(this.graphicLayer);
+            this.rmpLayer.visible = false;
         }
     }
 
@@ -293,7 +302,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             const arbitraryFirstMapWidgetInfo: { [key: string]: any } = Object.values(appState.appConfig.widgets).find((widgetInfo: any) => {
                 return widgetInfo.uri === 'widgets/arcgis/arcgis-map/'
             });
-
             return arbitraryFirstMapWidgetInfo.id;
         }
     }
@@ -563,40 +571,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.loadRMPs(this.currentFacility);
     }
 
-    Grid() {
-        if (this.multipleLocations) {
-            return (
-                <div>
-                    <h3>Multiple Facilities at that Location</h3>
-                    <h5>Select one to continue</h5>
-                    <DataGrid columns={this.columns} rows={this.rows} onRowClick={this.rowClick}
-                              rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
-                        sortable: true,
-                        resizable: true
-                    }}/>
-                </div>
-            )
-
-        } else if (this.multipleRMPs) {
-            return (<div>
-                    <h3>Multiple RMPs Found for {this.attributes.FacilityName}</h3>
-                    <h4 id="facilityStatus">
-                        {this.facilityStatus}
-                    </h4><br/>
-                    <h5>Select one to continue</h5>
-                    <DataGrid columns={this.columns} rows={this.rows} onRowClick={this.rowClick}
-                              rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
-                        sortable: true,
-                        resizable: true
-                    }}/>
-                    <br/><br/>
-                </div>
-            )
-        } else {
-            return null
-        }
-    }
-
     LocationMetadata() {
         if (this.location_string.length > 0 && this.multipleRMPs) {
             return (
@@ -611,6 +585,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     mapClick = (e) => {
+
         // clear it all
         this.multipleRMPs = false;
         this.multipleLocations = false;
@@ -623,6 +598,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.erTextAttr = undefined;
         this.attributes = undefined;
         this.nothingThere = [];
+        this.loading = true;
+        this.accidentChems = [];
         this.setState({
             rmpGridClick: this.rmpGridClick,
             processText: this.processText,
@@ -633,6 +610,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             erTextAttr: this.erTextAttr,
             attributes: this.attributes,
             nothingThere: this.nothingThere,
+            loading: this.loading,
+            accidentChems:  this.accidentChems,
         });
 
         this.graphicLayer.removeAll();
@@ -674,29 +653,32 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 });
                 this.columns = [{key: 'FacilityName', name: 'Name'}];
                 this.rows = data;
-
+                this.sortedRows = data
                 this.multipleLocations = true;
                 this.multipleRMPs = false;
                 this.setState({
                     columns: this.columns,
                     rows: this.rows,
+                    sortedRows: this.sortedRows,
                     // multipleLocations: this.multipleLocations,
                     // multipleRMPs: this.multipleRMPs,
                 });
 
                 this.Grid();
+                this.loading = false;
+                this.setState({
+                    loading: this.loading,
+                });
 
             } else {
-                this.nothingThere = [
-                    <div>No facilities found at this location</div>
-                ]
+                this.nothingThere = [<div>No facilities found at this location</div>];
+                this.loading = false;
                 this.setState({
-                    nothingThere: this.nothingThere
-                })
+                    nothingThere: this.nothingThere,
+                    loading: this.loading,
+                });
             }
         });
-
-
     }
 
     rowKeyGetter(row) {
@@ -714,6 +696,69 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             this.loadRMPs(facility[0]);
         }
 
+    }
+
+    Grid() {
+        if (this.multipleLocations || this.multipleRMPs) {
+            return (
+                <div>
+                    {this.multipleLocations ? <h3>Multiple Facilities at that Location <br/>
+                    </h3> : this.multipleRMPs ?
+                        <h3>Multiple RMPs Found for {this.attributes.FacilityName} <h4 id="facilityStatus">
+                            {this.facilityStatus}
+                        </h4><br/></h3> : null}
+                    <h5>Select one to continue</h5>
+                    <DataGrid style={{height: `${(this.rows.length * 35) + 37}px`, maxHeight: "700px"}}
+                              columns={this.columns} rows={this.sortedRows} onRowClick={this.rowClick}
+                              rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
+                        sortable: true,
+                        resizable: true
+                    }} onSortColumnsChange={this.onSortColsChange} sortColumns={this.sortColumns}/>
+                </div>
+            )
+        } else {
+            return null
+        }
+    }
+
+    onSortColsChange(cols) {
+        if (cols.length === 0) {
+            this.sortedRows = this.rows;
+            this.sortColumns = [];
+            this.setState({
+                sortedRows: this.sortedRows,
+                sortColumns: this.sortColumns,
+            });
+            return
+        }
+
+        this.sortColumns = cols.slice(-1);
+
+        this.sortedRows = [...this.rows];
+        this.sortedRows.sort((a, b) => {
+            for (let col of cols) {
+
+                let comparator = getComparator(col.columnKey);
+                let res = comparator(a, b);
+                if (res !== 0) {
+                    // if (col.direction === 'ASC') {
+                    return col.direction === 'ASC' ? res : -res;
+                    //     return res;
+                    // } else if (col.direction === 'DESC') {
+                    //     return -res;
+                    // }
+                }
+
+            }
+            return 0;
+        });
+
+        // this.rows = sortedRows;
+        this.setState({
+            sortedRows: this.sortedRows,
+            sortColumns: this.sortColumns,
+        });
+        return this.sortedRows
     }
 
     loadRMPs(feature) {
@@ -765,11 +810,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     ];
 
                     this.rows = data;
+                    this.sortedRows = data;
                     this.showGrid = true;
                     this.rmpGridClick = true;
                     this.setState({
                         columns: this.columns,
                         rows: this.rows,
+                        sortedRows: this.sortedRows,
                         rmpGridClick: this.rmpGridClick,
                     });
 
@@ -843,6 +890,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     loadFeature(feature) {
+        this.loading = true;
+        this.setState({
+            loading: this.loading
+        });
         let promises = [];
         this.erTextAttr = undefined;
         this.attributes = feature.attributes;
@@ -887,8 +938,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             this.setState({
                 executiveSummaryText: this.executiveSummaryText,
             });
-            console.dir(e)
         });
+
         promises.push(executivePromise);
 
         let processQuery = new RelationshipQuery();
@@ -904,7 +955,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 naicsQuery.relationshipId = this.tblS1Process_NAICS.relationshipId;
                 naicsQuery.objectIds = [process.attributes.OBJECTID];
                 this.naicsText = [];
-               naicsPromise = this.tblS1Processes.queryRelatedFeatures(naicsQuery).then(naicsCodes => {
+                naicsPromise = this.tblS1Processes.queryRelatedFeatures(naicsQuery).then(naicsCodes => {
                     naicsCodes[process.attributes.OBJECTID].features.forEach((naics, i) => {
                         this.naicsText.push(
                             <div>{this.tblS1Process_NAICS.getFieldDomain('NAICSCode').getName(naics.attributes.NAICSCode)}</div>);
@@ -916,7 +967,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 processChemicalsQuery.relationshipId = this.tblS1ProcessChemicals.relationshipId;
                 processChemicalsQuery.objectIds = [process.attributes.OBJECTID];
 
-               processChemPromise =  this.tblS1Processes.queryRelatedFeatures(processChemicalsQuery).then(e => {
+                processChemPromise = this.tblS1Processes.queryRelatedFeatures(processChemicalsQuery).then(e => {
                     e[process.attributes.OBJECTID].features.forEach((processChemical) => {
 
                         let chemicalQuery = new RelationshipQuery();
@@ -925,7 +976,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         chemicalQuery.relationshipId = this.tlkpChemicals.relationshipId;
                         chemicalQuery.objectIds = [processChemical.attributes.OBJECTID];
 
-                       chemQueryPromise = this.tblS1ProcessChemicals.queryRelatedFeatures(chemicalQuery).then((e) => {
+                        chemQueryPromise = this.tblS1ProcessChemicals.queryRelatedFeatures(chemicalQuery).then((e) => {
                             e[processChemical.attributes.OBJECTID].features.forEach((chemical) => {
                                 if (chemical.attributes.CASNumber === '00-11-11') {
                                     let flammableMixtureQuery = new RelationshipQuery();
@@ -933,7 +984,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                     flammableMixtureQuery.relationshipId = this.tblS1FlammableMixtureChemicals.relationshipId;
                                     flammableMixtureQuery.objectIds = [processChemical.attributes.OBJECTID];
 
-                                   flammableMixPromise = this.tblS1ProcessChemicals.queryRelatedFeatures(flammableMixtureQuery).then((e) => {
+                                    flammableMixPromise = this.tblS1ProcessChemicals.queryRelatedFeatures(flammableMixtureQuery).then((e) => {
                                         let chemicalOBJECTIDS = [];
                                         e[processChemical.attributes.OBJECTID].features.forEach((item) => {
                                             chemicalOBJECTIDS.push(item.attributes.OBJECTID)
@@ -944,7 +995,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                         chemicalLookup.relationshipId = this.FlammableChemicals.relationshipId;
                                         chemicalLookup.objectIds = chemicalOBJECTIDS;
 
-                                       chemLookupPromise = this.tblS1FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup).then((e) => {
+                                        chemLookupPromise = this.tblS1FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup).then((e) => {
                                             this.processText.push(<tr>
                                                 <td colSpan={2}>{chemical.attributes.ChemicalName}</td>
                                                 <td className="quantity">{this.numberFormatter(processChemical.attributes.Quantity)}</td>
@@ -987,9 +1038,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         accidentQuery.relationshipId = this.tblS6AccidentHistory.relationshipId;
         accidentQuery.objectIds = [attributes.OBJECTID];
         this.accidentText = [];
+        this.accidentChems = [];
         let accidentChemPromise, accidentChemQueryPromise, accidentFlamMixPromise, accidentChemLookupPromise;
         promises.push(accidentChemPromise, accidentChemQueryPromise, accidentFlamMixPromise, accidentChemLookupPromise);
         let accidentPromise = this.tblS1Facilities.queryRelatedFeatures(accidentQuery).then((featureSet) => {
+
+
             if (featureSet.hasOwnProperty(attributes.OBJECTID)) {
                 featureSet[attributes.OBJECTID].features.forEach((accident) => {
                     let release_event = [];
@@ -1058,7 +1112,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                                 <th colSpan={2}>Chemical(s)</th>
                                                 <th>Quantity (lbs)</th>
                                             </tr>)
-                                           accidentChemLookupPromise = this.tblS6FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup).then(e => {
+                                            accidentChemLookupPromise = this.tblS6FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup).then(e => {
                                                 this.accidentChems.push(<tr>
                                                     <td colSpan={2}>{chemical.attributes.ChemicalName}</td>
                                                     <td className="quantity">{this.numberFormatter(accidentChemical.attributes.QuantityReleased)}</td>
@@ -1094,56 +1148,28 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 }
             )
         });
+
         promises.push(accidentPromise);
 
         let ERQuery = new RelationshipQuery();
         ERQuery.outFields = ['*'];
         ERQuery.relationshipId = this.tblS9EmergencyResponses.relationshipId;
         ERQuery.objectIds = [attributes.OBJECTID];
+
         let emerRespPromise = this.tblS1Facilities.queryRelatedFeatures(ERQuery).then((e) => {
             this.erTextAttr = e[attributes.OBJECTID].features[0];
             this.setState({
                 erTextAttr: this.erTextAttr
             })
-            // if (this.erTextAttr) {
-            //     this.EmerRespPlan();
-            // }
         });
-        promises.push(emerRespPromise)
 
-        // if (!this.multipleRMPs) {
-        //     if (attributes.ValidLatLongFlag) {
-        //         let location_string = 'RMP Validated Location Used' +
-        //             '<br/>Description: ' + this.tblS1Facilities.getFieldDomain('LatLongDescription').getName(attributes.LatLongDescription) +
-        //             '<br/>Method: ' + this.tblS1Facilities.getFieldDomain('LatLongMethod').getName(attributes.LatLongMethod);
-        //     } else if (!attributes.ValidLatLongFlag && attributes.FRS_Lat !== undefined && attributes.FRS_long !== undefined) {
-        //         let location_string = 'FRS Location Used' +
-        //             '<br/>Description: ' + this.tblS1Facilities.getFieldDomain('FRS_Description').getName(attributes.FRS_Description) +
-        //             '<br/>Method: ' + this.tblS1Facilities.getFieldDomain('FRS_Method').getName(attributes.FRS_Method);
-        //     } else {
-        //         let location_string = 'Location Not Validated' +
-        //             '<br/>Description: ' + this.tblS1Facilities.getFieldDomain('LatLongDescription').getName(attributes.LatLongDescription) +
-        //             '<br/>Method: ' + this.tblS1Facilities.getFieldDomain('LatLongMethod').getName(attributes.LatLongMethod);
-        //     }
-        //
-        //     if (attributes.HorizontalAccMeasure) {
-        //         location_string += '<br/>Horizontal Accuracy (m): ' + attributes.HorizontalAccMeasure +
-        //             '<br/>Horizontal Datum: ' + this.tblS1Facilities.getFieldDomain('HorizontalRefDatumCode').getName(attributes.HorizontalRefDatumCode) +
-        //             (attributes.SourceMapScaleNumber ? '<br/>Source Map Scale: ' + attributes.SourceMapScaleNumber : '')
-        //     }
-        //
-        //     // let row = domConstruct.toDom(location_string);
-        //     // domConstruct.place(row, 'location_metadata');
-        // }
-// todo: figure out loading shelter and deferred
-// all([processDeferred.promise, accidentDeferred.promise]).then(function () {
-//   that.loadingShelter.hide();
+        promises.push(emerRespPromise);
+
         Promise.all(promises).then(() => {
             this.loading = false;
             this.setState({
                 loading: this.loading,
             });
-            console.log('all resolved')
         });
     }
 
@@ -1178,51 +1204,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         })
     }
 
-    // getColumns(facils: string[]) {
-    //     return [
-    //         SelectColumn,
-    //         {
-    //             key: 'FacilityName',
-    //             name: 'Name'
-    //         },
-    //         {
-    //             key: 'CompletionCheckDate',
-    //             name: 'Date'
-    //         }
-    //     ]
-    // }
-
-    // rowSorter() {
-    //     const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([]);
-    //
-    //     const facilities = useMemo(() => {
-    //         return [...new Set(this.rows.map(row => row.FacilityName))].sort(new Intl.Collator().compare);
-    //     }, []);
-    //
-    //     const columns = useMemo(() => this.getColumns(facilities), [facilities]);
-    //
-    //     this.sortedRows = useMemo(() => {
-    //         if (sortColumns.length === 0) return this.rows;
-    //         const sortedRows = [...this.rows];
-    //         sortedRows.sort((a, b) => {
-    //             for (let sort of sortColumns) {
-    //                 const comparator = getComparator(sort.columnKey);
-    //                 const compRes = comparator(a, b);
-    //                 if (compRes !== 0) {
-    //                     return sort.direction === 'ASC' ? compRes : -compRes;
-    //                 }
-    //             }
-    //             return 0
-    //         });
-    //     }, [this.rows, this.columns]);
-    //     return sortedRows;
-    // }
-
     render() {
         return (
 
             <div className="widget-addLayers jimu-widget p-2" style={{overflow: "auto", height: "97%"}}>
-                {/*<div id="loading" >*/}
                 <this.NothingFound/>
                 <this.Grid/>
                 <this.LocationMetadata/>
@@ -1235,8 +1220,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         <this.ExecModal/>
                     </div>
                 }
-                {/*</div>*/}
-
                 {this.mainText ? this.LandingText() : null}
                 <JimuMapViewComponent useMapWidgetId={this.getArbitraryFirstMapWidgetId()}
                                       onActiveViewChange={this.onActiveViewChange}/>
