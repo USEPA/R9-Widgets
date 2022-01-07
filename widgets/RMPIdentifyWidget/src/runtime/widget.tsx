@@ -143,7 +143,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         //     width: "11px",
         //     height: "20px"
         // });
-        this.symbol = new SimpleMarkerSymbol({color: 'green'});
+        this.symbol = new SimpleMarkerSymbol({color: 'yellow', style: 'diamond'});
 
         this.graphicLayer = new GraphicsLayer();
 
@@ -153,6 +153,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.rmpLayer.loadAll().then((res) => {
             // console.log(res)
             this.jmv.view.map.add(this.rmpLayer);
+            this.graphicLayer = new GraphicsLayer();
+
+
+            this.jmv.view.map.add(this.graphicLayer);
 
             // this.facilities = this.rmpLayer.sublayers.find(lyr => {
             //
@@ -266,6 +270,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     mainText: this.mainText,
                     nothingThere: this.nothingThere
                 });
+                this.jmv.view.map.layers.add(this.graphicLayer);
             }
             this.first = false;
         } else {
@@ -611,7 +616,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             attributes: this.attributes,
             nothingThere: this.nothingThere,
             loading: this.loading,
-            accidentChems:  this.accidentChems,
+            accidentChems: this.accidentChems,
         });
 
         this.graphicLayer.removeAll();
