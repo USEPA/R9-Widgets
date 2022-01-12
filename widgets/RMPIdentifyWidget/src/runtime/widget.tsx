@@ -3,7 +3,6 @@ import './assets/style.css';
 import {React, AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState} from "jimu-core";
 import {IMConfig} from "../config";
 import {JimuMapView, JimuMapViewComponent} from "jimu-arcgis";
-import PictureMarkerSymbol from "esri/symbols/PictureMarkerSymbol";
 import MapImageLayer from "esri/layers/MapImageLayer";
 import DataGrid, {SelectColumn} from "react-data-grid";
 import Query from "esri/rest/support/Query";
@@ -20,27 +19,7 @@ import {Button, Modal, ModalBody, ModalFooter, ModalHeader} from "jimu-ui"
 import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
 import type {Column, SortColumn} from "react-data-grid";
 
-interface Row {
-    // OBJECTID?: number,
-    // // if we have a facility
-    // CameoID?: any,
-    // EPAFacilityID?: string,
-    // Facility4DigitZipExt?: string,
-    // FacilityCity?: string,
-    // FacilityCountyFIPS?: string,
-    // FacilityLatDecDegs?: number,
-    // FacilityLongDecDegs?: number,
-    // FacilityName?: string,
-    // FacilityState?: string,
-    // FacilityStr1?: string,
-    // FacilityStr2?: string,
-    // FacilityZipCode?: string,
-    // MarplotID?: any,
-    // RMPID?: number,
-    // Status?: string,
-
-
-}
+interface Row {}
 
 function getComparator(sortColumn: string) {
     switch (sortColumn) {
@@ -134,15 +113,14 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     componentDidMount() {
+        this.loading = true;
+        this.setState({
+            loading: this.loading,
+        })
         this.rmpLayer = new MapImageLayer({
             url: "https://utility.arcgis.com/usrsvcs/servers/a9dda0a4ba0a433992ce3bdffd89d35a/rest/services/SharedServices/RMPFacilities/MapServer",
         });
 
-        // this.symbol = new PictureMarkerSymbol({
-        //     url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAUCAYAAABbLMdoAAAAAXNSR0IB2cksfwAAAAlwSFlzAAAOxAAADsQBlSsOGwAAAdtJREFUKJGV0k9Ik3Ecx/H3nn71iASyp12cE4KxUxaIPM9kzG0wUBSkf3jaoKgovChdwg6dOghCh6JLEHlZl3BpMHFrPj4oKKQM8fDAXORh2HaRnaL4wWwdBtY2V/S9fb+8+MLv8/0J/qNE8yCbRanVeDM8zO1/YuDl6iq3Nja6l0Kh8lJbnMuhra1x3+mEg4Pya6A9LpVIKgpnJidhbo4Lpqk+jUblkxa8uYmeThOJx6GrC0ZGYHdXPtrZYVbX+d6Ai0Xe9faCz1fvDQMsi3NHR7wFrp/g9XXtTipVuTg1BQ5HHXd0wNgYpNNc3d7GZxh8Ftksyv5+5fnAAHg8jbH094Nl4SgW1STIK0II9WGhIM9PT7dmKAREIrC4KC9vbeEVnZ3yldvNrG1ztnlzrQa5HPT1UQoE+CL8fr6Zpvosk5Ezug6a9hvn83B4CKOjxE8eGI3Kx/PzPDBNnBMTdXh8DMvLYBjqp6EhaTVE5/V230ulyslAAHp6YG8PqlV+ut3yZstRQqHy+4UF1c5k5KVYrL7V7ydhGHw99dwej7xh2+QTCRwuFz8UhbsN6fzZDA5SWFnhg2lybXxcmwmHK9W2GMDlIhYMqh/D4cqLltybB/VPI4PN81Px3+oXm5WbogYCJW8AAAAASUVORK5CYII=',
-        //     width: "11px",
-        //     height: "20px"
-        // });
         this.symbol = new SimpleMarkerSymbol({color: 'yellow', style: 'diamond'});
 
         this.graphicLayer = new GraphicsLayer();
@@ -157,12 +135,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
 
             this.jmv.view.map.add(this.graphicLayer);
-
-            // this.facilities = this.rmpLayer.sublayers.find(lyr => {
-            //
-            //     return lyr.title === "Active RMP Facilities";
-            //     // return lyr
-            // });
 
             this.rmpLayer.sublayers.forEach(lyr => {
                 if (lyr.title === "Active RMP Facilities") {
@@ -182,14 +154,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     });
                 }
             });
+            this.loading = false;
+            this.setState({
+                loading: this.loading,
+            })
         });
 
         this.openModal = false;
-        this.loading = false;
-
-        //  this.getGeometryUnion(this.boundaries.url, "STATE_ABBR='CA' OR STATE_ABBR='AZ' OR STATE_ABBR='NV'").then(res => {
-        //     this.r9Geom = res;
-        // });
     }
 
     onActiveViewChange = (jmv: JimuMapView) => {
@@ -700,7 +671,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         } else {
             this.loadRMPs(facility[0]);
         }
-
     }
 
     Grid() {
@@ -951,8 +921,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         processQuery.outFields = ['*'];
         processQuery.relationshipId = this.tblS1Processes.relationshipId;
         processQuery.objectIds = [this.attributes.OBJECTID];
-        let naicsPromise, processChemPromise, chemQueryPromise, flammableMixPromise, chemLookupPromise;
-        promises.push(naicsPromise, processChemPromise, chemQueryPromise, flammableMixPromise, chemLookupPromise)
         let facilitiesPromise = this.tblS1Facilities.queryRelatedFeatures(processQuery).then((featureSet) => {
             featureSet[this.attributes.OBJECTID].features.forEach((process) => {
                 let naicsQuery = new RelationshipQuery();
@@ -960,7 +928,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 naicsQuery.relationshipId = this.tblS1Process_NAICS.relationshipId;
                 naicsQuery.objectIds = [process.attributes.OBJECTID];
                 this.naicsText = [];
-                naicsPromise = this.tblS1Processes.queryRelatedFeatures(naicsQuery).then(naicsCodes => {
+                this.tblS1Processes.queryRelatedFeatures(naicsQuery).then(naicsCodes => {
                     naicsCodes[process.attributes.OBJECTID].features.forEach((naics, i) => {
                         this.naicsText.push(
                             <div>{this.tblS1Process_NAICS.getFieldDomain('NAICSCode').getName(naics.attributes.NAICSCode)}</div>);
@@ -972,7 +940,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 processChemicalsQuery.relationshipId = this.tblS1ProcessChemicals.relationshipId;
                 processChemicalsQuery.objectIds = [process.attributes.OBJECTID];
 
-                processChemPromise = this.tblS1Processes.queryRelatedFeatures(processChemicalsQuery).then(e => {
+                this.tblS1Processes.queryRelatedFeatures(processChemicalsQuery).then(e => {
                     e[process.attributes.OBJECTID].features.forEach((processChemical) => {
 
                         let chemicalQuery = new RelationshipQuery();
@@ -981,7 +949,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         chemicalQuery.relationshipId = this.tlkpChemicals.relationshipId;
                         chemicalQuery.objectIds = [processChemical.attributes.OBJECTID];
 
-                        chemQueryPromise = this.tblS1ProcessChemicals.queryRelatedFeatures(chemicalQuery).then((e) => {
+                        this.tblS1ProcessChemicals.queryRelatedFeatures(chemicalQuery).then((e) => {
                             e[processChemical.attributes.OBJECTID].features.forEach((chemical) => {
                                 if (chemical.attributes.CASNumber === '00-11-11') {
                                     let flammableMixtureQuery = new RelationshipQuery();
@@ -989,7 +957,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                     flammableMixtureQuery.relationshipId = this.tblS1FlammableMixtureChemicals.relationshipId;
                                     flammableMixtureQuery.objectIds = [processChemical.attributes.OBJECTID];
 
-                                    flammableMixPromise = this.tblS1ProcessChemicals.queryRelatedFeatures(flammableMixtureQuery).then((e) => {
+                                    this.tblS1ProcessChemicals.queryRelatedFeatures(flammableMixtureQuery).then((e) => {
                                         let chemicalOBJECTIDS = [];
                                         e[processChemical.attributes.OBJECTID].features.forEach((item) => {
                                             chemicalOBJECTIDS.push(item.attributes.OBJECTID)
@@ -1000,7 +968,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                         chemicalLookup.relationshipId = this.FlammableChemicals.relationshipId;
                                         chemicalLookup.objectIds = chemicalOBJECTIDS;
 
-                                        chemLookupPromise = this.tblS1FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup).then((e) => {
+                                        this.tblS1FlammableMixtureChemicals.queryRelatedFeatures(chemicalLookup).then((e) => {
                                             this.processText.push(<tr>
                                                 <td colSpan={2}>{chemical.attributes.ChemicalName}</td>
                                                 <td className="quantity">{this.numberFormatter(processChemical.attributes.Quantity)}</td>
@@ -1033,7 +1001,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         });
                     });
                 });
-
             });
         });
         promises.push(facilitiesPromise);
@@ -1213,11 +1180,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         return (
 
             <div className="widget-addLayers jimu-widget p-2" style={{overflow: "auto", height: "97%"}}>
-                <this.NothingFound/>
-                <this.Grid/>
-                <this.LocationMetadata/>
+                {this.mainText && !this.loading ? this.LandingText() : null}
                 {this.loading ? <h2 style={{background: 'white'}}>Loading...</h2> :
                     <div>
+                        <this.NothingFound/>
+                        <this.Grid/>
+                        <this.LocationMetadata/>
                         <this.Facility/>
                         <this.Process/>
                         <this.Accidents/>
@@ -1225,7 +1193,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         <this.ExecModal/>
                     </div>
                 }
-                {this.mainText ? this.LandingText() : null}
                 <JimuMapViewComponent useMapWidgetId={this.getArbitraryFirstMapWidgetId()}
                                       onActiveViewChange={this.onActiveViewChange}/>
             </div>
