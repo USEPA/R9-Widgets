@@ -279,8 +279,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         }
     }
 
-    ChemicalsText = () => {
-        // if (this.chemicalInfo.length > 0) {
+    ChemicalsText() {
+        if (this.chemicalInfo.length > 0) {
         return (
             <div>
                 <h3 style={{textDecoration: "underline"}}>Chemicals</h3>
@@ -292,15 +292,16 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 <br/>
             </div>
         )
-        // } else {
-        //     return null
-        // }
+        } else {
+            return null
+        }
     }
 
     mapClick = (e) => {
         this.loading = true;
         this.featureSet = [];
         this.rows = [];
+        this.sortedRows = [];
         this.attributes = undefined;
         this.contactInfo = [];
         this.chemicalInfo = [];
@@ -310,6 +311,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             loading: this.loading,
             featureSet: this.featureSet,
             rows: this.rows,
+            sortedRows: this.sortedRows,
             attributes: this.attributes,
             contactInfo: this.contactInfo,
             chemicalInfo: this.chemicalInfo,
@@ -336,13 +338,14 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.queryLayer = undefined;
         this.allTierIIfl.forEach(fl => {
             let promise = fl.queryFeatures(featureQuery).then((featureSet) => {
-                if (featureSet.features.length === 1) {
-                    this.featureSet.push(...featureSet.features);
+                this.featureSet.push(...featureSet.features);
+                if (this.featureSet.length === 1) {
+                    // this.featureSet.push(...featureSet.features);
                     // this.queryLayer = fl;
                     this.loadFeature(this.featureSet[0]);
                     noneFound.push(false);
-                } else if (featureSet.features.length > 1) {
-                    this.featureSet.push(...featureSet.features);
+                } else if (this.featureSet.length > 1) {
+
                     // this.queryLayer = fl;
                     this.multipleLocations = true;
                     let data = [];
@@ -400,6 +403,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         let location = this.featureSet.filter((feature) => {
             return feature.attributes.OBJECTID === this.sortedRows[row].OBJECTID;
         });
+        console.log(location)
         this.loadFeature(location[0]);
     }
 
@@ -567,7 +571,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         // facilities to chemicals relationship ID
                         chemicalQuery.relationshipId = this.TierIIChemInventory.relationshipId;
                         chemicalQuery.objectIds = [this.attributes.OBJECTID];
-
+                        let chemInfoArr = [];
+                        let newChemInfo = [];
+                        let chemPromises = [];
                         // let chemicalsPromise = this.queryLayer.queryRelatedFeatures(chemicalQuery).then((e) => {
                         this.queryLayer.queryRelatedFeatures(chemicalQuery).then((e) => {
                             e[this.attributes.OBJECTID].features.forEach((chemical, i) => {
@@ -579,13 +585,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                                 <b>{chemical.attributes.chemical_name} {chemical.attributes.cas_code ? ' (' + chemical.attributes.cas_code + ')' : ''}</b>
                                             </td>
                                         </tr>
-                                        {/*<tr>*/}
-                                        {/*    <td>Max Amount: {chemical.attributes.MaxAmount ? chemical.attributes.MaxAmount : 'Not Reported'}</td>*/}
-                                        {/*</tr>*/}
-                                        {/*<tr>*/}
-                                        {/*    <td>Avg Daily*/}
-                                        {/*        Amount: {chemical.attributes.AveAmount ? chemical.attributes.AveAmount : 'Not Reported'}</td>*/}
-                                        {/*</tr>*/}
                                         <tr>
                                             <td>Days: {chemical.attributes.DaysOnSite}</td>
                                         </tr>
@@ -662,7 +661,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                     chemicalLocationQuery.relationshipId = this.TierIIChemInvLocations.relationshipId;
                                     chemicalLocationQuery.objectIds = [chemical.attributes.OBJECTID];
 
-                                    this.TierIIChemInventory.queryRelatedFeatures(chemicalLocationQuery).then((e) => {
+                                    let chemLocPromise = this.TierIIChemInventory.queryRelatedFeatures(chemicalLocationQuery).then((e) => {
 
 
                                         // if (service.config.state.abbr === 'NV') {
@@ -721,27 +720,31 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                                 </div>
                                             )
                                             newChemInfo.push(...chemLocInfo);
-                                            this.chemicalInfo.push(...newChemInfo);
-                                            this.setState({
-                                                chemicalInfo: this.chemicalInfo,
-                                            });
+                                            // this.chemicalInfo.push(...newChemInfo);
+                                            // this.setState({
+                                            //     chemicalInfo: this.chemicalInfo,
+                                            // });
                                         });
 
                                         // this.chemicalInfo.push(...newChemInfo);
-                                        this.setState({
-                                            chemicalInfo: this.chemicalInfo,
-                                        });
-                                        this.ChemicalsText();
+                                        // this.setState({
+                                        //     chemicalInfo: this.chemicalInfo,
+                                        // });
+                                        // this.ChemicalsText();
+                                        chemInfoArr.push(...newChemInfo);
                                     }, function (e) {
                                         console.log("Error: " + e);
                                     });
-                                    // promises.push(chemLocPromise);
+
+                                    chemPromises.push(chemLocPromise);
+
                                 } else {
-                                    this.chemicalInfo.push(...newChemInfo);
-                                    this.setState({
-                                        chemicalInfo: this.chemicalInfo,
-                                    });
-                                    this.ChemicalsText();
+                                    chemInfoArr.push(...newChemInfo);
+                                    // this.chemicalInfo.push(...newChemInfo);
+                                    // this.setState({
+                                    //     chemicalInfo: this.chemicalInfo,
+                                    // });
+                                    // this.ChemicalsText();
                                 }
                                 // this.chemicalInfo.push(...newChemInfo);
                                 // this.setState({
@@ -749,10 +752,23 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                 // });
                                 // this.ChemicalsText();
                             });
+
                         }, function (e) {
                             console.log("Error: " + e);
                         });
-                        // promises.push(chemicalsPromise);
+
+                        Promise.all(chemPromises).then(() => {
+                           this.loading = false;
+                           this.chemicalInfo = chemInfoArr;
+                           console.log(chemInfoArr)
+                           this.setState({
+                               chemicalInfo: this.chemicalInfo,
+                               loading: this.loading,
+                           }, () => {
+                               this.ChemicalsText();
+                               console.log('chemmmmmmm infoooooooooo')
+                            });
+                        });
 
                     } else {
                         this.loading = false;
@@ -760,36 +776,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                             loading: this.loading,
                         });
                     }
-                    // Promise.all(promises).then(() => {
-                    //     console.log('all resolved')
-                    //     this.multipleLocations = false;
-                    //     this.loading = false;
-                    //     this.setState({
-                    //         // contactInfo: this.contactInfo,
-                    //         // chemicalInfo: this.chemicalInfo,
-                    //         loading: this.loading,
-                    //     });
-                    //     // this.ContactsText();
-                    //     // this.ChemicalsText();
-                    // });
-                    return
                 }
             }
         );
-
-        //
-        // Promise.all(promises).then(() => {
-        //     this.multipleLocations = false;
-        //     // this.loading = false;
-        //     // this.setState({
-        //     //     contactInfo: this.contactInfo,
-        //     // });
-        //     // this.ContactsText();
-        //     // this.setState({
-        //     //     loading: this.loading,
-        //     // });
-        // })
-
     }
 
     render() {
