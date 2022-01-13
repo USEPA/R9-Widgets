@@ -155,14 +155,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         }
     }
 
-    componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView; }>, snapshot?: any) {
+    componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView; contactInfo: any[]; chemicalInfo: any[] }>, snapshot?: any) {
         let widgetState: WidgetState;
         widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
-
         // do anything on open/close of widget here
         if (widgetState == WidgetState.Opened) {
+            this.tierIILayer.visible = true;
             if (this.first) {
-                this.tierIILayer.visible = true;
                 this.nothingThere = false;
                 this.setState({
                     nothingThere: this.nothingThere,
@@ -263,7 +262,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     ContactsText() {
-        // if (this.contactInfo.length > 0) {
+        if (this.contactInfo.length > 0) {
             return (
                 <div>
                     <h3 style={{textDecoration: "underline"}}>Contacts</h3>
@@ -275,24 +274,24 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     <br/>
                 </div>
             )
-        // } else {
-        //     return null
-        // }
+        } else {
+            return null
+        }
     }
 
-    ChemicalsText() {
+    ChemicalsText = () => {
         // if (this.chemicalInfo.length > 0) {
-            return (
-                <div>
-                    <h3 style={{textDecoration: "underline"}}>Chemicals</h3>
-                    <table>
-                        <tbody>
-                        {this.chemicalInfo}
-                        </tbody>
-                    </table>
-                    <br/>
-                </div>
-            )
+        return (
+            <div>
+                <h3 style={{textDecoration: "underline"}}>Chemicals</h3>
+                <table>
+                    <tbody>
+                    {this.chemicalInfo}
+                    </tbody>
+                </table>
+                <br/>
+            </div>
+        )
         // } else {
         //     return null
         // }
@@ -399,7 +398,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
     rowClick(row) {
         let location = this.featureSet.filter((feature) => {
-            return feature.attributes.OBJECTID === this.rows[row].OBJECTID;
+            return feature.attributes.OBJECTID === this.sortedRows[row].OBJECTID;
         });
         this.loadFeature(location[0]);
     }
@@ -422,7 +421,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 {this.multipleLocations ?
                     <div>
                         <div><h3>Multiple Facilities at that Location</h3><br/><h5>Select one to continue</h5></div>
-                        <DataGrid style={{height: `${(this.rows.length * 35) + 37}px`, maxHeight: "700px"}}
+                        <DataGrid style={{height: `${(this.sortedRows.length * 35) + 37}px`, maxHeight: "700px"}}
                                   columns={this.columns} rows={this.sortedRows} onRowClick={this.rowClick}
                                   rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
                             sortable: true,
@@ -445,12 +444,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         }
 
         this.sortColumns = cols.slice(-1);
-
-
-        // this.columns = this.loadColumns(newCols);
-
         this.sortedRows = [...this.rows];
-       this.sortedRows.sort((a, b) => {
+        this.sortedRows.sort((a, b) => {
             for (let col of cols) {
 
                 let comparator = getComparator(col.columnKey);
@@ -472,30 +467,22 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         return this.sortedRows
     }
 
-    loadColumns(columns: any[]): readonly Column<Row>[] {
-        return [
-            SelectColumn,
-            {key: 'FacilityName', name: 'Name'}
-        ]
-    }
-
     loadFeature(feature) {
-        this.loading = false;
+        this.loading = true;
+        // this.contactInfo = [];
         this.setState({
             loading: this.loading,
+            // contactInfo: this.contactInfo,
         });
         this.multipleLocations = false;
-        let promises = [];
-        this.contactInfo = []
         this.attributes = feature.attributes;
         let selectedGraphic = new Graphic({geometry: feature.geometry, symbol: this.symbol});
         this.graphicsLayer.add(selectedGraphic);
-
-
         this.allTierIIfl.forEach(fl => {
                 if (fl.title.includes(this.attributes.State)) {
                     this.queryLayer = fl;
-                    let phonePromises = [];
+                    let contactsPromises = [];
+                    let contacts = [];
                     // if contacts are available get them
                     if (this.TierIIContacts.relationshipId !== 'none' && this.TierIIContacts.relationshipId !== undefined) {
                         var contactQuery = new RelationshipQuery();
@@ -507,18 +494,17 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         contactQuery.objectIds = [this.attributes.OBJECTID];
                         this.queryLayer.queryRelatedFeatures(contactQuery).then((e) => {
                             e[this.attributes.OBJECTID].features.forEach((contact, i) => {
-
-
                                 let contactPhonesQuery = new RelationshipQuery();
                                 contactPhonesQuery.outFields = ['*'];
                                 // contacts to phone relationship id
                                 contactPhonesQuery.relationshipId = this.TierIIPhone.relationshipId;
                                 contactPhonesQuery.objectIds = [contact.attributes.OBJECTID];
 
-                                this.TierIIContacts.queryRelatedFeatures(contactPhonesQuery).then((f) => {
+                                let contactPromise = this.TierIIContacts.queryRelatedFeatures(contactPhonesQuery).then((f) => {
                                     // these attributes could be different for each state
                                     // the service.config.state object helps you identify which state you are working with
-                                    this.contactInfo.push(
+                                    // this.contactInfo.push(
+                                    contacts.push(
                                         <tr>
                                             <td style={{paddingTop: "10px"}}>
                                                 <b>{contact.attributes.Title ? contact.attributes.Title + ': ' : ''}
@@ -529,7 +515,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                         </tr>
                                     );
 
-                                    this.contactInfo.push(
+                                    // this.contactInfo.push(
+                                    contacts.push(
                                         <tr>
                                             <td>Email: {contact.attributes.Email ? contact.attributes.Email : 'Not Reported'}</td>
                                         </tr>
@@ -538,55 +525,31 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
                                     if (f.hasOwnProperty(contact.attributes.OBJECTID)) {
                                         f[contact.attributes.OBJECTID].features.forEach((contact_phone_feature, j) => {
-                                            this.contactInfo.push(<div>
+                                            contacts.push(<div>
                                                 <tr>
                                                     <td>{contact_phone_feature.attributes.Type ? contact_phone_feature.attributes.Type + ': ' : ''}
                                                         {contact_phone_feature.attributes.Phone ? contact_phone_feature.attributes.Phone : ''}</td>
                                                 </tr>
                                             </div>)
                                         });
-                                        this.loading = false;
-                                        this.setState({
-                                            loading: this.loading,
-                                            contactInfo: this.contactInfo,
-                                        });
-                                        this.ContactsText();
-                                    } else {
-                                        this.loading = false;
-                                        this.setState({
-                                            loading: this.loading,
-                                            contactInfo: this.contactInfo,
-                                        });
-                                        this.ContactsText();
                                     }
-
-
                                 }, function (e) {
                                     console.log("Error: " + e);
+                                });
 
-                                });
-                                // this.loading = false;
-                                this.setState({
-                                    loading: this.loading,
-                                    contactInfo: this.contactInfo,
-                                });
-                                this.ContactsText();
-                                // promises.push(contactPhonePromise);
-                                // Promise.all(promises).then(() => {
-                                //     this.loading = false;
-                                //     this.setState({
-                                //         loading: this.loading
-                                //     })
-                                // });
+                                contactsPromises.push(contactPromise);
+
                             });
 
-                            // this.loading = false;
-                            // this.setState({
-                            //     loading: this.loading,
-                            //     contactInfo: this.contactInfo,
-                            // });
-                            // this.ContactsText();
-                            // promises.push(contactsPromise);
+                            Promise.all(contactsPromises).then(() => {
+                                this.loading = false;
+                                this.contactInfo = contacts;
+                                this.setState({
+                                    contactInfo: this.contactInfo
+                                }, () => {
+                                    this.ContactsText();
+                                });
+                            });
                         }, function (e) {
                             console.log("Error: " + e);
                         });
@@ -596,13 +559,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                             loading: this.loading,
                         });
                     }
-
-                    // Promise.all(promises).then(() => {
-                    //     this.loading = false;
-                    //     this.setState({
-                    //         loading: this.loading
-                    //     })
-                    // });
 
                     if (this.TierIIChemInventory.relationshipId !== 'none' && this.TierIIChemInventory.relationshipId !== undefined) {
                         // GET CHEMICALS
@@ -765,9 +721,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                                 </div>
                                             )
                                             newChemInfo.push(...chemLocInfo);
+                                            this.chemicalInfo.push(...newChemInfo);
+                                            this.setState({
+                                                chemicalInfo: this.chemicalInfo,
+                                            });
                                         });
 
-                                        this.chemicalInfo.push(...newChemInfo);
+                                        // this.chemicalInfo.push(...newChemInfo);
                                         this.setState({
                                             chemicalInfo: this.chemicalInfo,
                                         });
@@ -783,6 +743,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                     });
                                     this.ChemicalsText();
                                 }
+                                // this.chemicalInfo.push(...newChemInfo);
+                                // this.setState({
+                                //     chemicalInfo: this.chemicalInfo,
+                                // });
+                                // this.ChemicalsText();
                             });
                         }, function (e) {
                             console.log("Error: " + e);
@@ -836,6 +801,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         <this.Grid/>
                         <this.FacilityText/>
                         <this.ContactsText/>
+                        {/*{this.contactInfo}*/}
                         <this.ChemicalsText/>
                     </div>
                 }
