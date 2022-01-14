@@ -37,13 +37,13 @@ function getComparator(sortColumn: string) {
 
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     jimuMapView: JimuMapView, loading: boolean, attributes: any, facilities: any, nothingThere: boolean,
-    featureSet: any[], columns: any[], rows: any[], sortedRows: any[], sortColumns: any[], contactInfo: any[], chemicalInfo: any[],
+    featureSet: any[], columns: any[], rows: any[], sortedRows: any[], sortColumns: any[], contactInfo: any[], chemicalInfo: any[], recordsText: any[],
 }> {
 
     jmv: JimuMapView;
     first: boolean = false;
     loading: boolean = true;
-    mainText: boolean = true;
+    mainText: boolean = false;
     tierIILayer: MapImageLayer;
     graphicsLayer: GraphicsLayer;
     symbol: SimpleMarkerSymbol;
@@ -65,13 +65,15 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     sortColumns: any[] = [];
     TierIIContacts: any;
     TierIIChemInventory: any;
-    TierIIPhone: any
-    TierIIChemInvLocations: any
-    TierIIChemInvMixtures: any
-    Tier
+    TierIIPhone: any;
+    TierIIChemInvLocations: any;
+    TierIIChemInvMixtures: any;
+    TierIIHazards: any;
     queryLayer: any;
     contactInfo: any[] = [];
     chemicalInfo: any[] = [];
+    recordsLayer: FeatureLayer;
+    recordsText: any[] = [];
 
     constructor(props) {
         super(props);
@@ -94,12 +96,20 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.tierIILayer = new MapImageLayer({
             url: "https://utility.arcgis.com/usrsvcs/servers/ea77cd05c98e44a98fdaddc83948015d/rest/services/EPA_EPCRA/TierIIFacilities_new_dev/MapServer"
         });
+        // this.TierIIHazards = new FeatureLayer({
+        //     url: "https://utility.arcgis.com/usrsvcs/servers/ea77cd05c98e44a98fdaddc83948015d/rest/services/EPA_EPCRA/TierIIFacilities_new_dev/MapServer/5"
+        // });
         // url for new service layer https://utility.arcgis.com/usrsvcs/servers/ea77cd05c98e44a98fdaddc83948015d/rest/services/EPA_EPCRA/TierIIFacilities_new_dev/MapServer
+        //records url is layer 10
+        this.recordsLayer = new FeatureLayer({
+            url: "https://utility.arcgis.com/usrsvcs/servers/f7e36ad5c73f4a19a24877d920a27c0a/rest/services/EPA_EPCRA/TierIIFacilities/MapServer/10",
+            outFields: ['*']
+        });
         this.symbol = new SimpleMarkerSymbol({color: 'yellow', style: 'diamond'});
 
         this.graphicsLayer = new GraphicsLayer();
         this.allTierIIfl = [];
-        this.jmv.view.map.add(this.graphicsLayer);
+
         this.tierIILayer.load();
         this.tierIILayer.loadAll().then(() => {
             this.tierIILayer.sublayers.forEach(lyr => {
@@ -123,7 +133,59 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 })
             });
             this.jmv.view.map.add(this.tierIILayer);
+            this.jmv.view.map.add(this.graphicsLayer);
+            // this.TierIIHazards.load();
+        });
 
+        let recordsTextArr = [];
+        this.recordsLayer.load().then(() => {
+            let statusQuery = new Query();
+
+            statusQuery.outFields = ['*'];
+            statusQuery.where = "1=1";
+
+            this.recordsLayer.queryFeatures(statusQuery).then(records => {
+                const sortedRecords = [records.features.find((r) => r.attributes.State === 'California')]
+                    .concat(records.features.filter((r) => r.attributes.State !== 'California')
+                        .sort((a, b) => a.attributes.State > b.attributes.State ? 1 : -1));
+                sortedRecords.forEach((record) => {
+                    let lastUpdate = moment(record.attributes.LastUpdate).toISOString().split('T')[0];
+                    recordsTextArr.push(
+                        <div>
+                            <tr>
+                                <td>State: {record.attributes.State}</td>
+                            </tr>
+                            <tr>
+                                <td>Status Year: {record.attributes.CurrentReportingYear}</td>
+                            </tr>
+                            <tr>
+                                <td>Last Updated: {lastUpdate}</td>
+                            </tr>
+                            <tr>
+                                <td>Contact: {record.attributes.ContactName}</td>
+                            </tr>
+                            <tr>
+                                <td>Contact Phone: {record.attributes.ContactPhone}</td>
+                            </tr>
+                            <tr>
+                                <td>Contact Email: {record.attributes.ContactEmail}</td>
+                            </tr>
+                            <tr>
+                                <td><br/></td>
+                            </tr>
+                        </div>
+                    );
+                });
+                this.loading = false;
+                this.recordsText = recordsTextArr;
+                this.mainText = true;
+                this.setState({
+                    recordsText: this.recordsText,
+                    loading: this.loading,
+                }, () => {
+                    this.LandingText()
+                });
+            });
         });
     }
 
@@ -189,11 +251,26 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     LandingText = () => {
-        return (
-            <div id="landingText" style={{overflow: 'auto'}}>
-
-            </div>
-        )
+        if (this.mainText) {
+            return (
+                <div id="landingText" style={{overflow: 'auto'}}>
+                    <h1>Tier II Records Status</h1><br/>
+                    <table>
+                        <tbody id="tierii_status">
+                        {this.recordsText}
+                        </tbody>
+                    </table>
+                    <p>Click Facility to view contact and chemical information.</p><br/>
+                    <p>More info on the Emergency Planning and Community Right-to-Know Act (EPCRA):
+                        <a href={"https://www.epa.gov/epcra"}>https://www.epa.gov/epcra</a></p><br/>
+                    <p>EPCRA Fact Sheet: <a
+                        href={"https://www.epa.gov/sites/production/files/2017-08/documents/epcra_fact_sheet_overview_8-2-17.pdf"}>https://www.epa.gov/sites/production/files/2017-08/documents/epcra_fact_sheet_overview_8-2-17.pdf</a>
+                    </p>
+                </div>
+            )
+        } else {
+            return null
+        }
     }
 
     FacilityText = () => {
@@ -223,37 +300,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         </tr> : ''}
                         </tbody>
                     </table>
-
-                    {/*{this.attributes.SubjectToChemAccidentPrevention === true ? <tr>*/}
-                    {/*        <td>Subject to Chemical Accident Prevention: Yes</td>*/}
-                    {/*    </tr> :*/}
-                    {/*    <tr>*/}
-                    {/*        <td>Subject to Chemical Accident Prevention: Unknown</td>*/}
-                    {/*    </tr>}*/}
-
-                    {/*{this.attributes.SubjectToEmergencyPlanning === true ? <tr>*/}
-                    {/*        <td>Subject to Emergency Planning: Yes</td>*/}
-                    {/*    </tr> :*/}
-                    {/*    this.attributes.SubjectToEmergencyPlanning === false ? <tr>*/}
-                    {/*            <td>Subject to Emergency Planning: No</td>*/}
-                    {/*        </tr> :*/}
-                    {/*        <tr>*/}
-                    {/*            <td>Subject to Emergency Planning: Unknown</td>*/}
-                    {/*        </tr>}*/}
-
-                    {/*{this.attributes.Manned === true ? <div>*/}
-                    {/*        <tr>*/}
-                    {/*            <td>Manned: Yes</td>*/}
-                    {/*        </tr>*/}
-                    {/*        <tr>*/}
-                    {/*            <td>Max*/}
-                    {/*                Occupants: {this.attributes.MaxNumOccupants ? this.attributes.MaxNumOccupants : 'Unknown'}</td>*/}
-                    {/*        </tr>*/}
-                    {/*    </div> :*/}
-                    {/*    <tr>*/}
-                    {/*        <td>Manned: No</td>*/}
-                    {/*    </tr>}*/}
-
                 </div>
             )
         } else {
@@ -281,23 +327,24 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
     ChemicalsText() {
         if (this.chemicalInfo.length > 0) {
-        return (
-            <div>
-                <h3 style={{textDecoration: "underline"}}>Chemicals</h3>
-                <table>
-                    <tbody>
-                    {this.chemicalInfo}
-                    </tbody>
-                </table>
-                <br/>
-            </div>
-        )
+            return (
+                <div>
+                    <h3 style={{textDecoration: "underline"}}>Chemicals</h3>
+                    <table>
+                        <tbody>
+                        {this.chemicalInfo}
+                        </tbody>
+                    </table>
+                    <br/>
+                </div>
+            )
         } else {
             return null
         }
     }
 
     mapClick = (e) => {
+        this.mainText = false;
         this.loading = true;
         this.featureSet = [];
         this.rows = [];
@@ -333,6 +380,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         let featureQuery = new Query();
         featureQuery.outFields = ['*'];
         featureQuery.geometry = clickExtent;
+        featureQuery.returnGeometry = true;
         this.columns = [{key: 'FacilityName', name: 'Name'}];
         let promises = [];
         this.queryLayer = undefined;
@@ -403,7 +451,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         let location = this.featureSet.filter((feature) => {
             return feature.attributes.OBJECTID === this.sortedRows[row].OBJECTID;
         });
-        console.log(location)
         this.loadFeature(location[0]);
     }
 
@@ -666,21 +713,21 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
                                         // if (service.config.state.abbr === 'NV') {
                                         //     var chemicalHazardsQuery = new RelationshipQuery();
-                                        //
+                                        // //
                                         //     chemicalHazardsQuery.outFields = ['*'];
                                         //     // chemicals to chemical locations relationship id
-                                        //     chemicalHazardsQuery.relationshipId = service.config.chemicals.hazards.relationshipId;
+                                        //     chemicalHazardsQuery.relationshipId = this.TierIIHazards.relationshipId;
                                         //     chemicalHazardsQuery.objectIds = [chemical.attributes.OBJECTID];
-                                        //     service.chemicals.queryRelatedFeatures(chemicalHazardsQuery, (response) => {
-                                        //         var hazardsNode = dojo.byId('hazards_' + chemical.attributes.OBJECTID);
-                                        //         var hazards = [];
-                                        //         dojo.forEach(response[chemical.attributes.OBJECTID].features, function (hazard, j) {
-                                        //             hazards.push(hazard.attributes.category);
-                                        //         });
-                                        //         hazardsNode.innerHTML = '<td>Hazard(s): ' + hazards.join(", ") + '</td>';
+                                        //     this.TierIIChemInventory.queryRelatedFeatures(chemicalHazardsQuery).then((response) => {
+                                        //         // var hazardsNode = dojo.byId('hazards_' + chemical.attributes.OBJECTID);
+                                        //         console.log(response)
+                                        //         // var hazards = [];
+                                        //         // dojo.forEach(response[chemical.attributes.OBJECTID].features, function (hazard, j) {
+                                        //         //     hazards.push(hazard.attributes.category);
+                                        //         // });
+                                        //         // hazardsNode.innerHTML = '<td>Hazard(s): ' + hazards.join(", ") + '</td>';
                                         //     });
                                         // }
-
 
                                         e[chemical.attributes.OBJECTID].features.forEach((chemical_location, j) => {
                                             //         this.chemicalInfo.push(
@@ -720,17 +767,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                                 </div>
                                             )
                                             newChemInfo.push(...chemLocInfo);
-                                            // this.chemicalInfo.push(...newChemInfo);
-                                            // this.setState({
-                                            //     chemicalInfo: this.chemicalInfo,
-                                            // });
                                         });
-
-                                        // this.chemicalInfo.push(...newChemInfo);
-                                        // this.setState({
-                                        //     chemicalInfo: this.chemicalInfo,
-                                        // });
-                                        // this.ChemicalsText();
                                         chemInfoArr.push(...newChemInfo);
                                     }, function (e) {
                                         console.log("Error: " + e);
@@ -740,17 +777,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
                                 } else {
                                     chemInfoArr.push(...newChemInfo);
-                                    // this.chemicalInfo.push(...newChemInfo);
-                                    // this.setState({
-                                    //     chemicalInfo: this.chemicalInfo,
-                                    // });
-                                    // this.ChemicalsText();
                                 }
-                                // this.chemicalInfo.push(...newChemInfo);
-                                // this.setState({
-                                //     chemicalInfo: this.chemicalInfo,
-                                // });
-                                // this.ChemicalsText();
                             });
 
                         }, function (e) {
@@ -758,15 +785,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         });
 
                         Promise.all(chemPromises).then(() => {
-                           this.loading = false;
-                           this.chemicalInfo = chemInfoArr;
-                           console.log(chemInfoArr)
-                           this.setState({
-                               chemicalInfo: this.chemicalInfo,
-                               loading: this.loading,
-                           }, () => {
-                               this.ChemicalsText();
-                               console.log('chemmmmmmm infoooooooooo')
+                            this.loading = false;
+                            this.chemicalInfo = chemInfoArr;
+                            this.setState({
+                                chemicalInfo: this.chemicalInfo,
+                                loading: this.loading,
+                            }, () => {
+                                this.ChemicalsText();
                             });
                         });
 
@@ -790,7 +815,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         <this.Grid/>
                         <this.FacilityText/>
                         <this.ContactsText/>
-                        {/*{this.contactInfo}*/}
                         <this.ChemicalsText/>
                     </div>
                 }
