@@ -3,30 +3,14 @@ import './assets/style.css';
 import {React, AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState} from "jimu-core";
 import {IMConfig} from "../config";
 import {JimuMapView, JimuMapViewComponent} from "jimu-arcgis";
-import PictureMarkerSymbol from "esri/symbols/PictureMarkerSymbol";
-import MapImageLayer from "esri/layers/MapImageLayer";
 import DataGrid, {SelectColumn} from "react-data-grid";
-import Query from "esri/rest/support/Query";
-import SpatialReference from "esri/geometry/SpatialReference";
-import query from "esri/rest/query";
-import geometryEngine from "esri/geometry/geometryEngine";
 import GraphicsLayer from "esri/layers/GraphicsLayer";
 import Extent from "esri/geometry/Extent";
-import RelationshipQuery from "esri/rest/support/RelationshipQuery";
-import Graphic from "esri/Graphic";
-import FeatureLayer from "esri/layers/FeatureLayer";
-import moment from "Moment";
-import {Button, Modal, ModalBody, ModalFooter, ModalHeader} from "jimu-ui"
-import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
-import type {Column} from "react-data-grid";
-import {Sort} from "../../../../../jimu-ui/advanced/lib/sql-expression-builder/styles";
 
-interface Row {
-}
 
 function getComparator(sortColumn: string) {
     switch (sortColumn) {
-        // todo: configure for SDWIS columns
+        // todo: configure for NRC columns
         case '':
             return (a, b) => {
                 return a[sortColumn].localeCompare(b[sortColumn]);
@@ -55,12 +39,15 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     constructor(props) {
         super(props);
         // bind this to class methods
+        this.NothingFound = this.NothingFound.bind(this);
+        this.LandingText = this.LandingText.bind(this);
+        this.mapClick = this.mapClick.bind(this);
+        this.rowClick = this.rowClick.bind(this);
+        this.Grid = this.Grid.bind(this);
+        this.onSortColsChange = this.onSortColsChange.bind(this)
     }
 
     componentDidMount() {
-
-
-
     }
 
     onActiveViewChange = (jmv: JimuMapView) => {

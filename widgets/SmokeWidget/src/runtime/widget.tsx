@@ -3,38 +3,8 @@ import './assets/style.css';
 import {React, AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState} from "jimu-core";
 import {IMConfig} from "../config";
 import {JimuMapView, JimuMapViewComponent} from "jimu-arcgis";
-import PictureMarkerSymbol from "esri/symbols/PictureMarkerSymbol";
-import MapImageLayer from "esri/layers/MapImageLayer";
-import DataGrid, {SelectColumn} from "react-data-grid";
-import Query from "esri/rest/support/Query";
-import SpatialReference from "esri/geometry/SpatialReference";
-import query from "esri/rest/query";
-import geometryEngine from "esri/geometry/geometryEngine";
 import GraphicsLayer from "esri/layers/GraphicsLayer";
 import Extent from "esri/geometry/Extent";
-import RelationshipQuery from "esri/rest/support/RelationshipQuery";
-import Graphic from "esri/Graphic";
-import FeatureLayer from "esri/layers/FeatureLayer";
-import moment from "Moment";
-import {Button, Modal, ModalBody, ModalFooter, ModalHeader} from "jimu-ui"
-import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
-import type {Column} from "react-data-grid";
-import {Sort} from "../../../../../jimu-ui/advanced/lib/sql-expression-builder/styles";
-
-interface Row {
-}
-
-function getComparator(sortColumn: string) {
-    switch (sortColumn) {
-        // todo: configure for SDWIS columns
-        case '':
-            return (a, b) => {
-                return a[sortColumn].localeCompare(b[sortColumn]);
-            };
-        default:
-            throw new Error(`unsupported sortColumn: "${sortColumn}"`);
-    }
-}
 
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     jimuMapView: JimuMapView, loading: boolean, columns: any[], rows: any[], sortedRows: any[], sortColumns: any[],
@@ -55,11 +25,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     constructor(props) {
         super(props);
         // bind this to class methods
+        this.NothingFound = this.NothingFound.bind(this);
+        this.LandingText = this.LandingText.bind(this);
+        this.mapClick = this.mapClick.bind(this);
     }
 
     componentDidMount() {
-
-
 
     }
 
@@ -75,7 +46,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         }
     }
 
-    componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView}>, snapshot?: any) {
+    componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView }>, snapshot?: any) {
         let widgetState: WidgetState;
         widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
         // do anything on open/close of widget here
@@ -134,19 +105,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             ymax: e.mapPoint.y + toleraceInMapCoords,
             spatialReference: this.jmv.view.spatialReference,
         });
-
-
-    }
-
-    rowKeyGetter(row) {
-        return row;
-    }
-
-    rowClick(row) {
-        // let location = this.featureSet.filter((feature) => {
-    //         return feature.attributes.OBJECTID === this.sortedRows[row].OBJECTID;
-    //     });
-    //     this.loadFeature(location[0]);
     }
 
     NothingFound() {
@@ -161,57 +119,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         }
     }
 
-    Grid() {
-        return (
-            <div>
-                {this.multipleLocations ?
-                    <div>
-                        <div><h3>Multiple Facilities at that Location</h3><br/><h5>Select one to continue</h5></div>
-                        <DataGrid style={{height: `${(this.sortedRows.length * 35) + 37}px`, maxHeight: "700px"}}
-                                  columns={this.columns} rows={this.sortedRows} onRowClick={this.rowClick}
-                                  rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
-                            sortable: true,
-                            resizable: true
-                        }} onSortColumnsChange={this.onSortColsChange} sortColumns={this.sortColumns}/>
-                    </div> : null}
-            </div>
-        )
-    }
 
-    onSortColsChange(cols) {
-        if (cols.length === 0) {
-            this.sortedRows = this.rows;
-            this.sortColumns = [];
-            this.setState({
-                sortedRows: this.sortedRows,
-                sortColumns: this.sortColumns,
-            })
-            return this.rows
-        }
-
-        this.sortColumns = cols.slice(-1);
-        this.sortedRows = [...this.rows];
-        this.sortedRows.sort((a, b) => {
-            for (let col of cols) {
-
-                let comparator = getComparator(col.columnKey);
-                let res = comparator(a, b);
-                if (res !== 0) {
-                    return col.direction === 'ASC' ? res : -res;
-                }
-            }
-            return 0;
-        });
-
-
-        // this.rows = sortedRows;
-        this.setState({
-            sortedRows: this.sortedRows,
-            sortColumns: this.sortColumns
-            // columns: this.columns,
-        });
-        return this.sortedRows
-    }
 
 
     render() {
@@ -220,7 +128,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 <this.NothingFound/>
                 {this.loading ? <h2 style={{background: 'white'}}>Loading...</h2> :
                     <div>
-                        <this.Grid/>
                     </div>
                 }
 
