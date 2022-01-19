@@ -645,7 +645,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 this.setState({
                     loading: this.loading,
                 });
-
             } else {
                 this.nothingThere = [<div>No facilities found at this location</div>];
                 this.loading = false;

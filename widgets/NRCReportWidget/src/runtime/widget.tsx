@@ -7,7 +7,6 @@ import DataGrid, {SelectColumn} from "react-data-grid";
 import GraphicsLayer from "esri/layers/GraphicsLayer";
 import Extent from "esri/geometry/Extent";
 
-
 function getComparator(sortColumn: string) {
     switch (sortColumn) {
         // todo: configure for NRC columns

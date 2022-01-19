@@ -6,6 +6,11 @@ import {JimuMapView, JimuMapViewComponent} from "jimu-arcgis";
 import DataGrid, {SelectColumn} from "react-data-grid";
 import GraphicsLayer from "esri/layers/GraphicsLayer";
 import Extent from "esri/geometry/Extent";
+import Query from "esri/rest/support/Query";
+import FeatureLayer from "esri/layers/FeatureLayer";
+import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
+import geometry from "esri/geometry";
+import Graphic from "esri/Graphic";
 
 
 function getComparator(sortColumn: string) {
@@ -22,6 +27,7 @@ function getComparator(sortColumn: string) {
 
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     jimuMapView: JimuMapView, loading: boolean, columns: any[], rows: any[], sortedRows: any[], sortColumns: any[],
+    onOpenText: any[], nothingThere: any[], facilityText: any[],
 }> {
 
     jmv: JimuMapView;
@@ -33,8 +39,17 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     columns: any[] = [];
     sortColumns: any[] = [];
     graphicsLayer: GraphicsLayer;
-    nothingThere: boolean = false;
+    nothingThere: any[] = [];
     multipleLocations: boolean = false;
+    featureLayer: FeatureLayer;
+    featureLayerPWS: FeatureLayer;
+    featureLayerTable: FeatureLayer;
+    featureLayerAdmin: FeatureLayer;
+    onOpenText: any[] = [];
+    featureSet: any[] = [];
+    symbol: SimpleMarkerSymbol;
+    facilityText: any[] = [];
+
 
     constructor(props) {
         super(props);
@@ -48,8 +63,36 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     componentDidMount() {
+        this.featureLayer = new FeatureLayer({
+            url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/0',
+            outFields: ['*']
+        });
+        this.featureLayerPWS = new FeatureLayer({
+            url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/1',
+            outFields: ['*']
+        });
+        this.featureLayerTable = new FeatureLayer({
+            url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/3',
+            outFields: ['*']
+        });
+        this.featureLayerAdmin = new FeatureLayer({
+            url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/5',
+            outFields: ['*']
+        });
+        this.featureLayer.on('layerview-create-error', (e) => {
+            this.onOpenText = [];
+            this.onOpenText.push(
+                <div>
+                    The R9 SDWIS service resides on the EPA Intranet. Connect to the Pulse Secure client to access the
+                    data.
+                </div>
+            );
+            this.setState({
+                onOpenText: this.onOpenText,
+            });
+        });
 
-
+        this.symbol = new SimpleMarkerSymbol();
     }
 
     onActiveViewChange = (jmv: JimuMapView) => {
@@ -94,7 +137,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         if (this.mainText) {
             return (
                 <div id="landingText" style={{overflow: 'auto'}}>
-
+                    {this.onOpenText}
                 </div>
             )
         } else {
@@ -124,6 +167,47 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             spatialReference: this.jmv.view.spatialReference,
         });
 
+        let featureQuery = new Query();
+        featureQuery.outFields = ['*'];
+        featureQuery.geometry = clickExtent;
+        featureQuery.returnGeometry = true;
+        this.featureLayer.queryFeatures(featureQuery).then(featureSet => {
+            this.featureSet = featureSet.features;
+            if (this.featureSet.length === 1) {
+                this.loadFacility(this.featureSet[0]);
+            } else if (this.featureSet.length > 1) {
+
+                let data = [];
+
+                this.featureSet.forEach((feature) => {
+                    let attrs = feature.attributes;
+                    data.push(attrs);
+                });
+
+                this.columns = [{key: 'FacilityName', name: 'Name'}];
+                this.rows = data;
+                this.sortedRows = data
+                this.multipleLocations = true;
+                this.setState({
+                    columns: this.columns,
+                    rows: this.rows,
+                    sortedRows: this.sortedRows,
+                });
+
+                this.Grid();
+                this.loading = false;
+                this.setState({
+                    loading: this.loading,
+                })
+            } else {
+                this.nothingThere = [<div>No facilities found at this location</div>];
+                this.loading = false;
+                this.setState({
+                    nothingThere: this.nothingThere,
+                    loading: this.loading,
+                });
+            }
+        });
 
     }
 
@@ -132,17 +216,17 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     rowClick(row) {
-        // let location = this.featureSet.filter((feature) => {
-        //         return feature.attributes.OBJECTID === this.sortedRows[row].OBJECTID;
-        //     });
-        //     this.loadFeature(location[0]);
+        let location = this.featureSet.filter((feature) => {
+            return feature.attributes.OBJECTID === this.sortedRows[row].OBJECTID;
+        });
+        this.loadFacility(location[0]);
     }
 
     NothingFound() {
-        if (this.nothingThere) {
+        if (this.nothingThere.length > 0) {
             return (
                 <div>
-                    <h3>No facilities found at this location</h3><br/>
+                    <h3>{this.nothingThere}</h3><br/>
                 </div>
             )
         } else {
@@ -202,6 +286,140 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         return this.sortedRows
     }
 
+    loadFacility(facility) {
+        let selectedGraphic = new Graphic({geometry: facility.geometry, symbol: this.symbol});
+        this.graphicsLayer.add(selectedGraphic);
+        this.loading = true;
+        this.setState({
+            loading: this.loading,
+        });
+        // @ts-ignore
+        let facilitytype = this.featureLayer.getFieldDomain('fac_type').getName(facility.attributes.fac_type);
+        // @ts-ignore
+        let sourcetype = this.featureLayer.getFieldDomain('fac_sourcetype').getName(facility.attributes.fac_sourcetype);
+        // @ts-ignore
+        let availability = this.featureLayer.getFieldDomain('fac_availability').getName(facility.attributes.fac_availability);
+        // @ts-ignore
+        let sellertreated = this.featureLayer.getFieldDomain('sellertrtcode').getName(facility.attributes.sellertrtcode);
+        // @ts-ignore
+        let trtstatus = this.featureLayer.getFieldDomain('facsourcetrtstatus').getName(facility.attributes.facsourcetrtstatus);
+
+        this.facilityText = []
+        this.facilityText.push(<div>
+            <p style={{fontSize: '16px'}}>
+                <b>Public Water System (PWS)</b></p>
+            <p style={{fontSize: '14px'}}>
+                <b>Name: </b>{facility.attributes.fac_pws_name ? facility.attributes.fac_pws_name : 'Not Reported'}<br/><b>ID: </b>
+                {facility.attributes.fac_pwsid ? facility.attributes.fac_pwsid : 'Not Reported'}</p>
+            <br/><b><p style={{textAlign: "center"}}>Water System Facility Details</p></b>
+            <hr/>
+            <b>Facility Name:</b>
+            {facility.attributes.facilityname ? facility.attributes.facilityname : 'Not Reported'}<br/><b>Facility
+            ID: </b>
+            {facility.attributes.facilityid ? facility.attributes.facilityid : 'Not Reported'}<br/><b>Facility
+            Type: </b>
+            {facilitytype ? facilitytype : 'Not Reported'}<br/><b>Source
+            Type:</b>{sourcetype ? sourcetype : 'Not Reported'}<br/>
+            <b>Source Treated: </b>{trtstatus ? trtstatus : 'Not Reported'}<br/>
+            <b>Facility Availability:</b>{availability ? availability : 'Not Reported'}<br/>
+            <b>Last
+                Updated: </b>{facility.attributes.last_reported ? facility.attributes.last_reported : 'Not Reported'}<br/>
+            <b>PWS Purchased
+                From: </b>{facility.attributes.pwsid_seller ? facility.attributes.pwsid_seller : 'Not Reported'}<br/>
+            <b>Purchased Water Treated: </b>{sellertreated ? sellertreated : 'Not Reported'}<br/><br/>
+            <div id="pwsinfo"></div>
+            <p style={{textAlign: "center"}}><a
+                href={"https://echo.epa.gov/detailed-facility-report?fid=" + facility.attributes.fac_pwsid}
+                target="_blank\"><b>ECHO Detailed System Report</b> </a></p>
+            <p style={{textAlign: "center"}}>&nbsp;</p>
+            <table style={{
+                height: '98px',
+                borderColor: '#000000',
+                marginLeft: 'auto',
+                marginRight: 'auto',
+                width: '100%'
+            }}>
+                <tbody>
+                <tr>
+                    <td style={{textAlign: 'center', width: '287px'}}><b>Public Water System Contact</b>
+                        <hr/>
+                        <div id="admincontacts"></div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <p>&nbsp;</p>
+            <table style={{
+                height: '98px',
+                borderColor: '#000000',
+                marginLeft: 'auto',
+                marginRight: 'auto',
+                width: "100%"
+            }}>
+                <tbody>
+                <tr>
+                    <td style={{textAlign: 'center', width: '287px'}}>
+                        <strong>
+                            <p style={{textAlign: 'center'}}>Regulatory Agency Contact</p></strong>
+                        <hr/>
+                        <div id="tableinfo"></div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+
+            <p>&nbsp;</p>
+        </div>)
+        this.loading = false;
+        this.setState({
+            loading: this.loading,
+        })
+        this.loadFacilityPWS(facility.attributes.fac_pwsid);
+        this.loadFacilityTable(facility.attributes.pacode);
+        this.loadFacilityAdmin(facility.attributes.fac_pwsid);
+    };
+
+    loadFacilityPWS(PWS_ID) {
+        var _this = this;
+        var query = new query_1.default();
+        query.outFields = ['*'];
+        query.where = "PWSID='" + PWS_ID + "'";
+        this.featureLayerPWS.queryFeatures(query, function (featureSet) {
+            var facilityPWS = featureSet.features[0];
+            var tribe = _this.featureLayerPWS.getDomain('tribe')["getName"](facilityPWS.attributes.tribe);
+            var school = _this.featureLayerPWS.getDomain('pws_schoolordaycare')["getName"](facilityPWS.attributes.pws_schoolordaycare);
+            var ownertype = _this.featureLayerPWS.getDomain('pws_ownertype')["getName"](facilityPWS.attributes.pws_ownertype);
+            var wholesale = _this.featureLayerPWS.getDomain('pws_wholesale')["getName"](facilityPWS.attributes.pws_wholesale);
+            var watertype = _this.featureLayerPWS.getDomain('pws_wsourcetype')["getName"](facilityPWS.attributes.pws_wsourcetype);
+            var state = _this.featureLayerPWS.getDomain('pws_agencycode')["getName"](facilityPWS.attributes.pws_agencycode);
+            var pws = "<b><p style=\"text-align: center;\">Public Water System Details</p></b>" + "<hr/>" + "<b>City Served: </b>" + (facilityPWS.attributes.city ? facilityPWS.attributes.city : 'Not Reported') + "</br>" + "<b>County Served: </b>" + (facilityPWS.attributes.county ? facilityPWS.attributes.county : 'Not Reported') + "</br>" + "<b>State: </b>" + (state ? state : 'Not Reported') + "</br>" + "<b>Tribe Name: </b>" + (tribe ? tribe : 'Not Reported') + "</br>" + "<b>PWS Population Served: </b>" + (facilityPWS.attributes.pws_popserve ? facilityPWS.attributes.pws_popserve : 'Not Reported') + "</br>" + "<b>Is the PWS a School or Daycare? </b>" + (school ? school : 'Not Reported') + "</br>" + "<b>PWS Owner Type: </b>" + (ownertype ? ownertype : 'Not Reported') + "</br>" + "<b>Is PWS Wholesaler to Another PWS? </b>" + (wholesale ? wholesale : 'Not Reported') + "</br>" + "<b>PWS Source Water Type: </b>" + (watertype ? watertype : 'Not Reported') + "<p style=\"text-align: center;\">&nbsp;</p>";
+            dom_construct_1.default.place(pws, 'pwsinfo');
+        });
+    };
+
+    //pulls information from Primacy Agency table for the Regulatory section (bottom) "Regulatory Agency"
+    loadFacilityTable(PAcode) {
+        var query = new query_1.default();
+        query.outFields = ['*'];
+        query.where = "PACode='" + PAcode + "'";
+        this.featureLayerTable.queryFeatures(query, function (featureSet) {
+            var facilityTable = featureSet.features[0];
+            var table = "<p style=\"text-align: center;\">" + facilityTable.attributes.regauthority + "</p>" + "<p style=\"text-align: left;\"><b>Primary Contact: </b>" + (facilityTable.attributes.primarycontactname ? facilityTable.attributes.primarycontactname : 'Not Reported') + "</br>" + "<b>Phone: </b>" + (facilityTable.attributes.phone_number ? facilityTable.attributes.phone_number : 'Not Reported') + "</br>" + "<b>Email: </b>" + (facilityTable.attributes.email ? "<a href=\"mailto:" + facilityTable.attributes.email + "\"target=\"_blank\">" + facilityTable.attributes.email + " </a>" : 'Not Reported') + "</br>" + "<b>Website: </b>" + ("<a href=\"" + facilityTable.attributes.website + "\" target=\"_blank\">Click Here for Website</a>") + "</br>" + "<b>Address: </b>" + (facilityTable.attributes.mailing_address ? facilityTable.attributes.mailing_address : 'Not Reported') + "</p>";
+            dom_construct_1.default.place(table, 'tableinfo');
+        });
+    };
+
+    //pulls information from Admin Contact table for the Point of Contact section (top) "PWS Contact Information"
+    loadFacilityAdmin(pwsid) {
+        var query = new query_1.default();
+        query.where = "PWSID='" + pwsid + "'";
+        this.featureLayerAdmin.queryFeatures(query, function (featureSet) {
+            var facilityAdmin = featureSet.features[0];
+            var admin = "<p style=\"text-align: left;\">" + "<b>Primary Contact: </b>" + (facilityAdmin.attributes.org_name ? facilityAdmin.attributes.org_name : 'Not Reported') + "</br>" + "<b>Phone: </b>" + (facilityAdmin.attributes.phone_number ? facilityAdmin.attributes.phone_number : 'Not Reported') + "</br><b>Email: </b>" + (facilityAdmin.attributes.email_addr ? "<a href=\"mailto:" + facilityAdmin.attributes.email_addr + "\"target=\"_blank\">" + facilityAdmin.attributes.email_addr + " </a>" : 'Not Reported') + "</br>" + "<b>Address: </b>" + (facilityAdmin.attributes.address_line1 ? facilityAdmin.attributes.address_line1 : 'Not Reported') + "</br>" + (facilityAdmin.attributes.city_name ? facilityAdmin.attributes.city_name : '') + " " + (facilityAdmin.attributes.state_code ? facilityAdmin.attributes.state_code : '') + " " + (facilityAdmin.attributes.zip_code ? facilityAdmin.attributes.zip_code : '') + "</p>";
+            dom_construct_1.default.place(admin, 'admincontacts');
+        });
+    };
 
     render() {
         return (
