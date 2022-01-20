@@ -126,6 +126,84 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         // do anything on open/close of widget here
         if (widgetState == WidgetState.Opened) {
             if (this.first) {
+                this.loading = true;
+                if (this.featureLayer.loaded) {
+                    let query = new Query;
+                    query.where = '1=1';
+                    this.featureLayer.queryFeatureCount(query).then(count => {
+                        this.onOpenText.push(
+                            <div>
+                                There are currently <b>{count}</b> facilities in the SDWIS feature service.<br/>
+                                <b><i>This data is scale-dependent, please zoom in to see the points.</i></b><h2
+                                style={{textDecoration: 'underline'}}>Safe Drinking Water Information System
+                                (SDWIS)</h2>
+                                The data is directly from the <b>National SDWIS Database</b> and updated on a quarterly
+                                basis. The service provides information on facilities, public water systems, primacy
+                                agencies, administrative contacts, and tribal entities. The facility symbols
+                                are <i>clustered</i> to minimize overlap; zoom in closer to see a facility's true
+                                location. Detailed information about the <b>SDWIS Federal Reporting Services</b> can be
+                                found <b>
+                                <a href={"https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-information-system-sdwis-federal-reporting"}
+                                   target="_blank"> here.</a></b>
+                                <h2 style={{textDecoration: 'underline'}}>Enforcement & Compliance History Online
+                                    (ECHO)</h2>EPA's ECHO website provides details for facilities in your community to
+                                assess their compliance with environmental regulations. The interaction in this widget
+                                uses the Public Water System (PWS) ID to search the records. Check out the ECHO
+                                website <a href={"https://echo.epa.gov/"} target="_blank"><b>here</b></a> for more
+                                information and guidance.<br/>
+                                The <i><b>ECHO Detailed System Report</b></i> is linked with the selected facility
+                                record and opens the ECHO website details for the associated public water system in a
+                                new browser window. <h2 style={{textDecoration: 'underline'}}>Definitions</h2><b>Facilities
+                                - </b>These points represent facilities within a public water system. The facility types
+                                include but are not limited to wells, well heads, treatment plants, sampling stations,
+                                valves, transmission mains, pumps, pressure control, etc. Facilities are identified with
+                                Facility ID and Facility Name. The PWS ID indicates the public water system the selected
+                                facility falls under.<br/>
+                                <img id="Legend" src={'./assets/Symbology.png'}
+                                     style={{width: "75%", height: "75%"}}/><br/>
+                                <b>Public Water Systems (PWS) - </b> The public water system information is linked from
+                                the facility selected in the map. The PWS ID and PWS Name provide the unique
+                                identification for the public water system associated with the facility record.<br/>
+                                <br/>
+                                <table style={{
+                                    borderColor: '#000000',
+                                    marginLeft: 'auto',
+                                    marginRight: 'auto',
+                                    width: '100%'
+                                }}>
+                                    <tbody>
+                                    <td style={{textAlign: 'left', width: '287px'}}>
+                                        <b>PWS Contact Information - </b>This
+                                        section provides contact information for the public water system associated with
+                                        the selected facility. This information comes from the Admin Contacts
+                                        table.<br/>
+                                    </td>
+                                    </tbody>
+                                </table>
+                                <table style={{
+                                    height: '98px',
+                                    borderColor: '#000000',
+                                    marginLeft: 'auto',
+                                    marginRight: 'auto',
+                                    width: '100%',
+                                }}>
+                                    <tbody>
+                                    <td style={{textAlign: 'left', width: '287px'}}><b>Regulatory Agency - </b> This
+                                        section provides information for the regulatory organization associated with and
+                                        responsible for the selected facility's public water system. This information
+                                        comes from the Primacy Agency table." + "<br/></td>
+                                    </tbody>
+                                </table>
+                            </div>
+                        );
+
+                        this.setState({
+                            onOpenText: this.onOpenText
+                        }, () => {
+                            this.LandingText();
+                        })
+                    });
+                }
             }
             this.first = false;
         } else {
@@ -157,8 +235,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             return null
         }
     }
+
     Facility() {
-        if(this.facilityText.length >0) {
+        if (this.facilityText.length > 0) {
             return (
                 <div>
                     {this.facilityText}
@@ -266,13 +345,19 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             <div>
                 {this.multipleLocations ?
                     <div>
-                        <div><h3>Multiple Facilities at that Location</h3><br/><h5>Select one to continue</h5></div>
-                        <DataGrid style={{height: `${(this.sortedRows.length * 35) + 37}px`, maxHeight: "700px"}}
-                                  columns={this.columns} rows={this.sortedRows} onRowClick={this.rowClick}
+                        <div><h3>Multiple Facilities at that Location</h3><br/><h5>Select one to
+                            continue</h5></div>
+                        <DataGrid style={{
+                            height: `${(this.sortedRows.length * 35) + 37}px`,
+                            maxHeight: "700px"
+                        }}
+                                  columns={this.columns} rows={this.sortedRows}
+                                  onRowClick={this.rowClick}
                                   rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
                             sortable: true,
                             resizable: true
-                        }} onSortColumnsChange={this.onSortColsChange} sortColumns={this.sortColumns}/>
+                        }} onSortColumnsChange={this.onSortColsChange}
+                                  sortColumns={this.sortColumns}/>
                     </div> : null}
             </div>
         )
@@ -349,7 +434,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 Updated: </b>{facility.attributes.last_reported ? facility.attributes.last_reported : 'Not Reported'}<br/>
             <b>PWS Purchased
                 From: </b>{facility.attributes.pwsid_seller ? facility.attributes.pwsid_seller : 'Not Reported'}<br/>
-            <b>Purchased Water Treated: </b>{sellertreated ? sellertreated : 'Not Reported'}<br/><br/>
+            <b>Purchased Water
+                Treated: </b>{sellertreated ? sellertreated : 'Not Reported'}<br/><br/>
             <div id="pwsinfo"></div>
             <p style={{textAlign: "center"}}><a
                 href={"https://echo.epa.gov/detailed-facility-report?fid=" + facility.attributes.fac_pwsid}
@@ -364,7 +450,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             }}>
                 <tbody>
                 <tr>
-                    <td style={{textAlign: 'center', width: '287px'}}><b>Public Water System Contact</b>
+                    <td style={{textAlign: 'center', width: '287px'}}><b>Public Water System
+                        Contact</b>
                         <hr/>
                         <div id="admincontacts"></div>
                     </td>
@@ -402,7 +489,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.loadFacilityPWS(facility.attributes.fac_pwsid);
         this.loadFacilityTable(facility.attributes.pacode);
         this.loadFacilityAdmin(facility.attributes.fac_pwsid);
-    };
+    }
+    ;
 
     loadFacilityPWS(PWS_ID) {
         let query = new Query();
@@ -419,7 +507,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             this.pwsText.push(<div>
                 <b><p style={{textAlign: 'center'}}>Public Water System Details</p></b>
                 <hr/>
-                <b>City Served: </b>{facilityPWS.attributes.city ? facilityPWS.attributes.city : 'Not Reported'}<br/>
+                <b>City
+                    Served: </b>{facilityPWS.attributes.city ? facilityPWS.attributes.city : 'Not Reported'}<br/>
                 <b>County
                     Served: </b>{facilityPWS.attributes.county ? facilityPWS.attributes.county : 'Not Reported'}<br/><b>State: </b>{state ? state : 'Not Reported'}<br/>
                 <b>Tribe Name: </b>{tribe ? tribe : 'Not Reported'}<br/>
@@ -427,7 +516,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     Served: </b>{facilityPWS.attributes.pws_popserve ? facilityPWS.attributes.pws_popserve : 'Not Reported'}<br/>
                 <b>Is the PWS a School or Daycare? </b>{school ? school : 'Not Reported'}<br/>
                 <b>PWS Owner Type: </b>{ownertype ? ownertype : 'Not Reported'}<br/>
-                <b>Is PWS Wholesaler to Another PWS? </b>{wholesale ? wholesale : 'Not Reported'}<br/>
+                <b>Is PWS Wholesaler to Another
+                    PWS? </b>{wholesale ? wholesale : 'Not Reported'}<br/>
                 <b>PWS Source Water Type: </b>{watertype ? watertype : 'Not Reported'}<p
                 style={{textAlign: 'center'}}>&nbsp;</p>
             </div>);
@@ -435,7 +525,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 pwsText: this.pwsText,
             });
         });
-    };
+    }
+    ;
 
     //pulls information from Primacy Agency table for the Regulatory section (bottom) "Regulatory Agency"
     loadFacilityTable(PAcode) {
@@ -450,8 +541,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     Contact: </b>{facilityTable.attributes.primarycontactname ? facilityTable.attributes.primarycontactname : 'Not Reported'}<br/>
                     <b>Phone: </b>{facilityTable.attributes.phone_number ? facilityTable.attributes.phone_number : 'Not Reported'}<br/>
                     <b>Email: </b>{facilityTable.attributes.email ?
-                        <a href={"mailto:" + facilityTable.attributes.email} target="_blank"/> : 'Not Reported'} <br/>
-                    <b>Website: </b><a href={facilityTable.attributes.website} target="_blank">Click Here for
+                        <a href={"mailto:" + facilityTable.attributes.email}
+                           target="_blank"/> : 'Not Reported'} <br/>
+                    <b>Website: </b><a href={facilityTable.attributes.website} target="_blank">Click
+                        Here for
                         Website</a><br/>
                     <b>Address: </b>{facilityTable.attributes.mailing_address ? facilityTable.attributes.mailing_address : 'Not Reported'}
                 </p>
@@ -460,7 +553,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 regulatoryText: this.regulatoryText,
             });
         });
-    };
+    }
+    ;
 
     //pulls information from Admin Contact table for the Point of Contact section (top) "PWS Contact Information"
     loadFacilityAdmin(pwsid) {
@@ -485,11 +579,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 adminContactText: this.adminContactText,
             });
         });
-    };
+    }
+    ;
 
     render() {
         return (
-            <div className="widget-addLayers jimu-widget p-2" style={{overflow: "auto", height: "97%"}}>
+            <div className="widget-addLayers jimu-widget p-2"
+                 style={{overflow: "auto", height: "97%"}}>
                 <this.NothingFound/>
                 {this.loading ? <h2 style={{background: 'white'}}>Loading...</h2> :
                     <div>
