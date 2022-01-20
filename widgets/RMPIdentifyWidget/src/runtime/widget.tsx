@@ -807,7 +807,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     if (mostRecentRMP.DeRegistrationEffectiveDate) {
                         status = 'De-registered';
                         reason = (mostRecentRMP.DeregistrationReasonCode !== '04' ?
-                            this.tblS1Facilities.getFieldDomain('DeregistrationReasonCode').getName(mostRecentRMP.DeregistrationReasonCode) :
+                            this.tblS1Facilities.getFieldDomain('DeregistrationReasonCode')["getName"](mostRecentRMP.DeregistrationReasonCode) :
                             mostRecentRMP.DeregistrationReasonOtherText);
                         date = mostRecentRMP.DeRegistrationEffectiveDate;
                     } else {
@@ -829,18 +829,18 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     this.location_string = []
                     if (mostRecentRMP.ValidLatLongFlag) {
                         this.location_string.push(<div>RMP Validated Location Used
-                            <br/>Description: {this.tblS1Facilities.getFieldDomain('LatLongDescription').getName(mostRecentRMP.LatLongDescription)}
-                            <br/>Method: {this.tblS1Facilities.getFieldDomain('LatLongMethod').getName(mostRecentRMP.LatLongMethod)}
+                            <br/>Description: {this.tblS1Facilities.getFieldDomain('LatLongDescription')["getName"](mostRecentRMP.LatLongDescription)}
+                            <br/>Method: {this.tblS1Facilities.getFieldDomain('LatLongMethod')["getName"](mostRecentRMP.LatLongMethod)}
                         </div>)
                     } else if (!mostRecentRMP.ValidLatLongFlag && mostRecentRMP.FRS_Lat !== undefined && mostRecentRMP.FRS_long !== undefined) {
                         this.location_string.push(<div>FRS Location Used
-                            <br/>Description: {this.tblS1Facilities.getFieldDomain('FRS_Description').getName(mostRecentRMP.FRS_Description)}
-                            <br/>Method: {this.tblS1Facilities.getFieldDomain('FRS_Method').getName(mostRecentRMP.FRS_Method)}
+                            <br/>Description: {this.tblS1Facilities.getFieldDomain('FRS_Description')["getName"](mostRecentRMP.FRS_Description)}
+                            <br/>Method: {this.tblS1Facilities.getFieldDomain('FRS_Method')["getName"](mostRecentRMP.FRS_Method)}
                         </div>)
                     } else {
                         this.location_string.push(<div>Location Not Validated
-                            <br/>Description: {this.tblS1Facilities.getFieldDomain('LatLongDescription').getName(mostRecentRMP.LatLongDescription)}
-                            <br/>Method: {this.tblS1Facilities.getFieldDomain('LatLongMethod').getName(mostRecentRMP.LatLongMethod)}
+                            <br/>Description: {this.tblS1Facilities.getFieldDomain('LatLongDescription')["getName"](mostRecentRMP.LatLongDescription)}
+                            <br/>Method: {this.tblS1Facilities.getFieldDomain('LatLongMethod')["getName"](mostRecentRMP.LatLongMethod)}
                         </div>)
                     }
 
@@ -848,7 +848,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         let scale = <div><br/> Source Map Scale: {mostRecentRMP.SourceMapScaleNumber}</div>
                         this.location_string.push(<div><br/>Horizontal Accuracy (m): {mostRecentRMP.HorizontalAccMeasure}
                             <br/>Horizontal
-                            Datum: {this.tblS1Facilities.getFieldDomain('HorizontalRefDatumCode').getName(mostRecentRMP.HorizontalRefDatumCode)} {mostRecentRMP.SourceMapScaleNumber ? scale : ''}
+                            Datum: {this.tblS1Facilities.getFieldDomain('HorizontalRefDatumCode')["getName"](mostRecentRMP.HorizontalRefDatumCode)} {mostRecentRMP.SourceMapScaleNumber ? scale : ''}
                         </div>)
                     }
                     this.loading = false;
@@ -878,7 +878,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
         if (this.attributes.DeRegistrationEffectiveDate) {
             status = 'De-registered';
-            let reason = (this.attributes.DeregistrationReasonCode !== '04' ? this.tblS1Facilities.getFieldDomain('DeregistrationReasonCode').getName(this.attributes.DeregistrationReasonCode) : this.attributes.DeregistrationReasonOtherText);
+            let reason = (this.attributes.DeregistrationReasonCode !== '04' ? this.tblS1Facilities.getFieldDomain('DeregistrationReasonCode')["getName"](this.attributes.DeregistrationReasonCode) : this.attributes.DeregistrationReasonOtherText);
             let date = this.attributes.DeRegistrationEffectiveDate;
             status_string = status +
                 (reason ? '<br/>De-registration Reason: ' + reason : '') +
@@ -930,7 +930,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 this.tblS1Processes.queryRelatedFeatures(naicsQuery).then(naicsCodes => {
                     naicsCodes[process.attributes.OBJECTID].features.forEach((naics, i) => {
                         this.naicsText.push(
-                            <div>{this.tblS1Process_NAICS.getFieldDomain('NAICSCode').getName(naics.attributes.NAICSCode)}</div>);
+                            <div>{this.tblS1Process_NAICS.getFieldDomain('NAICSCode')["getName"](naics.attributes.NAICSCode)}</div>);
                     });
                 });
 

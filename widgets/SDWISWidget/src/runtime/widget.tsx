@@ -27,7 +27,7 @@ function getComparator(sortColumn: string) {
 
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     jimuMapView: JimuMapView, loading: boolean, columns: any[], rows: any[], sortedRows: any[], sortColumns: any[],
-    onOpenText: any[], nothingThere: any[], facilityText: any[],
+    onOpenText: any[], nothingThere: any[], facilityText: any[], pwsText: any[], regulatoryText: any[], adminContactText: any[],
 }> {
 
     jmv: JimuMapView;
@@ -49,7 +49,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     featureSet: any[] = [];
     symbol: SimpleMarkerSymbol;
     facilityText: any[] = [];
-
+    pwsText: any[] = [];
+    regulatoryText: any[] = [];
+    adminContactText: any[] = [];
 
     constructor(props) {
         super(props);
@@ -59,7 +61,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.mapClick = this.mapClick.bind(this);
         this.rowClick = this.rowClick.bind(this);
         this.Grid = this.Grid.bind(this);
-        this.onSortColsChange = this.onSortColsChange.bind(this)
+        this.onSortColsChange = this.onSortColsChange.bind(this);
+        this.loadFacility = this.loadFacility.bind(this);
+        this.loadFacilityPWS = this.loadFacilityPWS.bind(this);
+        this.loadFacilityTable = this.loadFacilityTable.bind(this);
+        this.loadFacilityAdmin = this.loadFacilityAdmin.bind(this);
+
     }
 
     componentDidMount() {
@@ -138,6 +145,20 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             return (
                 <div id="landingText" style={{overflow: 'auto'}}>
                     {this.onOpenText}
+                </div>
+            )
+        } else {
+            return null
+        }
+    }
+    Facility() {
+        if(this.facilityText.length >0) {
+            return (
+                <div>
+                    {this.facilityText}
+                    {this.pwsText}
+                    {this.regulatoryText}
+                    {this.adminContactText}
                 </div>
             )
         } else {
@@ -293,16 +314,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.setState({
             loading: this.loading,
         });
-        // @ts-ignore
-        let facilitytype = this.featureLayer.getFieldDomain('fac_type').getName(facility.attributes.fac_type);
-        // @ts-ignore
-        let sourcetype = this.featureLayer.getFieldDomain('fac_sourcetype').getName(facility.attributes.fac_sourcetype);
-        // @ts-ignore
-        let availability = this.featureLayer.getFieldDomain('fac_availability').getName(facility.attributes.fac_availability);
-        // @ts-ignore
-        let sellertreated = this.featureLayer.getFieldDomain('sellertrtcode').getName(facility.attributes.sellertrtcode);
-        // @ts-ignore
-        let trtstatus = this.featureLayer.getFieldDomain('facsourcetrtstatus').getName(facility.attributes.facsourcetrtstatus);
+
+        let facilitytype = this.featureLayer.getFieldDomain('fac_type')["getName"](facility.attributes.fac_type);
+        let sourcetype = this.featureLayer.getFieldDomain('fac_sourcetype')["getName"](facility.attributes.fac_sourcetype);
+        let availability = this.featureLayer.getFieldDomain('fac_availability')["getName"](facility.attributes.fac_availability);
+        let sellertreated = this.featureLayer.getFieldDomain('sellertrtcode')["getName"](facility.attributes.sellertrtcode);
+        let trtstatus = this.featureLayer.getFieldDomain('facsourcetrtstatus')["getName"](facility.attributes.facsourcetrtstatus);
 
         this.facilityText = []
         this.facilityText.push(<div>
@@ -374,6 +391,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.loading = false;
         this.setState({
             loading: this.loading,
+            facilityText: this.facilityText,
         })
         this.loadFacilityPWS(facility.attributes.fac_pwsid);
         this.loadFacilityTable(facility.attributes.pacode);
@@ -381,43 +399,85 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     };
 
     loadFacilityPWS(PWS_ID) {
-        var _this = this;
-        var query = new query_1.default();
+        let query = new Query();
         query.outFields = ['*'];
         query.where = "PWSID='" + PWS_ID + "'";
-        this.featureLayerPWS.queryFeatures(query, function (featureSet) {
+        this.featureLayerPWS.queryFeatures(query).then(featureSet => {
             var facilityPWS = featureSet.features[0];
-            var tribe = _this.featureLayerPWS.getDomain('tribe')["getName"](facilityPWS.attributes.tribe);
-            var school = _this.featureLayerPWS.getDomain('pws_schoolordaycare')["getName"](facilityPWS.attributes.pws_schoolordaycare);
-            var ownertype = _this.featureLayerPWS.getDomain('pws_ownertype')["getName"](facilityPWS.attributes.pws_ownertype);
-            var wholesale = _this.featureLayerPWS.getDomain('pws_wholesale')["getName"](facilityPWS.attributes.pws_wholesale);
-            var watertype = _this.featureLayerPWS.getDomain('pws_wsourcetype')["getName"](facilityPWS.attributes.pws_wsourcetype);
-            var state = _this.featureLayerPWS.getDomain('pws_agencycode')["getName"](facilityPWS.attributes.pws_agencycode);
-            var pws = "<b><p style=\"text-align: center;\">Public Water System Details</p></b>" + "<hr/>" + "<b>City Served: </b>" + (facilityPWS.attributes.city ? facilityPWS.attributes.city : 'Not Reported') + "</br>" + "<b>County Served: </b>" + (facilityPWS.attributes.county ? facilityPWS.attributes.county : 'Not Reported') + "</br>" + "<b>State: </b>" + (state ? state : 'Not Reported') + "</br>" + "<b>Tribe Name: </b>" + (tribe ? tribe : 'Not Reported') + "</br>" + "<b>PWS Population Served: </b>" + (facilityPWS.attributes.pws_popserve ? facilityPWS.attributes.pws_popserve : 'Not Reported') + "</br>" + "<b>Is the PWS a School or Daycare? </b>" + (school ? school : 'Not Reported') + "</br>" + "<b>PWS Owner Type: </b>" + (ownertype ? ownertype : 'Not Reported') + "</br>" + "<b>Is PWS Wholesaler to Another PWS? </b>" + (wholesale ? wholesale : 'Not Reported') + "</br>" + "<b>PWS Source Water Type: </b>" + (watertype ? watertype : 'Not Reported') + "<p style=\"text-align: center;\">&nbsp;</p>";
-            dom_construct_1.default.place(pws, 'pwsinfo');
+            var tribe = this.featureLayerPWS.getFieldDomain('tribe')["getName"](facilityPWS.attributes.tribe);
+            var school = this.featureLayerPWS.getFieldDomain('pws_schoolordaycare')["getName"](facilityPWS.attributes.pws_schoolordaycare);
+            var ownertype = this.featureLayerPWS.getFieldDomain('pws_ownertype')["getName"](facilityPWS.attributes.pws_ownertype);
+            var wholesale = this.featureLayerPWS.getFieldDomain('pws_wholesale')["getName"](facilityPWS.attributes.pws_wholesale);
+            var watertype = this.featureLayerPWS.getFieldDomain('pws_wsourcetype')["getName"](facilityPWS.attributes.pws_wsourcetype);
+            var state = this.featureLayerPWS.getFieldDomain('pws_agencycode')["getName"](facilityPWS.attributes.pws_agencycode);
+            this.pwsText.push(<div>
+                <b><p style={{textAlign: 'center'}}>Public Water System Details</p></b>
+                <hr/>
+                <b>City Served: </b>{facilityPWS.attributes.city ? facilityPWS.attributes.city : 'Not Reported'}<br/>
+                <b>County
+                    Served: </b>{facilityPWS.attributes.county ? facilityPWS.attributes.county : 'Not Reported'}<br/><b>State: </b>{state ? state : 'Not Reported'}<br/>
+                <b>Tribe Name: </b>{tribe ? tribe : 'Not Reported'}<br/>
+                <b>PWS Population
+                    Served: </b>{facilityPWS.attributes.pws_popserve ? facilityPWS.attributes.pws_popserve : 'Not Reported'}<br/>
+                <b>Is the PWS a School or Daycare? </b>{school ? school : 'Not Reported'}<br/>
+                <b>PWS Owner Type: </b>{ownertype ? ownertype : 'Not Reported'}<br/>
+                <b>Is PWS Wholesaler to Another PWS? </b>{wholesale ? wholesale : 'Not Reported'}<br/>
+                <b>PWS Source Water Type: </b>{watertype ? watertype : 'Not Reported'}<p
+                style={{textAlign: 'center'}}>&nbsp;</p>
+            </div>);
+            this.setState({
+                pwsText: this.pwsText,
+            });
         });
     };
 
     //pulls information from Primacy Agency table for the Regulatory section (bottom) "Regulatory Agency"
     loadFacilityTable(PAcode) {
-        var query = new query_1.default();
+        var query = new Query();
         query.outFields = ['*'];
         query.where = "PACode='" + PAcode + "'";
-        this.featureLayerTable.queryFeatures(query, function (featureSet) {
+        this.featureLayerTable.queryFeatures(query).then(featureSet => {
             var facilityTable = featureSet.features[0];
-            var table = "<p style=\"text-align: center;\">" + facilityTable.attributes.regauthority + "</p>" + "<p style=\"text-align: left;\"><b>Primary Contact: </b>" + (facilityTable.attributes.primarycontactname ? facilityTable.attributes.primarycontactname : 'Not Reported') + "</br>" + "<b>Phone: </b>" + (facilityTable.attributes.phone_number ? facilityTable.attributes.phone_number : 'Not Reported') + "</br>" + "<b>Email: </b>" + (facilityTable.attributes.email ? "<a href=\"mailto:" + facilityTable.attributes.email + "\"target=\"_blank\">" + facilityTable.attributes.email + " </a>" : 'Not Reported') + "</br>" + "<b>Website: </b>" + ("<a href=\"" + facilityTable.attributes.website + "\" target=\"_blank\">Click Here for Website</a>") + "</br>" + "<b>Address: </b>" + (facilityTable.attributes.mailing_address ? facilityTable.attributes.mailing_address : 'Not Reported') + "</p>";
-            dom_construct_1.default.place(table, 'tableinfo');
+            this.regulatoryText.push(<div>
+                <p style={{textAlign: 'center'}}>{facilityTable.attributes.regauthority}</p>
+                <p style={{textAlign: 'left'}}><b>Primary
+                    Contact: </b>{facilityTable.attributes.primarycontactname ? facilityTable.attributes.primarycontactname : 'Not Reported'}<br/>
+                    <b>Phone: </b>{facilityTable.attributes.phone_number ? facilityTable.attributes.phone_number : 'Not Reported'}<br/>
+                    <b>Email: </b>{facilityTable.attributes.email ?
+                        <a href={"mailto:" + facilityTable.attributes.email} target="_blank"/> : 'Not Reported'} <br/>
+                    <b>Website: </b><a href={facilityTable.attributes.website} target="_blank">Click Here for
+                        Website</a><br/>
+                    <b>Address: </b>{facilityTable.attributes.mailing_address ? facilityTable.attributes.mailing_address : 'Not Reported'}
+                </p>
+            </div>)
+            this.setState({
+                regulatoryText: this.regulatoryText,
+            });
         });
     };
 
     //pulls information from Admin Contact table for the Point of Contact section (top) "PWS Contact Information"
     loadFacilityAdmin(pwsid) {
-        var query = new query_1.default();
+        var query = new Query();
         query.where = "PWSID='" + pwsid + "'";
-        this.featureLayerAdmin.queryFeatures(query, function (featureSet) {
+        this.featureLayerAdmin.queryFeatures(query).then(featureSet => {
             var facilityAdmin = featureSet.features[0];
-            var admin = "<p style=\"text-align: left;\">" + "<b>Primary Contact: </b>" + (facilityAdmin.attributes.org_name ? facilityAdmin.attributes.org_name : 'Not Reported') + "</br>" + "<b>Phone: </b>" + (facilityAdmin.attributes.phone_number ? facilityAdmin.attributes.phone_number : 'Not Reported') + "</br><b>Email: </b>" + (facilityAdmin.attributes.email_addr ? "<a href=\"mailto:" + facilityAdmin.attributes.email_addr + "\"target=\"_blank\">" + facilityAdmin.attributes.email_addr + " </a>" : 'Not Reported') + "</br>" + "<b>Address: </b>" + (facilityAdmin.attributes.address_line1 ? facilityAdmin.attributes.address_line1 : 'Not Reported') + "</br>" + (facilityAdmin.attributes.city_name ? facilityAdmin.attributes.city_name : '') + " " + (facilityAdmin.attributes.state_code ? facilityAdmin.attributes.state_code : '') + " " + (facilityAdmin.attributes.zip_code ? facilityAdmin.attributes.zip_code : '') + "</p>";
-            dom_construct_1.default.place(admin, 'admincontacts');
+            this.adminContactText.push(
+                <div>
+                    <p style={{textAlign: 'left'}}><b>Primary
+                        Contact: </b>{facilityAdmin.attributes.org_name ? facilityAdmin.attributes.org_name : 'Not Reported'}<br/>
+                        <b>Phone: </b>{facilityAdmin.attributes.phone_number ? facilityAdmin.attributes.phone_number : 'Not Reported'}<br/>
+                        <b>Email: </b>{facilityAdmin.attributes.email_addr ?
+                            <a href={"mailto:" + facilityAdmin.attributes.email_addr}
+                               target="_blank"/> : 'Not Reported'}<br/>
+                        <b>Address: </b>{facilityAdmin.attributes.address_line1 ? facilityAdmin.attributes.address_line1 : 'Not Reported'}<br/>
+                        {facilityAdmin.attributes.city_name ? facilityAdmin.attributes.city_name : ''} {facilityAdmin.attributes.state_code ? facilityAdmin.attributes.state_code : ''} {facilityAdmin.attributes.zip_code ? facilityAdmin.attributes.zip_code : ''}
+                    </p>
+                </div>
+            );
+            this.setState({
+                adminContactText: this.adminContactText,
+            });
         });
     };
 
@@ -428,6 +488,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 {this.loading ? <h2 style={{background: 'white'}}>Loading...</h2> :
                     <div>
                         <this.Grid/>
+                        <this.Facility/>
                     </div>
                 }
 
