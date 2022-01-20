@@ -127,87 +127,90 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         if (widgetState == WidgetState.Opened) {
             if (this.first) {
                 this.loading = true;
-                if (this.featureLayer.loaded) {
-                    let query = new Query;
-                    query.where = '1=1';
-                    this.featureLayer.queryFeatureCount(query).then(count => {
-                        this.onOpenText.push(
-                            <div>
-                                There are currently <b>{count}</b> facilities in the SDWIS feature service.<br/>
-                                <b><i>This data is scale-dependent, please zoom in to see the points.</i></b><h2
-                                style={{textDecoration: 'underline'}}>Safe Drinking Water Information System
-                                (SDWIS)</h2>
-                                The data is directly from the <b>National SDWIS Database</b> and updated on a quarterly
-                                basis. The service provides information on facilities, public water systems, primacy
-                                agencies, administrative contacts, and tribal entities. The facility symbols
-                                are <i>clustered</i> to minimize overlap; zoom in closer to see a facility's true
-                                location. Detailed information about the <b>SDWIS Federal Reporting Services</b> can be
-                                found <b>
-                                <a href={"https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-information-system-sdwis-federal-reporting"}
-                                   target="_blank"> here.</a></b>
-                                <h2 style={{textDecoration: 'underline'}}>Enforcement & Compliance History Online
-                                    (ECHO)</h2>EPA's ECHO website provides details for facilities in your community to
-                                assess their compliance with environmental regulations. The interaction in this widget
-                                uses the Public Water System (PWS) ID to search the records. Check out the ECHO
-                                website <a href={"https://echo.epa.gov/"} target="_blank"><b>here</b></a> for more
-                                information and guidance.<br/>
-                                The <i><b>ECHO Detailed System Report</b></i> is linked with the selected facility
-                                record and opens the ECHO website details for the associated public water system in a
-                                new browser window. <h2 style={{textDecoration: 'underline'}}>Definitions</h2><b>Facilities
-                                - </b>These points represent facilities within a public water system. The facility types
-                                include but are not limited to wells, well heads, treatment plants, sampling stations,
-                                valves, transmission mains, pumps, pressure control, etc. Facilities are identified with
-                                Facility ID and Facility Name. The PWS ID indicates the public water system the selected
-                                facility falls under.<br/>
-                                <img id="Legend" src={'./assets/Symbology.png'}
-                                     style={{width: "75%", height: "75%"}}/><br/>
-                                <b>Public Water Systems (PWS) - </b> The public water system information is linked from
-                                the facility selected in the map. The PWS ID and PWS Name provide the unique
-                                identification for the public water system associated with the facility record.<br/>
-                                <br/>
-                                <table style={{
-                                    borderColor: '#000000',
-                                    marginLeft: 'auto',
-                                    marginRight: 'auto',
-                                    width: '100%'
-                                }}>
-                                    <tbody>
-                                    <td style={{textAlign: 'left', width: '287px'}}>
-                                        <b>PWS Contact Information - </b>This
-                                        section provides contact information for the public water system associated with
-                                        the selected facility. This information comes from the Admin Contacts
-                                        table.<br/>
-                                    </td>
-                                    </tbody>
-                                </table>
-                                <table style={{
-                                    height: '98px',
-                                    borderColor: '#000000',
-                                    marginLeft: 'auto',
-                                    marginRight: 'auto',
-                                    width: '100%',
-                                }}>
-                                    <tbody>
-                                    <td style={{textAlign: 'left', width: '287px'}}><b>Regulatory Agency - </b> This
-                                        section provides information for the regulatory organization associated with and
-                                        responsible for the selected facility's public water system. This information
-                                        comes from the Primacy Agency table." + "<br/></td>
-                                    </tbody>
-                                </table>
-                            </div>
-                        );
-
-                        this.setState({
-                            onOpenText: this.onOpenText
-                        }, () => {
-                            this.LandingText();
-                        })
-                    });
-                }
+                this.featureLayer.visible = true
+                // if (this.featureLayer.loaded) {
+                let query = new Query;
+                query.where = '1=1';
+                this.featureLayer.queryFeatureCount(query).then(count => {
+                    this.onOpenText.push(
+                        <div>
+                            There are currently <b>{count}</b> facilities in the SDWIS feature service.<br/>
+                            <b><i>This data is scale-dependent, please zoom in to see the points.</i></b><h2
+                            style={{textDecoration: 'underline'}}>Safe Drinking Water Information System
+                            (SDWIS)</h2>
+                            The data is directly from the <b>National SDWIS Database</b> and updated on a quarterly
+                            basis. The service provides information on facilities, public water systems, primacy
+                            agencies, administrative contacts, and tribal entities. The facility symbols
+                            are <i>clustered</i> to minimize overlap; zoom in closer to see a facility's true
+                            location. Detailed information about the <b>SDWIS Federal Reporting Services</b> can be
+                            found <b>
+                            <a href={"https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-information-system-sdwis-federal-reporting"}
+                               target="_blank"> here.</a></b>
+                            <h2 style={{textDecoration: 'underline'}}>Enforcement & Compliance History Online
+                                (ECHO)</h2>EPA's ECHO website provides details for facilities in your community to
+                            assess their compliance with environmental regulations. The interaction in this widget
+                            uses the Public Water System (PWS) ID to search the records. Check out the ECHO
+                            website <a href={"https://echo.epa.gov/"} target="_blank"><b>here</b></a> for more
+                            information and guidance.<br/>
+                            The <i><b>ECHO Detailed System Report</b></i> is linked with the selected facility
+                            record and opens the ECHO website details for the associated public water system in a
+                            new browser window. <h2 style={{textDecoration: 'underline'}}>Definitions</h2><b>Facilities
+                            - </b>These points represent facilities within a public water system. The facility types
+                            include but are not limited to wells, well heads, treatment plants, sampling stations,
+                            valves, transmission mains, pumps, pressure control, etc. Facilities are identified with
+                            Facility ID and Facility Name. The PWS ID indicates the public water system the selected
+                            facility falls under.<br/>
+                            <img id="Legend" src={'./assets/Symbology.png'}
+                                 style={{width: "75%", height: "75%"}}/><br/>
+                            <b>Public Water Systems (PWS) - </b> The public water system information is linked from
+                            the facility selected in the map. The PWS ID and PWS Name provide the unique
+                            identification for the public water system associated with the facility record.<br/>
+                            <br/>
+                            <table style={{
+                                borderColor: '#000000',
+                                marginLeft: 'auto',
+                                marginRight: 'auto',
+                                width: '100%'
+                            }}>
+                                <tbody>
+                                <td style={{textAlign: 'left', width: '287px'}}>
+                                    <b>PWS Contact Information - </b>This
+                                    section provides contact information for the public water system associated with
+                                    the selected facility. This information comes from the Admin Contacts
+                                    table.<br/>
+                                </td>
+                                </tbody>
+                            </table>
+                            <table style={{
+                                height: '98px',
+                                borderColor: '#000000',
+                                marginLeft: 'auto',
+                                marginRight: 'auto',
+                                width: '100%',
+                            }}>
+                                <tbody>
+                                <td style={{textAlign: 'left', width: '287px'}}><b>Regulatory Agency - </b> This
+                                    section provides information for the regulatory organization associated with and
+                                    responsible for the selected facility's public water system. This information
+                                    comes from the Primacy Agency table." + "<br/></td>
+                                </tbody>
+                            </table>
+                        </div>
+                    );
+                    this.loading = false;
+                    this.setState({
+                        onOpenText: this.onOpenText,
+                        loading: this.loading
+                    }, () => {
+                        this.LandingText();
+                    })
+                });
+                // }
             }
             this.first = false;
         } else {
             this.first = true;
+            this.featureLayer.visible = false;
 
         }
     }
