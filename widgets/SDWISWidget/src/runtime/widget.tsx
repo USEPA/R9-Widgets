@@ -61,6 +61,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.mapClick = this.mapClick.bind(this);
         this.rowClick = this.rowClick.bind(this);
         this.Grid = this.Grid.bind(this);
+        this.Facility = this.Facility.bind(this);
         this.onSortColsChange = this.onSortColsChange.bind(this);
         this.loadFacility = this.loadFacility.bind(this);
         this.loadFacilityPWS = this.loadFacilityPWS.bind(this);
@@ -87,6 +88,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             outFields: ['*']
         });
         this.featureLayer.on('layerview-create-error', (e) => {
+            this.loading = false;
             this.onOpenText = [];
             this.onOpenText.push(
                 <div>
@@ -95,10 +97,14 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 </div>
             );
             this.setState({
+                loading: this.loading,
                 onOpenText: this.onOpenText,
             });
         });
-
+        this.jmv.view.map.layers.add(this.featureLayer);
+        this.jmv.view.map.layers.add(this.featureLayerPWS);
+        this.jmv.view.map.layers.add(this.featureLayerTable);
+        this.jmv.view.map.layers.add(this.featureLayerAdmin);
         this.symbol = new SimpleMarkerSymbol();
     }
 
