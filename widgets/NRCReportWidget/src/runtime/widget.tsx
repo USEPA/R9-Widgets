@@ -1,11 +1,16 @@
 /** @jsx jsx */
 import './assets/style.css';
-import {React, AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState} from "jimu-core";
+import {React, AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState, SessionManager} from "jimu-core";
 import {IMConfig} from "../config";
 import {JimuMapView, JimuMapViewComponent} from "jimu-arcgis";
 import DataGrid, {SelectColumn} from "react-data-grid";
 import GraphicsLayer from "esri/layers/GraphicsLayer";
 import Extent from "esri/geometry/Extent";
+import FeatureLayer from "esri/layers/FeatureLayer";
+import Query from "esri/rest/support/Query";
+import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
+import Graphic from "esri/Graphic";
+import Color from "esri/Color";
 
 function getComparator(sortColumn: string) {
     switch (sortColumn) {
@@ -21,19 +26,27 @@ function getComparator(sortColumn: string) {
 
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     jimuMapView: JimuMapView, loading: boolean, columns: any[], rows: any[], sortedRows: any[], sortColumns: any[],
+    nothingThere: any[], record: any[],
 }> {
 
     jmv: JimuMapView;
     first: boolean = false;
-    loading: boolean = true;
+    loading: boolean = false;
     mainText: boolean = true;
     rows: any[] = [];
     sortedRows: any[] = [];
     columns: any[] = [];
     sortColumns: any[] = [];
     graphicsLayer: GraphicsLayer;
-    nothingThere: boolean = false;
+    nothingThere: any[] = [];
     multipleLocations: boolean = false;
+    nrcLayer: FeatureLayer;
+    featureSet: any[] = [];
+    symbol: SimpleMarkerSymbol;
+    proxyUrl = "https://r9data.response.epa.gov/apps/webeocproxy";
+    token: any;
+    record: any[] = [];
+
 
     constructor(props) {
         super(props);
@@ -43,10 +56,27 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.mapClick = this.mapClick.bind(this);
         this.rowClick = this.rowClick.bind(this);
         this.Grid = this.Grid.bind(this);
-        this.onSortColsChange = this.onSortColsChange.bind(this)
+        this.onSortColsChange = this.onSortColsChange.bind(this);
+        this.RecordText = this.RecordText.bind(this);
+        this.loadLog = this.loadLog.bind(this);
+
     }
 
     componentDidMount() {
+
+        this.nrcLayer = new FeatureLayer({url: 'https://utility.arcgis.com/usrsvcs/servers/ea5c6623faee4c71a165c07902c5394b/rest/services/WebEOC/WebEOCHotlineLogGeoJSON_NEW/FeatureServer/0'});
+        this.jmv.view.map.layers.add(this.nrcLayer);
+        this.graphicsLayer = new GraphicsLayer();
+        this.symbol = new SimpleMarkerSymbol({size: 20, color: new Color([255, 255, 0, 0.5])});
+
+        this.jmv.view.map.layers.add(this.nrcLayer);
+        this.jmv.view.map.layers.add(this.graphicsLayer);
+
+        let sessions = SessionManager.getInstance().getSessions();
+        if (sessions.length > 0) {
+            // todo: make sure this will work in all cases of the app being used
+            this.token = sessions[0].token;
+        }
     }
 
     onActiveViewChange = (jmv: JimuMapView) => {
@@ -61,12 +91,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         }
     }
 
-    componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView}>, snapshot?: any) {
+    componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView }>, snapshot?: any) {
         let widgetState: WidgetState;
         widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
         // do anything on open/close of widget here
         if (widgetState == WidgetState.Opened) {
             if (this.first) {
+
             }
             this.first = false;
         } else {
@@ -91,7 +122,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         if (this.mainText) {
             return (
                 <div id="landingText" style={{overflow: 'auto'}}>
-
+                    <h2> Select Web EOC point to view the log.</h2>
                 </div>
             )
         } else {
@@ -103,11 +134,15 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.mainText = false;
         this.loading = true;
         this.rows = [];
+        this.record = [];
         this.sortedRows = [];
+        this.nothingThere = [];
         this.setState({
             loading: this.loading,
             rows: this.rows,
             sortedRows: this.sortedRows,
+            record: this.record,
+            nothingThere: this.nothingThere,
         });
 
         this.graphicsLayer.removeAll();
@@ -121,7 +156,48 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             spatialReference: this.jmv.view.spatialReference,
         });
 
+        let featureQuery = new Query();
+        featureQuery.outFields = ['*'];
+        featureQuery.geometry = clickExtent;
+        featureQuery.orderByFields = ['dateofreport DESC'];
+        featureQuery.returnGeometry = true;
+        this.nrcLayer.queryFeatures(featureQuery).then((features) => {
+            this.featureSet = features.features
+            if (this.featureSet.length === 1) {
+                this.loadLog(features[0]);
+            } else if (this.featureSet.length > 1) {
+                this.multipleLocations = true;
+                let data = [];
 
+                this.featureSet.forEach(feature => {
+                    data.push(feature.attributes);
+                });
+
+                this.rows = data;
+                this.sortedRows = data;
+                this.columns = [{key: 'sourceofpollution', name: 'Source of Pollution'}, {
+                    key: 'dateofreport',
+                    name: 'Date of Report'
+                }];
+                this.loading = false;
+
+                this.setState({
+                    rows: this.rows,
+                    sortedRows: this.sortedRows,
+                    columns: this.columns,
+                    loading: this.loading
+                }, () => {
+                    this.Grid();
+                });
+            } else {
+                this.nothingThere = [<h3>No logs found at this location</h3>]
+                this.loading = false;
+                this.setState({
+                    nothingThere: this.nothingThere,
+                    loading: this.loading,
+                });
+            }
+        });
     }
 
     rowKeyGetter(row) {
@@ -129,14 +205,14 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     rowClick(row) {
-        // let location = this.featureSet.filter((feature) => {
-    //         return feature.attributes.OBJECTID === this.sortedRows[row].OBJECTID;
-    //     });
-    //     this.loadFeature(location[0]);
+        let location = this.featureSet.filter((feature) => {
+            return feature.attributes.OBJECTID === this.sortedRows[row].OBJECTID;
+        });
+        this.loadLog(location[0]);
     }
 
     NothingFound() {
-        if (this.nothingThere) {
+        if (this.nothingThere.length > 0) {
             return (
                 <div>
                     <h3>No facilities found at this location</h3><br/>
@@ -199,6 +275,44 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         return this.sortedRows
     }
 
+    RecordText() {
+        if (this.record.length >0) {
+            return (
+                <div>
+                    {this.record}
+                </div>
+            )
+        } else {
+            return null
+        }
+    }
+
+    loadLog(logEntry) {
+        this.loading = true;
+        this.setState({
+            loading: this.loading
+        });
+        let selectedGraphic = new Graphic({geometry: logEntry.geometry, symbol: this.symbol});
+        this.graphicsLayer.add(selectedGraphic);
+        fetch(this.proxyUrl + '/' + logEntry.attributes.nrcnumber, {
+            headers: {'Content-Type': 'application/json', 'Authorization': this.token}
+        }).then(function (response) {
+            return response.text();
+        }).then((response) => {
+            this.loading = false;
+            this.record.push(
+                <div>
+                    {response}
+                </div>);
+
+            this.setState({
+                loading: this.loading,
+                record: this.record,
+            }, () => {
+                this.RecordText();
+            });
+        });
+    }
 
     render() {
         return (
@@ -207,6 +321,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 {this.loading ? <h2 style={{background: 'white'}}>Loading...</h2> :
                     <div>
                         <this.Grid/>
+                        <this.RecordText/>
                     </div>
                 }
 
