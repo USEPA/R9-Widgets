@@ -211,7 +211,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         } else {
             this.first = true;
             this.featureLayer.visible = false;
-
         }
     }
 

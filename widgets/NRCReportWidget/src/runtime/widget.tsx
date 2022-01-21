@@ -15,9 +15,14 @@ import Color from "esri/Color";
 function getComparator(sortColumn: string) {
     switch (sortColumn) {
         // todo: configure for NRC columns
-        case '':
+        case 'sourceofpollution':
             return (a, b) => {
                 return a[sortColumn].localeCompare(b[sortColumn]);
+            };
+        case 'dateofreport':
+            return (a, b) => {
+                // @ts-ignore
+                return new Date(a[sortColumn]) - new Date(b[sortColumn]);
             };
         default:
             throw new Error(`unsupported sortColumn: "${sortColumn}"`);
@@ -97,11 +102,16 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         // do anything on open/close of widget here
         if (widgetState == WidgetState.Opened) {
             if (this.first) {
-
+                this.loading = false;
+                this.nrcLayer.visible = true;
+                this.setState({
+                    loading: this.loading
+                });
             }
             this.first = false;
         } else {
             this.first = true;
+            this.nrcLayer.visible = false;
 
         }
     }
@@ -175,10 +185,20 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
                 this.rows = data;
                 this.sortedRows = data;
-                this.columns = [{key: 'sourceofpollution', name: 'Source of Pollution'}, {
-                    key: 'dateofreport',
-                    name: 'Date of Report'
-                }];
+                this.columns = [
+                    {
+                        key: 'sourceofpollution',
+                        name: 'Source of Pollution'
+                    },
+                    {
+                        key: 'dateofreport',
+                        name: 'Date of Report',
+                        formatter(props) {
+                            const date = props.row.dateofreport
+                            return <p>{new Date(date).toISOString().split('T')[0]}</p>
+                        }
+                    }
+                ];
                 this.loading = false;
 
                 this.setState({
@@ -276,7 +296,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     RecordText() {
-        if (this.record.length >0) {
+        if (this.record.length > 0) {
             return (
                 <div>
                     {this.record}
