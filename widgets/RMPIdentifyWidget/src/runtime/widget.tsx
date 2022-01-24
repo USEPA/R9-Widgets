@@ -116,7 +116,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.loading = true;
         this.setState({
             loading: this.loading,
-        })
+        });
         this.rmpLayer = new MapImageLayer({
             url: "https://utility.arcgis.com/usrsvcs/servers/a9dda0a4ba0a433992ce3bdffd89d35a/rest/services/SharedServices/RMPFacilities/MapServer",
         });

@@ -11,6 +11,11 @@ import Query from "esri/rest/support/Query";
 import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
 import Graphic from "esri/Graphic";
 import Color from "esri/Color";
+import esriConfig from "esri/config";
+import esriRequest from "esri/request";
+import urlUtils from "esri/core/urlUtils";
+import dangerouslySetInnerHTML from 'react'
+
 
 function getComparator(sortColumn: string) {
     switch (sortColumn) {
@@ -48,7 +53,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     nrcLayer: FeatureLayer;
     featureSet: any[] = [];
     symbol: SimpleMarkerSymbol;
-    proxyUrl = "https://r9data.response.epa.gov/apps/webeocproxy";
+    // proxyUrl = "https://r9data.response.epa.gov/apps/webeocproxy";
+    proxyUrl = "http://127.0.0.1:5000";
     token: any;
     record: any[] = [];
 
@@ -68,13 +74,28 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     componentDidMount() {
+        // esriConfig.request.proxyUrl = "http://127.0.0.1:5000";
+        //
+        // urlUtils.addProxyRule({
+        //     urlPrefix: 'localhost:3001',
+        //     proxyUrl: this.proxyUrl
+        // });
 
+        this.loading = true;
+        this.setState({
+            loading: this.loading,
+        });
         this.nrcLayer = new FeatureLayer({url: 'https://utility.arcgis.com/usrsvcs/servers/ea5c6623faee4c71a165c07902c5394b/rest/services/WebEOC/WebEOCHotlineLogGeoJSON_NEW/FeatureServer/0'});
         this.jmv.view.map.layers.add(this.nrcLayer);
+        this.nrcLayer.on('layerview-create', () => {
+                this.mainText = true;
+                this.LandingText();
+            }
+        );
+
         this.graphicsLayer = new GraphicsLayer();
         this.symbol = new SimpleMarkerSymbol({size: 20, color: new Color([255, 255, 0, 0.5])});
 
-        this.jmv.view.map.layers.add(this.nrcLayer);
         this.jmv.view.map.layers.add(this.graphicsLayer);
 
         let sessions = SessionManager.getInstance().getSessions();
@@ -82,6 +103,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             // todo: make sure this will work in all cases of the app being used
             this.token = sessions[0].token;
         }
+        console.log('sure did mounted')
     }
 
     onActiveViewChange = (jmv: JimuMapView) => {
@@ -174,7 +196,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.nrcLayer.queryFeatures(featureQuery).then((features) => {
             this.featureSet = features.features
             if (this.featureSet.length === 1) {
-                this.loadLog(features[0]);
+                this.multipleLocations = false;
+                this.loadLog(this.featureSet[0]);
             } else if (this.featureSet.length > 1) {
                 this.multipleLocations = true;
                 let data = [];
@@ -210,6 +233,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     this.Grid();
                 });
             } else {
+                this.multipleLocations = false;
                 this.nothingThere = [<h3>No logs found at this location</h3>]
                 this.loading = false;
                 this.setState({
@@ -314,15 +338,15 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         });
         let selectedGraphic = new Graphic({geometry: logEntry.geometry, symbol: this.symbol});
         this.graphicsLayer.add(selectedGraphic);
-        fetch(this.proxyUrl + '/' + logEntry.attributes.nrcnumber, {
+        fetch(this.proxyUrl + '/webeocproxy/' + logEntry.attributes.nrcnumber, {
             headers: {'Content-Type': 'application/json', 'Authorization': this.token}
         }).then(function (response) {
             return response.text();
         }).then((response) => {
             this.loading = false;
             this.record.push(
-                <div>
-                    {response}
+                // todo: explore alternatives to this method
+                <div dangerouslySetInnerHTML={{__html: response}}>
                 </div>);
 
             this.setState({
@@ -344,7 +368,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         <this.RecordText/>
                     </div>
                 }
-
                 {this.mainText ? this.LandingText() : null}
                 <JimuMapViewComponent useMapWidgetId={this.getArbitraryFirstMapWidgetId()}
                                       onActiveViewChange={this.onActiveViewChange}/>

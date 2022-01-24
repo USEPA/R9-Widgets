@@ -1,19 +1,24 @@
 /* add additional custom styles */
 .windmenu {
-  /*display: none;*/
-  /*position: absolute;*/
-  background: rgba(0, 0, 0, 0.55);
-  border-radius: 3px;
-  padding: 0 14px;
-  width: 220px !important;
-  z-index: 102 !important;
-  /*top:auto !important;
-	bottom:20px !important;
-	overflow: hidden;*/
-  transition: height 0.5s ease;
-  -moz-transition: height 0.5s ease;
-  -webkit-transition: height 0.5s ease;
-  -o-transition: height 0.5s ease; }
+    /*display: none;*/
+    position: absolute;
+    background: rgba(0, 0, 0, 0.55);
+    border-radius: 3px;
+    padding: 0 14px;
+    width: 220px !important;
+    z-index: 102 !important;
+    top: auto !important;
+    bottom: 20px !important;
+    overflow: hidden;
+    transition: height 0.5s ease;
+    -moz-transition: height 0.5s ease;
+    -webkit-transition: height 0.5s ease;
+    -o-transition: height 0.5s ease;
+}
+
+/*.widget-renderer {*/
+/*    background: rgba(0, 0, 0, 0.55);*/
+/*}*/
 
 /*.jimu-widget-windmenu .hide {*/
 /*  display: none !important; }*/

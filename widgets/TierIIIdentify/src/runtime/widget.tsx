@@ -16,7 +16,7 @@ import RelationshipQuery from "esri/rest/support/RelationshipQuery";
 import Graphic from "esri/Graphic";
 import FeatureLayer from "esri/layers/FeatureLayer";
 import moment from "Moment";
-import {Button, Modal, ModalBody, ModalFooter, ModalHeader} from "jimu-ui"
+import {Button} from "jimu-ui"
 import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
 import type {Column} from "react-data-grid";
 import {Sort} from "../../../../../jimu-ui/advanced/lib/sql-expression-builder/styles";
@@ -90,9 +90,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.onSortColsChange = this.onSortColsChange.bind(this);
         this.ContactsText = this.ContactsText.bind(this);
         this.ChemicalsText = this.ChemicalsText.bind(this);
+        this.badLocations = this.badLocations.bind(this)
     }
 
     componentDidMount() {
+        console.log('did mountedddd')
         this.tierIILayer = new MapImageLayer({
             url: "https://utility.arcgis.com/usrsvcs/servers/ea77cd05c98e44a98fdaddc83948015d/rest/services/EPA_EPCRA/TierIIFacilities_new_dev/MapServer"
         });
@@ -132,6 +134,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     });
                 })
             });
+
             this.jmv.view.map.add(this.tierIILayer);
             this.jmv.view.map.add(this.graphicsLayer);
             // this.TierIIHazards.load();
@@ -205,6 +208,56 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
     };
 
+    badLocations() {
+        // this.loading = true;
+        // this.setState({
+        //     loading: this.loading
+        // })
+        let fls = [this.tierIICA, this.tierIIAZ, this.tierIINV, this.tierIIHI];
+        this.featureSet = [];
+        this.rows = [];
+        this.sortedRows = [];
+        let query = new Query();
+        query.where = "NeedsReview = 'true'";
+        query.returnGeometry = true;
+        query.outFields = ['*'];
+        let promises = [];
+        fls.forEach(fl => {
+            let promise = fl.queryFeatures(query).then(featureSet => {
+                if (featureSet.features.length > 0) {
+                    this.featureSet.push(...featureSet.features)
+                    // let data = []
+                    this.featureSet.forEach(feature => {
+                        var attrs = feature.attributes;
+                       this.sortedRows.push(attrs);
+                    });
+
+                    // this.rows.push(...data)
+                    // this.sortedRows.push(...data)
+                    // this.loading = false;
+                    // this.setState({
+                    //     rows: this.rows,
+                    //     sortedRows: this.sortedRows,
+                    //     // loading: this.loading,
+                    // });
+                }
+            });
+            promises.push(promise);
+        });
+
+        Promise.all(promises).then(() => {
+            this.loading = false;
+            this.setState({
+                loading: this.loading,
+                sortedRows: this.sortedRows,
+            });
+            console.log('bad queried');
+            this.multipleLocations = true
+            this.Grid();
+        });
+        return
+    }
+
     onActiveViewChange = (jmv: JimuMapView) => {
         this.jmv = jmv;
         if (jmv) {
@@ -261,6 +314,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         </tbody>
                     </table>
                     <p>Click Facility to view contact and chemical information.</p><br/>
+                    <Button onClick={this.badLocations}>View locations needing review</Button><br/>
                     <p>More info on the Emergency Planning and Community Right-to-Know Act (EPCRA):
                         <a href={"https://www.epa.gov/epcra"}>https://www.epa.gov/epcra</a></p><br/>
                     <p>EPCRA Fact Sheet: <a
