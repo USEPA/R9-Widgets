@@ -3,13 +3,9 @@ import './assets/style.css';
 import {React, AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState} from "jimu-core";
 import {IMConfig} from "../config";
 import {JimuMapView, JimuMapViewComponent} from "jimu-arcgis";
-import PictureMarkerSymbol from "esri/symbols/PictureMarkerSymbol";
 import MapImageLayer from "esri/layers/MapImageLayer";
-import DataGrid, {SelectColumn} from "react-data-grid";
+import DataGrid from "react-data-grid";
 import Query from "esri/rest/support/Query";
-import SpatialReference from "esri/geometry/SpatialReference";
-import query from "esri/rest/query";
-import geometryEngine from "esri/geometry/geometryEngine";
 import GraphicsLayer from "esri/layers/GraphicsLayer";
 import Extent from "esri/geometry/Extent";
 import RelationshipQuery from "esri/rest/support/RelationshipQuery";
@@ -18,8 +14,9 @@ import FeatureLayer from "esri/layers/FeatureLayer";
 import moment from "Moment";
 import {Button} from "jimu-ui"
 import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
-import type {Column} from "react-data-grid";
-import {Sort} from "../../../../../jimu-ui/advanced/lib/sql-expression-builder/styles";
+import FeatureEffect from "esri/views/layers/support/FeatureEffect";
+import FeatureFilter from "esri/views/layers/support/FeatureFilter";
+
 
 interface Row {
 }
@@ -37,7 +34,7 @@ function getComparator(sortColumn: string) {
 
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     jimuMapView: JimuMapView, loading: boolean, attributes: any, facilities: any, nothingThere: boolean,
-    featureSet: any[], columns: any[], rows: any[], sortedRows: any[], sortColumns: any[], contactInfo: any[], chemicalInfo: any[], recordsText: any[],
+    featureSet: any[], columns: any[], rows: any[], sortedRows: any[], sortColumns: any[], contactInfo: any[], chemicalInfo: any[], recordsText: any[], mainText: boolean,
 }> {
 
     jmv: JimuMapView;
@@ -74,6 +71,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     chemicalInfo: any[] = [];
     recordsLayer: FeatureLayer;
     recordsText: any[] = [];
+    badPoints: boolean = false;
 
     constructor(props) {
         super(props);
@@ -95,6 +93,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
     componentDidMount() {
         console.log('did mountedddd')
+        let badLocFeatureEffect = new FeatureEffect({
+            filter: new FeatureFilter({
+                where: "NeedsReview = true"
+            }),
+            includedEffect: "hue-rotate(270deg)"
+        });
         this.tierIILayer = new MapImageLayer({
             url: "https://utility.arcgis.com/usrsvcs/servers/ea77cd05c98e44a98fdaddc83948015d/rest/services/EPA_EPCRA/TierIIFacilities_new_dev/MapServer"
         });
@@ -135,6 +139,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 })
             });
 
+            this.allTierIIfl.forEach(fl => {
+                this.jmv.view.map.layers.add(fl);
+                this.jmv.view.whenLayerView(fl).then(layerView => {
+                    // @ts-ignore
+                    layerView.featureEffect = badLocFeatureEffect
+                });
+            })
             this.jmv.view.map.add(this.tierIILayer);
             this.jmv.view.map.add(this.graphicsLayer);
             // this.TierIIHazards.load();
@@ -192,72 +203,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         });
     }
 
-    loadRelated(obj) {
-        obj.relationships.forEach((relationship) => {
-            if (relationship.role === "origin") {
-                this[relationship.name] = new FeatureLayer({url: this.baseurl + "/" + relationship.relatedTableId});
-                this[relationship.name].relationshipId = relationship.id;
-                this[relationship.name].load().then((e) => {
-                    this[relationship.name] = e;
-                    if (this[relationship.name].relationships.length > 0) {
-                        this.loadRelated(this[relationship.name]);
-                    }
-                })
-            }
-        });
-
-    };
-
-    badLocations() {
-        // this.loading = true;
-        // this.setState({
-        //     loading: this.loading
-        // })
-        let fls = [this.tierIICA, this.tierIIAZ, this.tierIINV, this.tierIIHI];
-        this.featureSet = [];
-        this.rows = [];
-        this.sortedRows = [];
-        let query = new Query();
-        query.where = "NeedsReview = 'true'";
-        query.returnGeometry = true;
-        query.outFields = ['*'];
-        let promises = [];
-        fls.forEach(fl => {
-            let promise = fl.queryFeatures(query).then(featureSet => {
-                if (featureSet.features.length > 0) {
-                    this.featureSet.push(...featureSet.features)
-                    // let data = []
-                    this.featureSet.forEach(feature => {
-                        var attrs = feature.attributes;
-                       this.sortedRows.push(attrs);
-                    });
-
-                    // this.rows.push(...data)
-                    // this.sortedRows.push(...data)
-                    // this.loading = false;
-                    // this.setState({
-                    //     rows: this.rows,
-                    //     sortedRows: this.sortedRows,
-                    //     // loading: this.loading,
-                    // });
-                }
-            });
-            promises.push(promise);
-        });
-
-        Promise.all(promises).then(() => {
-            this.loading = false;
-            this.setState({
-                loading: this.loading,
-                sortedRows: this.sortedRows,
-            });
-            console.log('bad queried');
-            this.multipleLocations = true
-            this.Grid();
-        });
-        return
-    }
-
     onActiveViewChange = (jmv: JimuMapView) => {
         this.jmv = jmv;
         if (jmv) {
@@ -275,19 +220,32 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
         // do anything on open/close of widget here
         if (widgetState == WidgetState.Opened) {
-            this.tierIILayer.visible = true;
             if (this.first) {
+                this.badPoints = false;
+                this.tierIILayer.visible = true;
+                this.mainText = true;
                 this.nothingThere = false;
                 this.setState({
+                    mainText: this.mainText,
                     nothingThere: this.nothingThere,
                 });
                 this.jmv.view.map.layers.add(this.graphicsLayer);
             }
             this.first = false;
         } else {
+            this.badPoints = false;
+            this.featureSet = [];
+            this.rows = [];
+            this.sortedRows = [];
+            this.attributes = undefined;
+            this.contactInfo = [];
+            this.chemicalInfo = [];
+            this.multipleLocations = false;
+            this.nothingThere = false;
             this.first = true;
             this.jmv.view.map.layers.remove(this.graphicsLayer);
             this.tierIILayer.visible = false;
+            this.mainText = true;
         }
     }
 
@@ -303,6 +261,114 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         }
     }
 
+    loadRelated(obj) {
+        obj.relationships.forEach((relationship) => {
+            if (relationship.role === "origin") {
+                this[relationship.name] = new FeatureLayer({url: this.baseurl + "/" + relationship.relatedTableId});
+                this[relationship.name].relationshipId = relationship.id;
+                this[relationship.name].load().then((e) => {
+                    this[relationship.name] = e;
+                    if (this[relationship.name].relationships.length > 0) {
+                        this.loadRelated(this[relationship.name]);
+                    }
+                })
+            }
+        });
+
+    };
+
+    badLocations(e) {
+        if (e) {
+            this.mainText = false;
+            this.loading = true;
+            this.featureSet = [];
+            this.rows = [];
+            this.sortedRows = [];
+            this.attributes = undefined;
+            this.contactInfo = [];
+            this.chemicalInfo = [];
+            this.multipleLocations = false;
+            this.nothingThere = false;
+            this.setState({
+                loading: this.loading,
+                featureSet: this.featureSet,
+                rows: this.rows,
+                sortedRows: this.sortedRows,
+                attributes: this.attributes,
+                contactInfo: this.contactInfo,
+                chemicalInfo: this.chemicalInfo,
+                nothingThere: this.nothingThere
+            });
+
+            let fls = [this.tierIICA, this.tierIIAZ, this.tierIINV, this.tierIIHI];
+            this.columns = [{key: 'FacilityName', name: 'Name'}];
+            this.graphicsLayer.removeAll();
+            let query = new Query();
+            query.where = "NeedsReview = 1";
+            query.returnGeometry = true;
+            query.outFields = ['*'];
+            let promises = [];
+            fls.forEach(fl => {
+                let promise = fl.queryFeatures(query).then(featureSet => {
+                    if (featureSet.features.length > 0) {
+                        this.featureSet.push(...featureSet.features)
+                        // let data = []
+                        this.featureSet.forEach(feature => {
+                            var attrs = feature.attributes;
+                            this.sortedRows.push(attrs);
+                            this.rows.push(attrs)
+                        });
+
+                        // this.rows.push(...data)
+                        // this.sortedRows.push(...data)
+                        // this.loading = false;
+                        // this.setState({
+                        //     rows: this.rows,
+                        //     sortedRows: this.sortedRows,
+                        //     // loading: this.loading,
+                        // });
+                    }
+                });
+                promises.push(promise);
+            });
+
+            Promise.all(promises).then(() => {
+                if (this.featureSet.length === 1) {
+                    this.loadFeature(this.featureSet[0]);
+                    let symbol = new SimpleMarkerSymbol({style: 'x', size: '20px', color: 'yellow'})
+
+                    let badPoint = new Graphic({geometry: this.featureSet[0].geometry, symbol});
+                    this.graphicsLayer.add(badPoint);
+
+                    this.jmv.view.goTo({
+                        center: [location[0].geometry.longitude, location[0].geometry.latitude]
+                    });
+
+                } else if (this.featureSet.length > 1) {
+                    this.badPoints = true;
+                    this.loading = false;
+                    this.multipleLocations = true
+                    this.setState({
+                        loading: this.loading,
+                        rows: this.rows,
+                        sortedRows: this.sortedRows,
+                        columns: this.columns,
+                    }, () => {
+                        this.Grid();
+                    });
+                } else {
+                    console.log('none bad')
+                    this.nothingThere = true;
+                    this.loading = false;
+                    this.setState({
+                        loading: this.loading,
+                        nothingThere: this.nothingThere,
+                    });
+                }
+            });
+        }
+    }
+
     LandingText = () => {
         if (this.mainText) {
             return (
@@ -314,7 +380,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         </tbody>
                     </table>
                     <p>Click Facility to view contact and chemical information.</p><br/>
-                    <Button onClick={this.badLocations}>View locations needing review</Button><br/>
+                    <Button id="badLocations" onClick={(e) => this.badLocations(e)}>View locations needing
+                        review</Button>
+                    <br/>
                     <p>More info on the Emergency Planning and Community Right-to-Know Act (EPCRA):
                         <a href={"https://www.epa.gov/epcra"}>https://www.epa.gov/epcra</a></p><br/>
                     <p>EPCRA Fact Sheet: <a
@@ -332,6 +400,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             return (
                 <div>
                     <h1>{this.attributes.FacilityName}</h1><br/>
+                    {this.badPoints ?
+                        <h4 style={{textDecoration: "underline", color: "red"}}><b>This location needs review, please
+                            contact...</b></h4> : null}
                     <table>
                         <tbody id="tierii_facility">
                         <tr>
@@ -398,6 +469,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     mapClick = (e) => {
+        this.badPoints = false;
         this.mainText = false;
         this.loading = true;
         this.featureSet = [];
@@ -416,7 +488,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             attributes: this.attributes,
             contactInfo: this.contactInfo,
             chemicalInfo: this.chemicalInfo,
-            nothingThere: this.nothingThere
+            nothingThere: this.nothingThere,
+            mainText: this.mainText,
         });
 
         this.graphicsLayer.removeAll();
@@ -505,6 +578,22 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         let location = this.featureSet.filter((feature) => {
             return feature.attributes.OBJECTID === this.sortedRows[row].OBJECTID;
         });
+        // zoom to and add graphic functionality for locations that need fixing
+        if (this.badPoints) {
+            let symbol = new SimpleMarkerSymbol({style: 'x', size: '20px', color: 'yellow'})
+
+            let badPoint = new Graphic({geometry: location[0].geometry, symbol});
+            this.graphicsLayer.add(badPoint);
+
+            this.jmv.view.goTo({
+                center: [location[0].geometry.longitude, location[0].geometry.latitude]
+            });
+            this.featureSet.forEach(location => {
+                console.log(location.geometry.longitude, location.geometry.latitude);
+            })
+
+        }
+
         this.loadFeature(location[0]);
     }
 
@@ -870,10 +959,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         <this.FacilityText/>
                         <this.ContactsText/>
                         <this.ChemicalsText/>
+                        {this.mainText ? this.LandingText() : null}
                     </div>
                 }
 
-                {this.mainText ? this.LandingText() : null}
                 <JimuMapViewComponent useMapWidgetId={this.getArbitraryFirstMapWidgetId()}
                                       onActiveViewChange={this.onActiveViewChange}/>
             </div>

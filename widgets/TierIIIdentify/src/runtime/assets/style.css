@@ -13,28 +13,6 @@ tr > td.quantity {
     padding-left: 10px !important;
 }
 
-/*td {*/
-/*    padding-left: 10px !important;*/
-/*}*/
-
-div.modal.jimu-outline-inside.fade.show {
-    overflow: auto;
-}
-
-.modal-open .modal {
-    overflow: auto !important;
-}
-
-[class*="modal"] {
-    overflow: auto !important;
-}
-
-#summaryLink {
-    padding: 0;
-    border: none;
-}
-
-#backLink {
-    padding: 0;
-    border: none;
+#badLocations {
+    margin-bottom: 36px;
 }
