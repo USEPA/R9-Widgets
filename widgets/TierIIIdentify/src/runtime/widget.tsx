@@ -318,15 +318,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                             this.sortedRows.push(attrs);
                             this.rows.push(attrs)
                         });
-
-                        // this.rows.push(...data)
-                        // this.sortedRows.push(...data)
-                        // this.loading = false;
-                        // this.setState({
-                        //     rows: this.rows,
-                        //     sortedRows: this.sortedRows,
-                        //     // loading: this.loading,
-                        // });
                     }
                 });
                 promises.push(promise);
@@ -357,7 +348,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         this.Grid();
                     });
                 } else {
-                    console.log('none bad')
+                    this.badPoints = true;
                     this.nothingThere = true;
                     this.loading = false;
                     this.setState({
@@ -379,7 +370,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         {this.recordsText}
                         </tbody>
                     </table>
-                    <p>Click Facility to view contact and chemical information.</p><br/>
+                    <p>Click facility to view contact and chemical information.</p><br/>
                     <Button id="badLocations" onClick={(e) => this.badLocations(e)}>View locations needing
                         review</Button>
                     <br/>
@@ -588,10 +579,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             this.jmv.view.goTo({
                 center: [location[0].geometry.longitude, location[0].geometry.latitude]
             });
-            this.featureSet.forEach(location => {
-                console.log(location.geometry.longitude, location.geometry.latitude);
-            })
-
         }
 
         this.loadFeature(location[0]);
@@ -600,9 +587,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     NothingFound() {
         if (this.nothingThere) {
             return (
-                <div>
-                    <h3>No facilities found at this location</h3><br/>
-                </div>
+                this.badPoints ? <div><h3>No incorrect locations reported at this time</h3><br/></div> : <div><h3>No facilities found at this location</h3><br/></div>
             )
         } else {
             return null
