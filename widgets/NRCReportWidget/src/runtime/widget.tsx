@@ -54,7 +54,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     featureSet: any[] = [];
     symbol: SimpleMarkerSymbol;
     // proxyUrl = "https://r9data.response.epa.gov/apps/webeocproxy";
-    proxyUrl = "http://127.0.0.1:5000";
+    proxyUrl = "http://127.0.0.1:5000/webeocproxy";
     token: any;
     record: any[] = [];
 
@@ -201,7 +201,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             } else if (this.featureSet.length > 1) {
                 this.multipleLocations = true;
                 let data = [];
-
                 this.featureSet.forEach(feature => {
                     data.push(feature.attributes);
                 });
@@ -332,13 +331,14 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     loadLog(logEntry) {
+        this.multipleLocations = false;
         this.loading = true;
         this.setState({
             loading: this.loading
         });
         let selectedGraphic = new Graphic({geometry: logEntry.geometry, symbol: this.symbol});
         this.graphicsLayer.add(selectedGraphic);
-        fetch(this.proxyUrl + '/webeocproxy/' + logEntry.attributes.nrcnumber, {
+        fetch(this.proxyUrl + '/' + logEntry.attributes.nrcnumber, {
             headers: {'Content-Type': 'application/json', 'Authorization': this.token}
         }).then(function (response) {
             return response.text();
@@ -360,7 +360,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
     render() {
         return (
-            <div className="widget-addLayers jimu-widget p-2" style={{overflow: "auto", height: "97%"}}>
+            <div className="widget-addLayers jimu-widget w-100 p-2" style={{overflow: "auto", width: '600px'}}>
                 <this.NothingFound/>
                 {this.loading ? <h2 style={{background: 'white'}}>Loading...</h2> :
                     <div>

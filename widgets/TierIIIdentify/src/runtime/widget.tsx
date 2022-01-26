@@ -233,6 +233,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             }
             this.first = false;
         } else {
+            if (this.badPoints) {
+                // go back to home if we are in the middle of nowhere looking at an incorrect location
+                this.jmv.view.goTo({
+                    center: [-117.7881, 35.6117]
+                });
+            }
+
             this.badPoints = false;
             this.featureSet = [];
             this.rows = [];
@@ -243,6 +250,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             this.multipleLocations = false;
             this.nothingThere = false;
             this.first = true;
+            this.graphicsLayer.removeAll();
             this.jmv.view.map.layers.remove(this.graphicsLayer);
             this.tierIILayer.visible = false;
             this.mainText = true;
@@ -936,10 +944,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
     render() {
         return (
-            <div className="widget-addLayers jimu-widget p-2" style={{overflow: "auto", height: "97%"}}>
-                <this.NothingFound/>
+            <div className="widget-addLayers jimu-widget p-2" style={{overflow: "auto"}}>
                 {this.loading ? <h2 style={{background: 'white'}}>Loading...</h2> :
                     <div>
+                        <this.NothingFound/>
                         <this.Grid/>
                         <this.FacilityText/>
                         <this.ContactsText/>
@@ -947,7 +955,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         {this.mainText ? this.LandingText() : null}
                     </div>
                 }
-
                 <JimuMapViewComponent useMapWidgetId={this.getArbitraryFirstMapWidgetId()}
                                       onActiveViewChange={this.onActiveViewChange}/>
             </div>

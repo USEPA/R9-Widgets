@@ -34,13 +34,13 @@ import {
 export default class WindWidget extends BaseWidget<AllWidgetProps<IMConfig>, {}> {
 
     // wind data urls
-    // hrrrUrl = 'https://r9data.response.epa.gov/apps/wind_data/current_wind_hrrr.json'
-    // namUrl = 'https://r9data.response.epa.gov/apps/wind_data/current_wind_nam.json'
-    // gfsUrl = 'https://r9data.response.epa.gov/apps/wind_data/current_wind_gfs.json'
+    hrrrUrl = 'https://r9data.response.epa.gov/apps/wind_data/current_wind_hrrr.json'
+    namUrl = 'https://r9data.response.epa.gov/apps/wind_data/current_wind_nam.json'
+    gfsUrl = 'https://r9data.response.epa.gov/apps/wind_data/current_wind_gfs.json'
     // locally stored JSONs for testing
-    hrrrUrl = `${this.props.context.folderUrl}dist/runtime/assets/current_wind_hrrr.json`
-    namUrl = `${this.props.context.folderUrl}/dist/runtime/assets/current_wind_nam.json`;
-    gfsUrl = `${this.props.context.folderUrl}/dist/runtime/assets/current_wind_gfs.json`;
+    // hrrrUrl = `${this.props.context.folderUrl}dist/runtime/assets/current_wind_hrrr.json`
+    // namUrl = `${this.props.context.folderUrl}/dist/runtime/assets/current_wind_nam.json`;
+    // gfsUrl = `${this.props.context.folderUrl}/dist/runtime/assets/current_wind_gfs.json`;
     displayOptions: DisplayOptions = {
         maxVelocity: 15
     }
