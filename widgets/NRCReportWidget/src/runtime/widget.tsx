@@ -11,11 +11,6 @@ import Query from "esri/rest/support/Query";
 import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
 import Graphic from "esri/Graphic";
 import Color from "esri/Color";
-import esriConfig from "esri/config";
-import esriRequest from "esri/request";
-import urlUtils from "esri/core/urlUtils";
-import dangerouslySetInnerHTML from 'react'
-
 
 function getComparator(sortColumn: string) {
     switch (sortColumn) {
@@ -57,7 +52,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     proxyUrl = "http://127.0.0.1:5000/webeocproxy";
     token: any;
     record: any[] = [];
-
+    openVisState: boolean = true;
+    nrcTitle: string = 'WebEOCHotlineLogGeoJSON';
 
     constructor(props) {
         super(props);
@@ -74,19 +70,31 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     componentDidMount() {
-        // esriConfig.request.proxyUrl = "http://127.0.0.1:5000";
-        //
-        // urlUtils.addProxyRule({
-        //     urlPrefix: 'localhost:3001',
-        //     proxyUrl: this.proxyUrl
-        // });
-
         this.loading = true;
         this.setState({
             loading: this.loading,
         });
-        this.nrcLayer = new FeatureLayer({url: 'https://utility.arcgis.com/usrsvcs/servers/ea5c6623faee4c71a165c07902c5394b/rest/services/WebEOC/WebEOCHotlineLogGeoJSON_NEW/FeatureServer/0'});
-        this.jmv.view.map.layers.add(this.nrcLayer);
+
+        // @ts-ignore
+        this.nrcLayer = this.jmv.view.map.layers.find(lyr => {
+            return lyr.title.includes(this.nrcTitle);
+        });
+
+        let addedToMap: boolean;
+
+        if (this.nrcLayer == undefined) {
+            addedToMap = false;
+            this.nrcLayer = new FeatureLayer({url: 'https://utility.arcgis.com/usrsvcs/servers/ea5c6623faee4c71a165c07902c5394b/rest/services/WebEOC/WebEOCHotlineLogGeoJSON_NEW/FeatureServer/0'});
+        } else {
+            addedToMap = true;
+        }
+
+        this.getLayerVis();
+
+        if (!addedToMap) {
+            this.jmv.view.map.layers.add(this.nrcLayer);
+        }
+
         this.nrcLayer.on('layerview-create', () => {
                 this.mainText = true;
                 this.LandingText();
@@ -103,7 +111,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             // todo: make sure this will work in all cases of the app being used
             this.token = sessions[0].token;
         }
-        console.log('sure did mounted')
     }
 
     onActiveViewChange = (jmv: JimuMapView) => {
@@ -124,6 +131,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         // do anything on open/close of widget here
         if (widgetState == WidgetState.Opened) {
             if (this.first) {
+                this.getLayerVis();
                 this.loading = false;
                 this.nrcLayer.visible = true;
                 this.setState({
@@ -133,8 +141,21 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             this.first = false;
         } else {
             this.first = true;
-            this.nrcLayer.visible = false;
+            this.nrcLayer.visible = this.openVisState;
 
+        }
+    }
+
+    getLayerVis() {
+        this.jmv.view.map.layers.forEach(lyr => {
+            if (lyr.title == this.nrcLayer.title) {
+                this.openVisState = lyr.visible
+                return
+            }
+        });
+
+        if (!this.openVisState) {
+            this.nrcLayer.visible = true;
         }
     }
 
@@ -309,12 +330,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         });
 
 
-        // this.rows = sortedRows;
         this.setState({
             sortedRows: this.sortedRows,
             sortColumns: this.sortColumns
-            // columns: this.columns,
         });
+
         return this.sortedRows
     }
 

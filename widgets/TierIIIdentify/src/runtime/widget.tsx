@@ -72,6 +72,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     recordsLayer: FeatureLayer;
     recordsText: any[] = [];
     badPoints: boolean = false;
+    openVisState: boolean = true;
+    tierIITitle: string = 'TierIIFacilities_new_dev';
 
     constructor(props) {
         super(props);
@@ -92,25 +94,44 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     componentDidMount() {
-        console.log('did mountedddd')
+        this.loading = true;
+        this.setState({
+            loading: this.loading,
+        });
+
+        // @ts-ignore
+        this.tierIILayer = this.jmv.view.map.layers.find(lyr => {
+            return lyr.title === this.tierIITitle;
+        });
+
+        let addedToMap: boolean;
+
+        if (this.tierIILayer == undefined) {
+            addedToMap = false;
+            this.tierIILayer = new MapImageLayer({
+                url: "https://utility.arcgis.com/usrsvcs/servers/ea77cd05c98e44a98fdaddc83948015d/rest/services/EPA_EPCRA/TierIIFacilities_new_dev/MapServer"
+            });
+        } else {
+            addedToMap = true;
+        }
+
+        this.getLayerVis();
+
         let badLocFeatureEffect = new FeatureEffect({
             filter: new FeatureFilter({
                 where: "NeedsReview = true"
             }),
             includedEffect: "hue-rotate(270deg)"
         });
-        this.tierIILayer = new MapImageLayer({
-            url: "https://utility.arcgis.com/usrsvcs/servers/ea77cd05c98e44a98fdaddc83948015d/rest/services/EPA_EPCRA/TierIIFacilities_new_dev/MapServer"
-        });
-        // this.TierIIHazards = new FeatureLayer({
-        //     url: "https://utility.arcgis.com/usrsvcs/servers/ea77cd05c98e44a98fdaddc83948015d/rest/services/EPA_EPCRA/TierIIFacilities_new_dev/MapServer/5"
-        // });
+
+
         // url for new service layer https://utility.arcgis.com/usrsvcs/servers/ea77cd05c98e44a98fdaddc83948015d/rest/services/EPA_EPCRA/TierIIFacilities_new_dev/MapServer
         //records url is layer 10
         this.recordsLayer = new FeatureLayer({
             url: "https://utility.arcgis.com/usrsvcs/servers/f7e36ad5c73f4a19a24877d920a27c0a/rest/services/EPA_EPCRA/TierIIFacilities/MapServer/10",
             outFields: ['*']
         });
+
         this.symbol = new SimpleMarkerSymbol({color: 'yellow', style: 'diamond'});
 
         this.graphicsLayer = new GraphicsLayer();
@@ -146,7 +167,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     layerView.featureEffect = badLocFeatureEffect
                 });
             })
-            this.jmv.view.map.add(this.tierIILayer);
+
+            if (!addedToMap) {
+                this.jmv.view.map.add(this.tierIILayer);
+            }
+
             this.jmv.view.map.add(this.graphicsLayer);
             // this.TierIIHazards.load();
         });
@@ -221,8 +246,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         // do anything on open/close of widget here
         if (widgetState == WidgetState.Opened) {
             if (this.first) {
+                this.getLayerVis();
                 this.badPoints = false;
-                this.tierIILayer.visible = true;
+                if (!this.openVisState) {
+                    this.tierIILayer.visible = true;
+                }
+
                 this.mainText = true;
                 this.nothingThere = false;
                 this.setState({
@@ -239,7 +268,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     center: [-117.7881, 35.6117]
                 });
             }
-
+            console.log(this.openVisState)
+            this.tierIILayer.visible = this.openVisState;
             this.badPoints = false;
             this.featureSet = [];
             this.rows = [];
@@ -252,8 +282,20 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             this.first = true;
             this.graphicsLayer.removeAll();
             this.jmv.view.map.layers.remove(this.graphicsLayer);
-            this.tierIILayer.visible = false;
             this.mainText = true;
+        }
+    }
+
+    getLayerVis() {
+        this.jmv.view.map.layers.forEach(lyr => {
+            if (lyr.title == this.tierIILayer.title) {
+                this.openVisState = lyr.visible
+                return
+            }
+        });
+
+        if (!this.openVisState) {
+            this.tierIILayer.visible = true;
         }
     }
 
@@ -595,7 +637,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     NothingFound() {
         if (this.nothingThere) {
             return (
-                this.badPoints ? <div><h3>No incorrect locations reported at this time</h3><br/></div> : <div><h3>No facilities found at this location</h3><br/></div>
+                this.badPoints ? <div><h3>No incorrect locations reported at this time</h3><br/></div> :
+                    <div><h3>No facilities found at this location</h3><br/></div>
             )
         } else {
             return null

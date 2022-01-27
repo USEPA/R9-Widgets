@@ -34,19 +34,19 @@ div.jimu-progress.progress.progress-primary.progress-linear.fireProgress > div.p
     margin-bottom: 5px;
 }
 
-div[role=dialog] {
-    inset: 0 0 auto auto !important;
-    width: 360px;
-    height: auto;
-    padding: 0;
-    margin: auto;
-    z-index: 5;
-    position: absolute;
-    opacity: 1;
-    border-radius: 4px;
-    float: right;
-    transform: translate(0, 47px) !important;
-}
+/*div[role=dialog] {*/
+/*    inset: 0 0 auto auto !important;*/
+/*    width: 360px;*/
+/*    height: auto;*/
+/*    padding: 0;*/
+/*    margin: auto;*/
+/*    z-index: 5;*/
+/*    position: absolute;*/
+/*    opacity: 1;*/
+/*    border-radius: 4px;*/
+/*    float: right;*/
+/*    transform: translate(0, 47px) !important;*/
+/*}*/
 
 /*#acresSubtext {*/
 /*    margin-top: -20px;*/

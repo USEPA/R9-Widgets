@@ -52,6 +52,7 @@ export default class WindWidget extends BaseWidget<AllWidgetProps<IMConfig>, {}>
         url: this.hrrrUrl,
         displayOptions: this.displayOptions
     });
+
     jmv: JimuMapView;
     _forecast_datetime;
     modal: boolean = false;

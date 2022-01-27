@@ -19,7 +19,8 @@ import {Button, Modal, ModalBody, ModalFooter, ModalHeader} from "jimu-ui"
 import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
 import type {Column, SortColumn} from "react-data-grid";
 
-interface Row {}
+interface Row {
+}
 
 function getComparator(sortColumn: string) {
     switch (sortColumn) {
@@ -93,6 +94,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     loading: boolean = false;
     rowCopy: any[] = [];
     sortColumns: SortColumn[] = [];
+    openVisState: boolean = true;
+    rmpTitle: string = 'RMPFacilities';
 
     constructor(props) {
         super(props);
@@ -117,23 +120,39 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.setState({
             loading: this.loading,
         });
-        this.rmpLayer = new MapImageLayer({
-            url: "https://utility.arcgis.com/usrsvcs/servers/a9dda0a4ba0a433992ce3bdffd89d35a/rest/services/SharedServices/RMPFacilities/MapServer",
+
+        // @ts-ignore
+        this.rmpLayer = this.jmv.view.map.layers.find(lyr => {
+            return lyr.title === this.rmpTitle;
         });
+
+        let addedToMap: boolean;
+        // if for some reason it isn't there add it
+
+        if (this.rmpLayer == undefined) {
+            addedToMap = false;
+            this.rmpLayer = new MapImageLayer({
+                url: "https://utility.arcgis.com/usrsvcs/servers/a9dda0a4ba0a433992ce3bdffd89d35a/rest/services/SharedServices/RMPFacilities/MapServer",
+            });
+        } else {
+            addedToMap = true
+        }
 
         this.symbol = new SimpleMarkerSymbol({color: 'yellow', style: 'diamond'});
 
         this.graphicLayer = new GraphicsLayer();
 
 
+        this.getLayerVis()
+
         this.jmv.view.map.add(this.graphicLayer);
         this.rmpLayer.load();
         this.rmpLayer.loadAll().then((res) => {
-            // console.log(res)
-            this.jmv.view.map.add(this.rmpLayer);
             this.graphicLayer = new GraphicsLayer();
 
-
+            if (!addedToMap) {
+                this.jmv.view.map.add(this.rmpLayer);
+            }
             this.jmv.view.map.add(this.graphicLayer);
 
             this.rmpLayer.sublayers.forEach(lyr => {
@@ -159,6 +178,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 loading: this.loading,
             })
         });
+
 
         this.openModal = false;
     }
@@ -234,7 +254,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         // do anything on open/close of widget here
         if (widgetState == WidgetState.Opened) {
             if (this.first) {
-                this.rmpLayer.visible = true;
+                this.getLayerVis();
+                if (!this.openVisState) {
+                    this.rmpLayer.visible = true;
+                }
                 this.mainText = true;
                 this.nothingThere = [];
                 this.setState({
@@ -245,29 +268,23 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             }
             this.first = false;
         } else {
+            this.rmpLayer.visible = this.openVisState
             this.first = true;
             this.jmv.view.map.layers.remove(this.graphicLayer);
-            this.rmpLayer.visible = false;
         }
     }
 
-    getGeometryUnion(layerUrl, queryWhere?, queryOutFields?, queryOurSR?) {
-        let where = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '1=1';
-        let outFields = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : ['*'];
-        let outSR = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 4326;
-
-        let newQuery = new Query();
-        newQuery.where = where;
-        newQuery.outSpatialReference = new SpatialReference({wkid: outSR});
-        newQuery.returnGeometry = true;
-        newQuery.outFields = outFields;
-        return query.executeQueryJSON(layerUrl, newQuery).then(function (results) {
-            if (results.features) {
-                return geometryEngine.union(results.features.map(function (g) {
-                    return g.geometry;
-                }));
+    getLayerVis() {
+        this.jmv.view.map.layers.forEach(lyr => {
+            if (lyr.title == this.rmpLayer.title) {
+                this.openVisState = lyr.visible
+                return
             }
         });
+
+        if (!this.openVisState) {
+            this.rmpLayer.visible = true;
+        }
     }
 
     getArbitraryFirstMapWidgetId = (): string => {
