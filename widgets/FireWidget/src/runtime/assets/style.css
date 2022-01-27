@@ -11,8 +11,16 @@
 }
 
 .progress-bar-track {
-    height: 20px !important;
+    height: 26px !important;
+    background-color: red !important;
+    border-radius: 13px 13px !important;
 }
+
+div.jimu-progress.progress.progress-primary.progress-linear.fireProgress > div.progress-bar-track > div {
+    border-top-left-radius: 13px 13px !important;
+    border-bottom-left-radius: 13px 13px !important;
+}
+
 
 .report-button {
     outline: none;
@@ -37,5 +45,10 @@ div[role=dialog] {
     opacity: 1;
     border-radius: 4px;
     float: right;
-    transform: translate(0,47px) !important;
+    transform: translate(0, 47px) !important;
 }
+
+/*#acresSubtext {*/
+/*    margin-top: -20px;*/
+/*    color: white;*/
+/*}*/

@@ -35,17 +35,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
 
     constructor(props) {
         super(props);
-        // make this more testable by moving the FeatureLayer setup into a function, can then mock/spyOn that function
-        // this.state = {};
-        // this.perimeterbufferFC = new FeatureLayer({
-        //     url: "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9Notifiable/FeatureServer/0",
-        //     definitionExpression: "display = 1"
-        // });
-        //
-        // this.boundaries = new FeatureLayer({
-        //     url: 'https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/USA_States_Generalized/FeatureServer/0',
-        // });
-
         this.checked = false;
         this.fireSwitchActive = this.fireSwitchActive.bind(this);
         this.resetFireFilter = this.resetFireFilter.bind(this);
@@ -55,18 +44,21 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
 
     componentDidMount() {
         this.setUpFeatureLayers({
-            url: "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9Notifiable/FeatureServer/0",
-            definitionExpression: "display = 1"
-        },
+                url: "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9Notifiable/FeatureServer/0",
+                definitionExpression: "display = 1"
+            },
             {
-            url: 'https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/USA_States_Generalized/FeatureServer/0',
-        })
+                url: 'https://services.arcgis.com/P3ePLMYs2RVChkJx/ArcGIS/rest/services/USA_States_Generalized/FeatureServer/0',
+            })
         this.loadFires().then(() => {
             this.filterFires();
         });
         this.getGeometryUnion(`${this.boundaries.url}/${this.boundaries.layerId}`, "STATE_ABBR='CA' OR STATE_ABBR='AZ' OR STATE_ABBR='NV'").then(res => {
             this.r9Geom = res;
         });
+
+        this.jmv.view.map.add(this.perimeterbufferFC, 0);
+
         this.openVisState = this.getFireLayerVis();
         this.checked = false;
     }
@@ -116,7 +108,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
 
     onActiveViewChange = (jmv: JimuMapView) => {
         this.jmv = jmv;
-        this.jmv.view.map.add(this.perimeterbufferFC, 0);
         if (jmv) {
             this.setState({
                 jimuMapView: jmv
@@ -158,9 +149,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
         //get perimeter buffer feature layer
         //Query for fires
         let query1 = this.perimeterbufferFC.createQuery();
-        // var query1 = new Query();
-
-        // query.where = "display = 1 AND acres >= 10 and RETRIEVED >= " + "'" + currentDate + "'";
         query1.where = "display = 1";
         query1.outSpatialReference = new SpatialReference({wkid: 102100});
         query1.returnGeometry = true;
@@ -204,8 +192,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
 
     _QueryfireResultsError(err) {
         //Need to write a better error report
-        // this.busyHandle.hide();
-        console.log('error');
+        console.error(`Error: ${err}`);
     }
 
     toggleFires(e: boolean) {
@@ -240,8 +227,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
     }
 
     resetFireFilter(loadAllFires, onClose = false) {
-        // var close = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-        // if (onClose) {
         this.fireLayerFilterReset.forEach((x) => {
             x.definitionExpression = '';
             if (x.title === this.irwinLabel && loadAllFires) {
@@ -267,11 +252,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
                 });
             }
         });
-        // }
+
         if (!onClose) {
-            // this.r9Geom.then(r9Geom => {
-            // var layerStructure = LayerStructure.getInstance();
-            // layerStructure.traversal(function (layerNode) {
             this.jmv.view.map.layers.forEach(lyr => {
                 if (lyr.type == 'feature') {
 
@@ -318,7 +300,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
                 } else {
                     return 'GeometryID = \'' + f.attributes.GeometryID + '\'';
                 }
-
             }).concat().join(" OR ")
         }, {
             label: this.irwinLabel,
@@ -329,13 +310,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
                 } else {
                     return 'IrwinID = \'' + f.attributes.IRWINID + '\'';
                 }
-
             }).join(" OR ")
         }];
+
         this.fireLayerVisReset = [];
         this.fireLayerFilterReset = [];
-
-        // var layerStructure = LayerStructure.getInstance();
 
         this.jmv.view.map.layers.forEach(lyr => {
             if (lyr.type == 'feature') {
@@ -350,11 +329,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
                         lyr.visible = true;
                         this.fireLayerVisReset.push(lyr);
                     }
-                    // capture layerObject promise
                 }
             }
         });
-
     }
 
     getArbitraryFirstMapWidgetId = (): string => {
@@ -363,15 +340,15 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
         // that has the type (uri) of "arcgis-map"
         if (appState) {
             const arbitraryFirstMapWidgetInfo: { [key: string]: any } = Object.values(appState.appConfig.widgets).find((widgetInfo: any) => {
-            return widgetInfo.uri === 'widgets/arcgis/arcgis-map/'
-        });
+                return widgetInfo.uri === 'widgets/arcgis/arcgis-map/'
+            });
 
-        return arbitraryFirstMapWidgetInfo.id;
+            return arbitraryFirstMapWidgetInfo.id;
         }
 
     }
 
-    setUpFeatureLayers(perimFLInfo: {url: string, definitionExpression: string}, boundariesFLInfo: {url: string}) {
+    setUpFeatureLayers(perimFLInfo: { url: string, definitionExpression: string }, boundariesFLInfo: { url: string }) {
         this.perimeterbufferFC = new FeatureLayer({
             url: perimFLInfo.url,
             definitionExpression: perimFLInfo.definitionExpression,
@@ -454,7 +431,6 @@ class Fire extends Component<any, any, any> {
     }
 
     componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<any>, snapshot?: any) {
-        // this.init();
     }
 
     init() {
@@ -464,11 +440,8 @@ class Fire extends Component<any, any, any> {
         this.setState({});
         let fireData = JSON.parse(this.props.fire.attributes.Data);
         this.PercentContained = fireData.percent_contained ? fireData.percent_contained : this.props.fire.attributes.PercentContained ? this.props.fire.attributes.PercentContained : 0;
-        // var dailyAcres = this.all_fires[fire].attributes.DailyAcres ? this.all_fires[fire].attributes.DailyAcres : 0;
         this.DailyAcres = fireData.acres ? fireData.acres : this.props.fire.attributes.DailyAcres ? this.props.fire.attributes.DailyAcres : 0;
-        // var gisAcres = this.all_fires[fire].attributes.GISAcres ? this.all_fires[fire].attributes.GISAcres : 0;
         this.GISAcres = fireData.acres ? fireData.acres : this.props.fire.attributes.GISAcres ? this.props.fire.attributes.GISAcres : 0;
-        // this.all_fires[fire].attributes.IncidentName = this.all_fires[fire].attributes.IncidentName.toUpperCase();
         this.IncidentName = fireData.IncidentName ? fireData.IncidentName.toUpperCase() : this.props.fire.attributes.IncidentName ? this.props.fire.attributes.IncidentName.toUpperCase() : "";
         this.Counties = fireData.hasOwnProperty('counties') ? fireData.counties.split(",") : JSON.parse(this.props.fire.attributes.counties);
 
@@ -482,8 +455,6 @@ class Fire extends Component<any, any, any> {
         var tribes = fireData.hasOwnProperty('tribes') ? fireData.tribes.split(",").filter(function (d) {
             return d !== "";
         }) : undefined;
-        //
-        // //If dailyAcres is 0 then look at GISAcres
 
 
         var t = '';
@@ -499,17 +470,15 @@ class Fire extends Component<any, any, any> {
                 let nplFacilities = facilities.facilities && facilities.facilities["NationalPriorityListPoint_R9_2019_R9"] ? facilities.facilities["NationalPriorityListPoint_R9_2019_R9"] : 0;
                 rmp = `, ${rmpFacilities} RMP`;
                 npl = `, ${nplFacilities} NPL`;
-                this.AcresFacilitySubText = `(${parseFloat(this.ReportingAcres).toLocaleString('en') + " acres" + rmp + npl + t})`
+                this.AcresFacilitySubText = `${parseFloat(this.ReportingAcres).toLocaleString('en') + " acres" + rmp + npl + t}`
             }
         } else {
             if (tribes) {
-                this.AcresFacilitySubText = `(${parseFloat(this.ReportingAcres).toLocaleString('en') + " acres" + t})`
+                this.AcresFacilitySubText = `${parseFloat(this.ReportingAcres).toLocaleString('en') + " acres" + t}`
             } else {
-                this.AcresFacilitySubText = `(${parseFloat(this.ReportingAcres).toLocaleString('en') + " acres"})`
+                this.AcresFacilitySubText = `${parseFloat(this.ReportingAcres).toLocaleString('en') + " acres"}`
             }
         }
-
-        // var nplPolys = facilities && facilities["NationalPriorityListBoundaryTypes_R9_2020_R9"] ? facilities["NationalPriorityListBoundaryTypes_R9_2020_R9"] : 0;
 
         var c = '';
         if (this.Counties) {
@@ -524,12 +493,10 @@ class Fire extends Component<any, any, any> {
 
         this.PCLabel = parseFloat(this.ReportingAcres).toLocaleString('en') + " acres";
 
-        // var pcTitle = percentContained + '% Contained';
         // //size of bar
         let acresMin = 0
         let acresMax = Math.max.apply(Math, this.props.acresArray);
         let acresRange = acresMax - acresMin;
-        // var scale = 300 / acresRange;
         let scaledPixels = (this.ReportingAcres - acresMin) * (300 / acresRange);
         if (scaledPixels < 100) {
             this.BarWidth = 100;
@@ -596,11 +563,20 @@ class Fire extends Component<any, any, any> {
             }
             <div className='fireNameTxt'><b>{this.IncidentName}</b></div>
             <div className='acresTxt' title={`${this.Counties}`}>{this.Counties}</div>
-            {this.AcresFacilitySubText}
-            <Progress showProgress={true} className='fireProgress' style={{width: this.BarWidth}}
-                      color={'primary'} value={Math.round(this.PercentContained)}>
+
+            <Progress
+                // showProgress={true}
+                className='fireProgress' style={{width: this.BarWidth}}
+                color={'primary'} value={Math.round(this.PercentContained)}>
                 {this.PCLabel}
             </Progress>
+            <div id='acresSubtext' style={{
+                width: this.BarWidth,
+                marginTop: '-24px',
+                color: 'white',
+                textAlign: 'center',
+                fontSize: 'medium',
+            }}>{this.AcresFacilitySubText}</div>
         </div>;
     }
 }
