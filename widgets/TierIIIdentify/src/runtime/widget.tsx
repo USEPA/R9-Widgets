@@ -17,10 +17,6 @@ import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
 import FeatureEffect from "esri/views/layers/support/FeatureEffect";
 import FeatureFilter from "esri/views/layers/support/FeatureFilter";
 
-
-interface Row {
-}
-
 function getComparator(sortColumn: string) {
     switch (sortColumn) {
         case 'FacilityName':
@@ -173,7 +169,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             }
 
             this.jmv.view.map.add(this.graphicsLayer);
-            // this.TierIIHazards.load();
         });
 
         let recordsTextArr = [];
@@ -364,7 +359,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         this.featureSet.push(...featureSet.features)
                         // let data = []
                         this.featureSet.forEach(feature => {
-                            var attrs = feature.attributes;
+                            let attrs = feature.attributes;
                             this.sortedRows.push(attrs);
                             this.rows.push(attrs)
                         });
@@ -410,7 +405,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         }
     }
 
-    LandingText = () => {
+    LandingText() {
         if (this.mainText) {
             return (
                 <div id="landingText" style={{overflow: 'auto'}}>
@@ -436,7 +431,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         }
     }
 
-    FacilityText = () => {
+    FacilityText() {
         if (!this.multipleLocations && this.attributes !== undefined) {
             return (
                 <div>
@@ -567,7 +562,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     let data = [];
 
                     this.featureSet.forEach(feature => {
-                        var attrs = feature.attributes;
+                        let attrs = feature.attributes;
                         data.push(attrs);
                     });
 
@@ -580,7 +575,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     noneFound.push(true);
                 }
                 if (noneFound.length === this.allTierIIfl.length) {
-                    var wasfound = noneFound.filter(found => {
+                    let wasfound = noneFound.filter(found => {
                         return found === false;
                     });
 
@@ -699,11 +694,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
     loadFeature(feature) {
         this.loading = true;
-        // this.contactInfo = [];
         this.setState({
             loading: this.loading,
-            // contactInfo: this.contactInfo,
         });
+
         this.multipleLocations = false;
         this.attributes = feature.attributes;
         let selectedGraphic = new Graphic({geometry: feature.geometry, symbol: this.symbol});
@@ -715,7 +709,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     let contacts = [];
                     // if contacts are available get them
                     if (this.TierIIContacts.relationshipId !== 'none' && this.TierIIContacts.relationshipId !== undefined) {
-                        var contactQuery = new RelationshipQuery();
+                        let contactQuery = new RelationshipQuery();
                         // GET CONTACTS
                         contactQuery.outFields = ['*'];
                         //dojo.forEach(service.facilities.relationships, function (relationship, i) {
@@ -738,7 +732,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                         <tr>
                                             <td style={{paddingTop: "10px"}}>
                                                 <b>{contact.attributes.Title ? contact.attributes.Title + ': ' : ''}
-                                                    {contact.attributes.FirstName ? contact.attributes.FirstName : ''}
+                                                    {contact.attributes.FirstName ? contact.attributes.FirstName + ' ' : ''}
                                                     {contact.attributes.LastName ? contact.attributes.LastName : ''}
                                                     {contact.attributes.FirstName || contact.attributes.LastName ? '' : 'Not Reported'}</b>
                                             </td>
@@ -792,7 +786,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
                     if (this.TierIIChemInventory.relationshipId !== 'none' && this.TierIIChemInventory.relationshipId !== undefined) {
                         // GET CHEMICALS
-                        var chemicalQuery = new RelationshipQuery();
+                        let chemicalQuery = new RelationshipQuery();
                         chemicalQuery.outFields = ['*'];
                         // facilities to chemicals relationship ID
                         chemicalQuery.relationshipId = this.TierIIChemInventory.relationshipId;
@@ -888,40 +882,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                     chemicalLocationQuery.objectIds = [chemical.attributes.OBJECTID];
 
                                     let chemLocPromise = this.TierIIChemInventory.queryRelatedFeatures(chemicalLocationQuery).then((e) => {
-
-
-                                        // if (service.config.state.abbr === 'NV') {
-                                        //     var chemicalHazardsQuery = new RelationshipQuery();
-                                        // //
-                                        //     chemicalHazardsQuery.outFields = ['*'];
-                                        //     // chemicals to chemical locations relationship id
-                                        //     chemicalHazardsQuery.relationshipId = this.TierIIHazards.relationshipId;
-                                        //     chemicalHazardsQuery.objectIds = [chemical.attributes.OBJECTID];
-                                        //     this.TierIIChemInventory.queryRelatedFeatures(chemicalHazardsQuery).then((response) => {
-                                        //         // var hazardsNode = dojo.byId('hazards_' + chemical.attributes.OBJECTID);
-                                        //         console.log(response)
-                                        //         // var hazards = [];
-                                        //         // dojo.forEach(response[chemical.attributes.OBJECTID].features, function (hazard, j) {
-                                        //         //     hazards.push(hazard.attributes.category);
-                                        //         // });
-                                        //         // hazardsNode.innerHTML = '<td>Hazard(s): ' + hazards.join(", ") + '</td>';
-                                        //     });
-                                        // }
-
                                         e[chemical.attributes.OBJECTID].features.forEach((chemical_location, j) => {
-                                            //         this.chemicalInfo.push(
-                                            //     <div>
-                                            //
-                                            //         <tr>
-                                            //             <td>Location: {e[chemical.attributes.OBJECTID].attributes.StorageLocation ? e[chemical.attributes.OBJECTID].attributes.StorageLocation : 'Not Reported'}</td>
-                                            //         </tr>
-                                            //         <tr>
-                                            //             <td>Container: {e[chemical.attributes.OBJECTID].attributes.ContainerType ? e[chemical.attributes.OBJECTID].attributes.ContainerType : 'Not Reported'}</td>
-                                            //         </tr>
-                                            //     </div>
-                                            // )
                                             let chemLocInfo = []
-                                            var location_number = j + 1;
+                                            let location_number = j + 1;
                                             chemLocInfo.push(
                                                 <div>
                                                     <tr>

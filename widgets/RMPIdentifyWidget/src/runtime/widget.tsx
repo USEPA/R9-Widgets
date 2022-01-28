@@ -6,9 +6,6 @@ import {JimuMapView, JimuMapViewComponent} from "jimu-arcgis";
 import MapImageLayer from "esri/layers/MapImageLayer";
 import DataGrid, {SelectColumn} from "react-data-grid";
 import Query from "esri/rest/support/Query";
-import SpatialReference from "esri/geometry/SpatialReference";
-import query from "esri/rest/query";
-import geometryEngine from "esri/geometry/geometryEngine";
 import GraphicsLayer from "esri/layers/GraphicsLayer";
 import Extent from "esri/geometry/Extent";
 import RelationshipQuery from "esri/rest/support/RelationshipQuery";
@@ -127,8 +124,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         });
 
         let addedToMap: boolean;
-        // if for some reason it isn't there add it
 
+        // if it isn't there add it
         if (this.rmpLayer == undefined) {
             addedToMap = false;
             this.rmpLayer = new MapImageLayer({
@@ -139,21 +136,16 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         }
 
         this.symbol = new SimpleMarkerSymbol({color: 'yellow', style: 'diamond'});
-
         this.graphicLayer = new GraphicsLayer();
-
-
+        this.jmv.view.map.add(this.graphicLayer);
+        // get visibility of map layers
         this.getLayerVis()
 
-        this.jmv.view.map.add(this.graphicLayer);
         this.rmpLayer.load();
         this.rmpLayer.loadAll().then((res) => {
-            this.graphicLayer = new GraphicsLayer();
-
             if (!addedToMap) {
                 this.jmv.view.map.add(this.rmpLayer);
             }
-            this.jmv.view.map.add(this.graphicLayer);
 
             this.rmpLayer.sublayers.forEach(lyr => {
                 if (lyr.title === "Active RMP Facilities") {
@@ -176,9 +168,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             this.loading = false;
             this.setState({
                 loading: this.loading,
-            })
+            });
         });
-
 
         this.openModal = false;
     }
@@ -213,7 +204,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     LandingText = () => {
         return (
             <div id="landingText" style={{overflow: 'auto'}}>
-                <h5 id="refresh_date"></h5>
                 <br/>Click Facility to view information.
                 <br/><br/><h5 style={{textDecoration: 'underline'}}>RMP Program Levels</h5>
                 <br/><u>Program Level 1</u>: Processes which would not affect the public in the case of a worst-case
@@ -254,7 +244,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         // do anything on open/close of widget here
         if (widgetState == WidgetState.Opened) {
             if (this.first) {
-                console.log(this.props)
                 this.getLayerVis();
                 if (!this.openVisState) {
                     this.rmpLayer.visible = true;
@@ -307,7 +296,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     <div>
                         {this.featureSet.length > 1 ?
                             <Button id="backLink" style={{textDecoration: "underline", cursor: "pointer"}}
-                                    onClick={this.backLink}>Back</Button> : null}
+                                    onClick={this.backLink}>{'< Back'}</Button> : null}
                         <h1> {this.attributes.FacilityName}</h1>
                         <h4 id="registration_status">Status: {this.status_string}</h4>
                         <table>
@@ -625,8 +614,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         featureQuery.returnGeometry = true;
 
         this.facilities.queryFeatures(featureQuery).then(featureSet => {
-            // console.dir(featureSet)
-
             this.featureSet = featureSet.features;
 
             if (this.featureSet.length === 1) {

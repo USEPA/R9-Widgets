@@ -48,8 +48,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     nrcLayer: FeatureLayer;
     featureSet: any[] = [];
     symbol: SimpleMarkerSymbol;
-    // proxyUrl = "https://r9data.response.epa.gov/apps/webeocproxy";
-    proxyUrl = "http://127.0.0.1:5000/webeocproxy";
+    proxyUrl = "https://r9data.response.epa.gov/apps/webeocproxy";
+    // proxyUrl = "http://127.0.0.1:5000/webeocproxy";
     token: any;
     record: any[] = [];
     openVisState: boolean = true;

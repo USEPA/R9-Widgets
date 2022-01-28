@@ -54,7 +54,7 @@ Button:hover {
 
 div[role=dialog][aria-modal=false] {
     inset: 0 0 auto auto !important;
-    width: 360px;
+    width: 360px !important;
     height: auto;
     padding: 0;
     margin: auto;
