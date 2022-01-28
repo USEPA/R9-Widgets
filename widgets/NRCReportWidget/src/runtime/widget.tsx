@@ -93,11 +93,23 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
         if (!addedToMap) {
             this.jmv.view.map.layers.add(this.nrcLayer);
+            this.loading = false;
+            this.setState({
+                loading: this.loading,
+            }, () => {
+                this.mainText = true;
+                this.LandingText();
+            });
         }
 
         this.nrcLayer.on('layerview-create', () => {
-                this.mainText = true;
-                this.LandingText();
+                this.loading = false;
+                this.setState({
+                    loading: this.loading,
+                }, () => {
+                    this.mainText = true;
+                    this.LandingText();
+                });
             }
         );
 
@@ -105,11 +117,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.symbol = new SimpleMarkerSymbol({size: 20, color: new Color([255, 255, 0, 0.5])});
 
         this.jmv.view.map.layers.add(this.graphicsLayer);
-
         let sessions = SessionManager.getInstance().getSessions();
         if (sessions.length > 0) {
-            // todo: make sure this will work in all cases of the app being used
             this.token = sessions[0].token;
+        } else if (this.props.token !== undefined && this.props.token !== "") {
+            this.token = this.props.token;
         }
     }
 

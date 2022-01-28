@@ -1,17 +1,17 @@
 
-/*div[role=dialog] {*/
-/*    inset: 0 0 auto auto !important;*/
-/*    width: 600px;*/
-/*    height: auto;*/
-/*    padding: 0;*/
-/*    margin: auto;*/
-/*    z-index: 5;*/
-/*    position: absolute;*/
-/*    opacity: 1;*/
-/*    border-radius: 4px;*/
-/*    float: right;*/
-/*    transform: translate(0, 47px) !important;*/
-/*}*/
+div[role=dialog][aria-modal=false] {
+    inset: 0 0 auto auto !important;
+    width: 600px;
+    height: auto;
+    padding: 0;
+    margin: auto;
+    z-index: 5;
+    position: absolute;
+    opacity: 1;
+    border-radius: 4px;
+    float: right;
+    transform: translate(0, 47px) !important;
+}
 
 div[role=row]:hover {
     cursor: pointer;

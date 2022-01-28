@@ -254,6 +254,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         // do anything on open/close of widget here
         if (widgetState == WidgetState.Opened) {
             if (this.first) {
+                console.log(this.props)
                 this.getLayerVis();
                 if (!this.openVisState) {
                     this.rmpLayer.visible = true;
@@ -1194,8 +1195,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
     render() {
         return (
-
-            <div className="widget-addLayers jimu-widget p-2" style={{overflow: "auto", height: "97%"}}>
+            <div className="widget-addLayers jimu-widget p-2" style={{overflow: "auto"}}>
                 {this.mainText && !this.loading ? this.LandingText() : null}
                 {this.loading ? <h2 style={{background: 'white'}}>Loading...</h2> :
                     <div>
