@@ -84,11 +84,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         // setup proxy rules for internal
         urlUtils.addProxyRule({
             proxyUrl: "https://gis.r09.epa.gov/api/portal_proxy/",
-            urlPrefix: "https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer"
+            urlPrefix: "https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL"
         });
 
         esriConfig.request.interceptors.push({
-            urls: 'https://gis.r09.epa.gov/api/portal_proxy',
+            urls: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL',
             // before: (params) => {
             //     params.requestOptions.headers = {'Authorization': this.token};
             // }
