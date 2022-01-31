@@ -88,9 +88,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         });
 
         esriConfig.request.interceptors.push({
-            urls: 'https://gis.r09.epa.gov/api/portal_proxy/?https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/0?f=json',
-            before: (request) => {
-                request.headers['Authorization'] = this.token;
+            // urls: 'https://gis.r09.epa.gov/api/portal_proxy/?https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/0?f=json',
+            before: (params) => {
+                params.requestOptions.headers = {'Authorization': this.token};
             }
         });
         // esriRequest.setRequestPreCallback((ioArgs: any) => {
