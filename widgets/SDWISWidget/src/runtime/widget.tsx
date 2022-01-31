@@ -81,7 +81,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             this.token = this.props.token;
         }
 
-
+        esriConfig.request.trustedServers.push('https://gis.r09.epa.gov/api/portal_proxy/');
 
         esriConfig.request.interceptors.push({
             urls:['https://gis.r09.epa.gov/api/portal_proxy/', 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL'],
@@ -89,7 +89,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 console.log(params);
             //     params.requestOptions.headers = {'Authorization': this.token};
             },
-            headers: {'Authorization': this.token}
+            headers: {'Authorization': `Token ${this.token}`}
         });
 
         // esriConfig.request.interceptors.push({
