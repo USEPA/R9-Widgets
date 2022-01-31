@@ -13,6 +13,7 @@ import geometry from "esri/geometry";
 import Graphic from "esri/Graphic";
 import esriRequest from "esri/request";
 import urlUtils from "esri/core/urlUtils";
+import esriConfig from "esri/config";
 
 function getComparator(sortColumn: string) {
     switch (sortColumn) {
@@ -80,6 +81,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             this.token = this.props.token;
         }
 
+        esriConfig.request.interceptors.push({
+            before: (request) => {
+                request.headers['Authorization'] = `Token ${this.token}`;
+            }
+        })
         // setup proxy rules for internal
         urlUtils.addProxyRule({
             proxyUrl: "https://gis.r09.epa.gov/api/portal_proxy/",
@@ -96,11 +102,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         //     //   'Authorization': `Bearer ${this.access_token}`
         //     // }
         // });
-
-        esriRequest("https://gis.r09.epa.gov/api/portal_proxy/", {headers: {'Authorization': this.token}}).then((res) => {
-          return res
-        });
-
 
 
         this.featureLayer = new FeatureLayer({
