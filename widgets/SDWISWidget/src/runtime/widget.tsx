@@ -1,6 +1,6 @@
 /** @jsx jsx */
 import './assets/style.css';
-import {React, AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState} from "jimu-core";
+import {React, AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState, SessionManager} from "jimu-core";
 import {IMConfig} from "../config";
 import {JimuMapView, JimuMapViewComponent} from "jimu-arcgis";
 import DataGrid, {SelectColumn} from "react-data-grid";
@@ -11,7 +11,8 @@ import FeatureLayer from "esri/layers/FeatureLayer";
 import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
 import geometry from "esri/geometry";
 import Graphic from "esri/Graphic";
-
+import esriRequest from "esri/request";
+import urlUtils from "esri/core/urlUtils";
 
 function getComparator(sortColumn: string) {
     switch (sortColumn) {
@@ -52,6 +53,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     pwsText: any[] = [];
     regulatoryText: any[] = [];
     adminContactText: any[] = [];
+    token: string = '';
 
     constructor(props) {
         super(props);
@@ -71,6 +73,36 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     componentDidMount() {
+        let sessions = SessionManager.getInstance().getSessions();
+        if (sessions.length > 0) {
+            this.token = sessions[0].token;
+        } else if (this.props.token !== undefined && this.props.token !== "") {
+            this.token = this.props.token;
+        }
+
+        // setup proxy rules for internal
+        urlUtils.addProxyRule({
+            proxyUrl: "https://gis.r09.epa.gov/api/portal_proxy/",
+            urlPrefix: "https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer"
+        });
+
+        // esriRequest.setRequestPreCallback((ioArgs: any) => {
+        //     if (ioArgs.url.indexOf("https://gis.r09.epa.gov/api/portal_proxy/") === 0) {
+        //         ioArgs.headers['Authorization'] = `Token ${this.token}`;
+        //     }
+        //     return ioArgs
+        //     // urls: 'https://r9.ercloud.org/naum',
+        //     // headers: {
+        //     //   'Authorization': `Bearer ${this.access_token}`
+        //     // }
+        // });
+
+        esriRequest("https://gis.r09.epa.gov/api/portal_proxy/", {headers: {'Authorization': this.token}}).then((res) => {
+          return res
+        });
+
+
+
         this.featureLayer = new FeatureLayer({
             url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/0',
             outFields: ['*']

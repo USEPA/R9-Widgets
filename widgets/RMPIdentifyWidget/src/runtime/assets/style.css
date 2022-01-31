@@ -13,10 +13,6 @@ tr > td.quantity {
     padding-left: 10px !important;
 }
 
-/*td {*/
-/*    padding-left: 10px !important;*/
-/*}*/
-
 div.modal.jimu-outline-inside.fade.show {
     overflow: auto;
 }
@@ -51,20 +47,4 @@ div[role=row]:hover {
 
 Button:hover {
     cursor: pointer;
-}
-
-/*div[role=dialog][aria-modal=false] {*/
-div[data-uniqueid=popper_1] {
-    inset: 0 0 auto auto !important;
-    width: 360px !important;
-    height: calc(100vh - 47px) !important;
-    overflow: auto !important;
-    padding: 0;
-    margin: auto;
-    z-index: 5;
-    position: absolute;
-    opacity: 1;
-    border-radius: 4px;
-    float: right;
-    transform: translate(0, 47px) !important;
 }
