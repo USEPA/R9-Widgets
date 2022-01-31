@@ -81,18 +81,18 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             this.token = this.props.token;
         }
 
-        esriConfig.request.interceptors.push({
-            urls: 'https://gis.r09.epa.gov/api/portal_proxy/?https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer',
-            before: (request) => {
-                request.headers['Authorization'] = `Token ${this.token}`;
-            }
-        })
         // setup proxy rules for internal
         urlUtils.addProxyRule({
             proxyUrl: "https://gis.r09.epa.gov/api/portal_proxy/",
             urlPrefix: "https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer"
         });
 
+        esriConfig.request.interceptors.push({
+            urls: 'https://gis.r09.epa.gov/api/portal_proxy/?https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/0?f=json',
+            before: (request) => {
+                request.headers['Authorization'] = this.token;
+            }
+        });
         // esriRequest.setRequestPreCallback((ioArgs: any) => {
         //     if (ioArgs.url.indexOf("https://gis.r09.epa.gov/api/portal_proxy/") === 0) {
         //         ioArgs.headers['Authorization'] = `Token ${this.token}`;
