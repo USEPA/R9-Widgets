@@ -89,9 +89,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
         esriConfig.request.interceptors.push({
             urls: 'https://gis.r09.epa.gov/api/portal_proxy/',
-            // before: (params) => {
+            before: (params) => {
+                console.log(params);
             //     params.requestOptions.headers = {'Authorization': this.token};
-            // }
+            },
             headers: {'Authorization': this.token}
         });
         // esriRequest.setRequestPreCallback((ioArgs: any) => {
