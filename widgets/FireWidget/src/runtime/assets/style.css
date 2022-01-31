@@ -14,11 +14,12 @@
     height: 26px !important;
     background-color: red !important;
     border-radius: 13px 13px !important;
+    /*border-radius: 13px;*/
 }
 
 div.jimu-progress.progress.progress-primary.progress-linear.fireProgress > div.progress-bar-track > div {
-    border-top-left-radius: 13px 13px !important;
-    border-bottom-left-radius: 13px 13px !important;
+    border-radius: 13px 13px !important;
+    /*border-bottom-left-radius: 13px 13px !important;*/
 }
 
 
@@ -34,10 +35,12 @@ div.jimu-progress.progress.progress-primary.progress-linear.fireProgress > div.p
     margin-bottom: 5px;
 }
 
-div[role=dialog][aria-modal=false] {
+/*div[role=dialog][aria-modal=false] {*/
+div[data-uniqueid=popper_4] {
     inset: 0 0 auto auto !important;
     width: 360px !important;
-    height: auto;
+    height: calc(100vh - 47px) !important;
+    overflow: auto !important;
     padding: 0;
     margin: auto;
     z-index: 5;

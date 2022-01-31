@@ -588,15 +588,16 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         return (
             <div className="widget-addLayers jimu-widget p-2"
                  style={{overflow: "auto", height: "97%"}}>
-                <this.NothingFound/>
+
                 {this.loading ? <h2 style={{background: 'white'}}>Loading...</h2> :
                     <div>
                         <this.Grid/>
                         <this.Facility/>
+                        <this.NothingFound/>
+                        {this.mainText ? this.LandingText() : null}
                     </div>
                 }
 
-                {this.mainText ? this.LandingText() : null}
                 <JimuMapViewComponent useMapWidgetId={this.getArbitraryFirstMapWidgetId()}
                                       onActiveViewChange={this.onActiveViewChange}/>
             </div>

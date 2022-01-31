@@ -17,10 +17,12 @@ tr > td.quantity {
     margin-bottom: 36px;
 }
 
-div[role=dialog][aria-modal=false] {
+/*div[role=dialog][aria-modal=false] {*/
+div[data-uniqueid=popper_2] {
     inset: 0 0 auto auto !important;
     width: 360px !important;
-    height: auto;
+    height: calc(100vh - 47px) !important;
+    overflow: auto !important;
     padding: 0;
     margin: auto;
     z-index: 5;

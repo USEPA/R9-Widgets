@@ -44,6 +44,7 @@ div.modal.jimu-outline-inside.fade.show {
     padding: 0;
     border: none;
 }
+
 div[role=row]:hover {
     cursor: pointer;
 }
@@ -52,10 +53,12 @@ Button:hover {
     cursor: pointer;
 }
 
-div[role=dialog][aria-modal=false] {
+/*div[role=dialog][aria-modal=false] {*/
+div[data-uniqueid=popper_1] {
     inset: 0 0 auto auto !important;
     width: 360px !important;
-    height: auto;
+    height: calc(100vh - 47px) !important;
+    overflow: auto !important;
     padding: 0;
     margin: auto;
     z-index: 5;

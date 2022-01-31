@@ -48,8 +48,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     nrcLayer: FeatureLayer;
     featureSet: any[] = [];
     symbol: SimpleMarkerSymbol;
-    proxyUrl = "https://r9data.response.epa.gov/apps/webeocproxy";
-    // proxyUrl = "http://127.0.0.1:5000/webeocproxy";
+    // proxyUrl = "https://r9data.response.epa.gov/apps/webeocproxy";
+    proxyUrl = "http://127.0.0.1:5000/webeocproxy";
     token: any;
     record: any[] = [];
     openVisState: boolean = true;
@@ -154,6 +154,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         } else {
             this.first = true;
             this.nrcLayer.visible = this.openVisState;
+            this.mainText = true
+            this.loading = false;
+            this.rows = [];
+            this.record = [];
+            this.sortedRows = [];
+            this.nothingThere = [];
 
         }
     }
@@ -393,14 +399,14 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     render() {
         return (
             <div className="widget-addLayers jimu-widget w-100 p-2" style={{overflow: "auto", width: '600px'}}>
-                <this.NothingFound/>
                 {this.loading ? <h2 style={{background: 'white'}}>Loading...</h2> :
                     <div>
                         <this.Grid/>
                         <this.RecordText/>
+                        <this.NothingFound/>
+                        {this.mainText ? this.LandingText() : null}
                     </div>
                 }
-                {this.mainText ? this.LandingText() : null}
                 <JimuMapViewComponent useMapWidgetId={this.getArbitraryFirstMapWidgetId()}
                                       onActiveViewChange={this.onActiveViewChange}/>
             </div>

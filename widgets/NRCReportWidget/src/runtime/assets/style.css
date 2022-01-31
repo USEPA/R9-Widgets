@@ -1,10 +1,9 @@
-
-
 /*div[role=dialog][aria-modal=false] */
-div.app-root-emotion-cache-ltr-1ftz45u {
+div[data-uniqueid=popper_0] {
     inset: 0 0 auto auto !important;
     width: 600px !important;
-    height: auto;
+    height: calc(100vh - 47px) !important;
+    overflow: auto !important;
     padding: 0;
     margin: auto;
     z-index: 5;

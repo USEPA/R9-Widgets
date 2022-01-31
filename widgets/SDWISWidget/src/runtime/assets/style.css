@@ -1,7 +1,8 @@
-div[role=dialog][aria-modal=false] {
+/*div[role=dialog][aria-modal=false] {*/
+div[data-uniqueid=popper_5] {
     inset: 0 0 auto auto !important;
     width: 360px !important;
-    height: auto;
+    height: auto !important;
     padding: 0;
     margin: auto;
     z-index: 5;
