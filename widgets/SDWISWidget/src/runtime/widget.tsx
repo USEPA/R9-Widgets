@@ -81,6 +81,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             this.token = this.props.token;
         }
 
+        // todo: check if this is needed, adjust URLs
         esriConfig.request.trustedServers.push('https://gis.r09.epa.gov/api/portal_proxy/');
 
         esriConfig.request.interceptors.unshift({
@@ -92,51 +93,34 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             headers: {'Authorization': `Token ${this.token}`}
         });
 
-        // esriConfig.request.interceptors.push({
-        //     urls: ['https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL'],
-        //     before: (params) => {
-        //         console.log(params);
-        //     //     params.requestOptions.headers = {'Authorization': this.token};
-        //     },
-        //     headers: {'Authorization': this.token}
-        // });
-
-              console.log(esriConfig.request.interceptors);
-
-
-        // esriRequest.setRequestPreCallback((ioArgs: any) => {
-        //     if (ioArgs.url.indexOf("https://gis.r09.epa.gov/api/portal_proxy/") === 0) {
-        //         ioArgs.headers['Authorization'] = `Token ${this.token}`;
-        //     }
-        //     return ioArgs
-        //     // urls: 'https://r9.ercloud.org/naum',
-        //     // headers: {
-        //     //   'Authorization': `Bearer ${this.access_token}`
-        //     // }
-        // });
         // setup proxy rules for internal
         urlUtils.addProxyRule({
             proxyUrl: "https://gis.r09.epa.gov/api/portal_proxy/",
             urlPrefix: "https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL"
         });
 
-
+        // facilities
         this.featureLayer = new FeatureLayer({
             url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/0',
             outFields: ['*']
         });
+        // public water systems
         this.featureLayerPWS = new FeatureLayer({
             url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/1',
             outFields: ['*']
         });
+
+        // pws primary agencies - TABLE
         this.featureLayerTable = new FeatureLayer({
             url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/3',
             outFields: ['*']
         });
+        // Admin contacts - TABLE
         this.featureLayerAdmin = new FeatureLayer({
             url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/5',
             outFields: ['*']
         });
+
         this.featureLayer.on('layerview-create-error', (e) => {
             this.loading = false;
             this.onOpenText = [];
@@ -153,8 +137,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         });
         this.jmv.view.map.layers.add(this.featureLayer);
         this.jmv.view.map.layers.add(this.featureLayerPWS);
-        this.jmv.view.map.layers.add(this.featureLayerTable);
-        this.jmv.view.map.layers.add(this.featureLayerAdmin);
         this.symbol = new SimpleMarkerSymbol();
     }
 
@@ -178,6 +160,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             if (this.first) {
                 this.loading = true;
                 this.featureLayer.visible = true
+                this.featureLayerPWS.visible = true;
                 // if (this.featureLayer.loaded) {
                 let query = new Query;
                 query.where = '1=1';
@@ -261,6 +244,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         } else {
             this.first = true;
             this.featureLayer.visible = false;
+            this.featureLayerPWS.visible = false;
+            this.mainText = true;
+            this.loading = false;
+            this.rows = [];
+            this.sortedRows = [];
         }
     }
 
