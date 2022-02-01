@@ -40,7 +40,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     columns: any, rows: any, rmpGridClick: boolean, attributes: any, erTextAttr: any,
     location_string: any[], facilityStatus: any[], accidentText: any[], processText: any[],
     process: any, naicsText: any, accidentChems: any, nothingThere: any[], openModal: boolean,
-    executiveSummaryText: any[], multipleLocations: boolean, loading: boolean, sortColumns: SortColumn[], sortedRows: any[],
+    executiveSummaryText: any[], multipleLocations: boolean, loading: boolean, sortColumns: SortColumn[], sortedRows: any[], refreshDate: any[];
 }> {
 
     jmv: JimuMapView;
@@ -49,7 +49,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     mainText: boolean = true;
     first: boolean = false;
     r9Geom: any;
-    graphicLayer: GraphicsLayer;
+    graphicsLayer: GraphicsLayer;
     facilities: any;
     currentFacility: any;
     tblS1Facilities: any;
@@ -93,6 +93,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     sortColumns: SortColumn[] = [];
     openVisState: boolean = true;
     rmpTitle: string = 'RMPFacilities';
+    refreshDate: any[] = [];
 
     constructor(props) {
         super(props);
@@ -136,8 +137,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         }
 
         this.symbol = new SimpleMarkerSymbol({color: 'yellow', style: 'diamond'});
-        this.graphicLayer = new GraphicsLayer();
-        this.jmv.view.map.add(this.graphicLayer);
+        this.graphicsLayer = new GraphicsLayer();
+        this.jmv.view.map.add(this.graphicsLayer);
         // get visibility of map layers
         this.getLayerVis()
 
@@ -165,9 +166,23 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     });
                 }
             });
-            this.loading = false;
-            this.setState({
-                loading: this.loading,
+
+            let statusLayer = new FeatureLayer({url: this.baseurl + '/14', outFields: ['*']});
+            let statusQuery = new Query();
+            statusQuery.outFields = ['*'];
+            statusQuery.where = "OBJECTID Like'%'";
+            statusLayer.queryFeatures(statusQuery).then(featureSet => {
+                let refreshDate = moment(featureSet.features[0].attributes.DateRefreshed).utc().toISOString().split('T')[0];
+
+                if (refreshDate !== undefined || refreshDate !== '') {
+                    this.refreshDate.push(<p>RMP Refresh Date: {refreshDate}</p>);
+                }
+
+                this.loading = false;
+                this.setState({
+                    refreshDate: this.refreshDate,
+                    loading: this.loading,
+                });
             });
         });
 
@@ -204,6 +219,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     LandingText = () => {
         return (
             <div id="landingText" style={{overflow: 'auto'}}>
+                <h2> RMP Identify</h2>
+                <h5>{this.refreshDate}</h5>
                 <br/>Click Facility to view information.
                 <br/><br/><h5 style={{textDecoration: 'underline'}}>RMP Program Levels</h5>
                 <br/><u>Program Level 1</u>: Processes which would not affect the public in the case of a worst-case
@@ -254,13 +271,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                     mainText: this.mainText,
                     nothingThere: this.nothingThere
                 });
-                this.jmv.view.map.layers.add(this.graphicLayer);
+                this.jmv.view.map.layers.add(this.graphicsLayer);
             }
             this.first = false;
         } else {
             this.rmpLayer.visible = this.openVisState
             this.first = true;
-            this.jmv.view.map.layers.remove(this.graphicLayer);
+            this.jmv.view.map.layers.remove(this.graphicsLayer);
         }
     }
 
@@ -365,9 +382,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                                 <td></td>
                             </tr>
                             </tbody>
-                        </table>
-                        <table>
-                            <tbody id="tierii_contacts"></tbody>
                         </table>
                     </div>
                 )
@@ -474,7 +488,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                             <td colSpan={2} className="nested">review or update of facility's ER
                                 plan? {this.erTextAttr.attributes.ER_ReviewDate ? moment(this.erTextAttr.attributes.ER_ReviewDate).toISOString().split('T')[0] : 'Not Reported'} </td>
                         </tr>
-                        {/*</td></tr>*/}
                         <tr>
                             <td></td>
                         </tr>
@@ -568,7 +581,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     mapClick = (e) => {
-
         // clear it all
         this.multipleRMPs = false;
         this.multipleLocations = false;
@@ -597,7 +609,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             accidentChems: this.accidentChems,
         });
 
-        this.graphicLayer.removeAll();
+        this.graphicsLayer.removeAll();
         let pixelWidth = this.jmv.view.extent.width / this.jmv.view.width;
         let toleraceInMapCoords = 10 * pixelWidth;
         let clickExtent = new Extent({
@@ -754,7 +766,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
         let selectedGraphic = new Graphic({geometry: feature.geometry, symbol: this.symbol});
 
-        this.graphicLayer.add(selectedGraphic);
+        this.graphicsLayer.add(selectedGraphic);
 
         let rmpQuery = new RelationshipQuery();
         rmpQuery.outFields = ['*'];
@@ -878,19 +890,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         this.attributes = feature.attributes;
         let attributes = this.attributes;
         let selectedGraphic = new Graphic({geometry: feature.geometry, symbol: this.symbol});
-        this.graphicLayer.add(selectedGraphic);
-        let status, status_string;
+        this.graphicsLayer.add(selectedGraphic);
 
-        if (this.attributes.DeRegistrationEffectiveDate) {
-            status = 'De-registered';
-            let reason = (this.attributes.DeregistrationReasonCode !== '04' ? this.tblS1Facilities.getFieldDomain('DeregistrationReasonCode')["getName"](this.attributes.DeregistrationReasonCode) : this.attributes.DeregistrationReasonOtherText);
-            let date = this.attributes.DeRegistrationEffectiveDate;
-            status_string = status +
-                (reason ? '<br/>De-registration Reason: ' + reason : '') +
-                (date ? '<br/>De-registration Effective Date: ' + moment(date).utc().toISOString().split('T')[0] : '') + '<br/><br/>';
-        } else {
-            status_string = 'Active<br/><br/>';
-        }
         if (this.attributes && Object.keys(this.attributes).length > 0) {
             this.setState({
                 attributes: this.attributes,

@@ -493,7 +493,6 @@ class Fire extends Component<any, any, any> {
 
         this.PCLabel = parseFloat(this.ReportingAcres).toLocaleString('en') + " acres";
 
-        // //size of bar
         let acresMin = 0
         let acresMax = Math.max.apply(Math, this.props.acresArray);
         let acresRange = acresMax - acresMin;
@@ -528,14 +527,12 @@ class Fire extends Component<any, any, any> {
                 this.props.jmv.view.zoom = 10;
             }
         } else {
-            // todo: change to goTo function
             this.props.jmv.view.goTo({center: [-119.5, 36.7]}); // else just center map over CA
             this.props.jmv.view.zoom = 5;
         }
     }
 
     _queryFireAttachment() {
-        // todo: set download url to attribute on props
         let oid = this.props.fire.attributes.OBJECTID.toString()
         let attachQuery = {
             objectIds: oid,
@@ -545,9 +542,7 @@ class Fire extends Component<any, any, any> {
         this.props.perim.queryAttachments(attachQuery).then((res) => {
             var latestReportIndex = res[oid].length - 1;
             window.open(res[oid][latestReportIndex].url, "_top");
-        })
-
-        // });
+        });
     }
 
     render() {
