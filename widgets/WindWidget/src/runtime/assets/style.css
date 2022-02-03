@@ -3,12 +3,12 @@
     /*display: none;*/
     position: absolute;
     background: rgba(0, 0, 0, 0.55);
-    border-radius: 3px;
-    padding: 0 14px;
-    width: 220px !important;
+    /*border-radius: 3px;*/
+    /*padding: 0 14px;*/
+    /*width: 220px !important;*/
     z-index: 102 !important;
     top: auto !important;
-    bottom: 20px !important;
+    /*bottom: 20px !important;*/
     overflow: hidden;
     transition: height 0.5s ease;
     -moz-transition: height 0.5s ease;
@@ -16,6 +16,13 @@
     -o-transition: height 0.5s ease;
 }
 
+.app-root-emotion-cache-ltr-e2gy9k .caret-icon {
+    display: none;
+}
+
+#wind-model:last-child {
+    margin: auto 0 auto auto
+}
 /*.widget-renderer {*/
 /*    background: rgba(0, 0, 0, 0.55);*/
 /*}*/
