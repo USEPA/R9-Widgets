@@ -103,16 +103,17 @@ export default class WindWidget extends BaseWidget<AllWidgetProps<IMConfig>, {}>
         }
     }
 
-    getArbitraryFirstMapWidgetId = (): string => {
-        const appState: any = window._appState;
-        // Loop through all the widgets in the config and find the "first"
-        // that has the type (uri) of "arcgis-map"
-        const arbitraryFirstMapWidgetInfo: { [key: string]: any } = Object.values(appState.appConfig.widgets).find((widgetInfo: any) => {
-            return widgetInfo.uri === 'widgets/arcgis/arcgis-map/'
-        });
-
-        return arbitraryFirstMapWidgetInfo.id;
-    }
+    // use this only if you have a single page experience and want the widgets to automatically use the first mapView
+    // getArbitraryFirstMapWidgetId = (): string => {
+    //     const appState: any = window._appState;
+    //     // Loop through all the widgets in the config and find the "first"
+    //     // that has the type (uri) of "arcgis-map"
+    //     const arbitraryFirstMapWidgetInfo: { [key: string]: any } = Object.values(appState.appConfig.widgets).find((widgetInfo: any) => {
+    //         return widgetInfo.uri === 'widgets/arcgis/arcgis-map/'
+    //     });
+    //
+    //     return arbitraryFirstMapWidgetInfo.id;
+    // }
 
     _setWindModel(model) {
         this.loading = true;
@@ -265,7 +266,7 @@ export default class WindWidget extends BaseWidget<AllWidgetProps<IMConfig>, {}>
                         <this.infoModal/>
                     </div>}
 
-                <JimuMapViewComponent useMapWidgetId={this.getArbitraryFirstMapWidgetId()}
+                <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
                                       onActiveViewChange={this.onActiveViewChange}/>
             </div>
         );

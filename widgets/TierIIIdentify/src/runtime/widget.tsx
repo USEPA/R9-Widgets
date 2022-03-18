@@ -130,7 +130,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
         this.symbol = new SimpleMarkerSymbol({color: 'yellow', style: 'diamond'});
 
-        this.graphicsLayer = new GraphicsLayer();
+        this.graphicsLayer = new GraphicsLayer({
+            listMode: "hide"
+        });
+
         this.allTierIIfl = [];
 
         this.tierIILayer.load();
@@ -294,17 +297,18 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         }
     }
 
-    getArbitraryFirstMapWidgetId = (): string => {
-        const appState: any = window._appState;
-        // Loop through all the widgets in the config and find the "first"
-        // that has the type (uri) of "arcgis-map"
-        if (appState) {
-            const arbitraryFirstMapWidgetInfo: { [key: string]: any } = Object.values(appState.appConfig.widgets).find((widgetInfo: any) => {
-                return widgetInfo.uri === 'widgets/arcgis/arcgis-map/'
-            });
-            return arbitraryFirstMapWidgetInfo.id;
-        }
-    }
+    // use this only if you have a single page experience and want the widgets to automatically use the first mapView
+    // getArbitraryFirstMapWidgetId = (): string => {
+    //     const appState: any = window._appState;
+    //     // Loop through all the widgets in the config and find the "first"
+    //     // that has the type (uri) of "arcgis-map"
+    //     if (appState) {
+    //         const arbitraryFirstMapWidgetInfo: { [key: string]: any } = Object.values(appState.appConfig.widgets).find((widgetInfo: any) => {
+    //             return widgetInfo.uri === 'widgets/arcgis/arcgis-map/'
+    //         });
+    //         return arbitraryFirstMapWidgetInfo.id;
+    //     }
+    // }
 
     loadRelated(obj) {
         obj.relationships.forEach((relationship) => {
@@ -416,7 +420,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         </tbody>
                     </table>
                     <p>Click facility to view contact and chemical information.</p><br/>
-                    <Button id="badLocations" onClick={(e) => this.badLocations(e)}>View locations needing
+                    <Button id="badLocations" data-testid="get-bad-locations-button" onClick={(e) => this.badLocations(e)}>View locations needing
                         review</Button>
                     <br/>
                     <p>More info on the Emergency Planning and Community Right-to-Know Act (EPCRA):
@@ -961,7 +965,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         {this.mainText ? this.LandingText() : null}
                     </div>
                 }
-                <JimuMapViewComponent useMapWidgetId={this.getArbitraryFirstMapWidgetId()}
+                <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
                                       onActiveViewChange={this.onActiveViewChange}/>
             </div>
         )

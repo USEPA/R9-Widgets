@@ -31,7 +31,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
 
     componentDidMount() {
-
+        this.graphicsLayer = new GraphicsLayer({
+            listMode: "hide"
+        });
     }
 
     onActiveViewChange = (jmv: JimuMapView) => {

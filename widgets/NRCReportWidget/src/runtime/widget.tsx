@@ -113,7 +113,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             }
         );
 
-        this.graphicsLayer = new GraphicsLayer();
+        this.graphicsLayer = new GraphicsLayer({
+            listMode: "hide"
+        });
+
         this.symbol = new SimpleMarkerSymbol({size: 20, color: new Color([255, 255, 0, 0.5])});
 
         this.jmv.view.map.layers.add(this.graphicsLayer);
@@ -177,17 +180,18 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         }
     }
 
-    getArbitraryFirstMapWidgetId = (): string => {
-        const appState: any = window._appState;
-        // Loop through all the widgets in the config and find the "first"
-        // that has the type (uri) of "arcgis-map"
-        if (appState) {
-            const arbitraryFirstMapWidgetInfo: { [key: string]: any } = Object.values(appState.appConfig.widgets).find((widgetInfo: any) => {
-                return widgetInfo.uri === 'widgets/arcgis/arcgis-map/'
-            });
-            return arbitraryFirstMapWidgetInfo.id;
-        }
-    }
+    // use this only if you have a single page experience and want the widgets to automatically use the first mapView
+    // getArbitraryFirstMapWidgetId = (): string => {
+    //     const appState: any = window._appState;
+    //     // Loop through all the widgets in the config and find the "first"
+    //     // that has the type (uri) of "arcgis-map"
+    //     if (appState) {
+    //         const arbitraryFirstMapWidgetInfo: { [key: string]: any } = Object.values(appState.appConfig.widgets).find((widgetInfo: any) => {
+    //             return widgetInfo.uri === 'widgets/arcgis/arcgis-map/'
+    //         });
+    //         return arbitraryFirstMapWidgetInfo.id;
+    //     }
+    // }
 
     LandingText = () => {
         if (this.mainText) {
@@ -406,7 +410,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                         {this.mainText ? this.LandingText() : null}
                     </div>
                 }
-                <JimuMapViewComponent useMapWidgetId={this.getArbitraryFirstMapWidgetId()}
+                <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
                                       onActiveViewChange={this.onActiveViewChange}/>
             </div>
         )

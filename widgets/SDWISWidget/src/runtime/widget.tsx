@@ -121,6 +121,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
             outFields: ['*']
         });
 
+        this.graphicsLayer = new GraphicsLayer({
+            listMode: "hide"
+        });
+
         this.featureLayer.on('layerview-create-error', (e) => {
             this.loading = false;
             this.onOpenText = [];
@@ -668,7 +672,7 @@ render()
                 </div>
             }
 
-            <JimuMapViewComponent useMapWidgetId={this.getArbitraryFirstMapWidgetId()}
+            <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
                                   onActiveViewChange={this.onActiveViewChange}/>
         </div>
     )

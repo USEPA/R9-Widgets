@@ -334,19 +334,20 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
         });
     }
 
-    getArbitraryFirstMapWidgetId = (): string => {
-        const appState: any = window._appState;
-        // Loop through all the widgets in the config and find the "first"
-        // that has the type (uri) of "arcgis-map"
-        if (appState) {
-            const arbitraryFirstMapWidgetInfo: { [key: string]: any } = Object.values(appState.appConfig.widgets).find((widgetInfo: any) => {
-                return widgetInfo.uri === 'widgets/arcgis/arcgis-map/'
-            });
-
-            return arbitraryFirstMapWidgetInfo.id;
-        }
-
-    }
+    // only use this for single page experiences as it will cause issues with layer visibility in multiple page experiences
+    // getArbitraryFirstMapWidgetId = (): string => {
+    //     const appState: any = window._appState;
+    //     // Loop through all the widgets in the config and find the "first"
+    //     // that has the type (uri) of "arcgis-map"
+    //     if (appState) {
+    //         const arbitraryFirstMapWidgetInfo: { [key: string]: any } = Object.values(appState.appConfig.widgets).find((widgetInfo: any) => {
+    //             return widgetInfo.uri === 'widgets/arcgis/arcgis-map/'
+    //         });
+    //
+    //         return arbitraryFirstMapWidgetInfo.id;
+    //     }
+    //
+    // }
 
     setUpFeatureLayers(perimFLInfo: { url: string, definitionExpression: string }, boundariesFLInfo: { url: string }) {
         this.perimeterbufferFC = new FeatureLayer({
@@ -393,7 +394,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, { j
                             onChange={this.fireSwitchActive}
                     />
                 </div>
-                <JimuMapViewComponent useMapWidgetId={this.getArbitraryFirstMapWidgetId()}
+                <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
                                       onActiveViewChange={this.onActiveViewChange}/>
 
                 {this.state && this.state.fires && this.jmv ? this.state.fires.map(x => <Fire ref={this.child}
