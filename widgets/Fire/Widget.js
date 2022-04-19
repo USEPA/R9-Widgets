@@ -100,7 +100,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           var incidentName = vs.all_fires[fire].attributes.Name? vs.all_fires[fire].attributes.Name.toUpperCase(): vs.all_fires[fire].attributes.IncidentName.toUpperCase();
           var counties = fireData.hasOwnProperty('counties')? fireData.counties.split(","): JSON.parse(vs.all_fires[fire].attributes.counties);
           var tribes = fireData.hasOwnProperty('tribes')? fireData.tribes.split(",").filter(function(d) {return d !== "";}): undefined;
-          var facilities = fireData.current_results? fireData.current_results.facilities: undefined;
+          var facilities = fireData.facilities? fireData.facilities: undefined;
           var rmpFacilities = facilities && facilities["Active RMP Facilities"] ? facilities["Active RMP Facilities"] : 0;
           var nplPoints = facilities && facilities["NationalPriorityListPoint_R9_2019_R9"] ? facilities["NationalPriorityListPoint_R9_2019_R9"] : 0;
           var nplPolys = facilities && facilities["NationalPriorityListBoundaryTypes_R9_2020_R9"] ? facilities["NationalPriorityListBoundaryTypes_R9_2020_R9"] : 0;
