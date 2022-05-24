@@ -51,7 +51,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         //Identify default fire layers and visisblity
         //get perimeter buffer feature layer
         // vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/ArcGIS/rest/services/R9_Fire_Perimeter_Buffers/FeatureServer/0", {
-        vs.perimeterbufferFC = new FeatureLayer("https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9Notifiable/FeatureServer/0", {
+        vs.perimeterbufferFC = new FeatureLayer(this.config.firesServiceUrl, {
           // definitionExpression: "display = 1 AND acres >= 10 AND RETRIEVED >= " + "'" + currentDate + "'"
           definitionExpression: "Display = 1"
         });
