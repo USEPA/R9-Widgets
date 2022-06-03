@@ -2,7 +2,7 @@
 import './assets/style.css';
 import {AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState} from "jimu-core";
 import {IMConfig} from "../config";
-import {Progress, Switch, Button, Icon} from 'jimu-ui';
+import {Progress, Switch, Button, Icon, Loading} from 'jimu-ui';
 import React, {Component} from 'react';
 import {JimuMapView, JimuMapViewComponent} from 'jimu-arcgis';
 import FeatureLayer from 'esri/layers/FeatureLayer';
@@ -58,8 +58,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       this.r9Geom = res;
     });
 
-
-    // this.openVisState = this.getFireLayerVis();
     this.checked = false;
   }
 
@@ -364,13 +362,14 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
   render() {
     if (!this.state?.jimuMapView) {
-      return <div>loading...
+      return <div className="jimu-widget" style={{backgroundColor: "white"}}>
+        <Loading type="SECONDARY"/>
         <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
                               onActiveViewChange={this.onActiveViewChange}/>
       </div>
     }
     return (
-      <div className="widget-addLayers jimu-widget p-2" style={{overflow: "auto"}}>
+      <div className="jimu-widget p-2" style={{overflow: "auto", backgroundColor: "white"}}>
         <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
                               onActiveViewChange={this.onActiveViewChange}/>
         <div style={{marginBottom: 10}}>These wildfires are greater than 10 acres and within 10 miles of
