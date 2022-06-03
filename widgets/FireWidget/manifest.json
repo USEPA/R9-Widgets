@@ -8,9 +8,12 @@
   "copyright": "",
   "license": "http://www.apache.org/licenses/LICENSE-2.0",
   "properties": {},
-  "supportedLocales": ["en"],
+  "supportedLocales": [
+    "en"
+  ],
   "defaultSize": {
     "width": 800,
     "height": 500
-  }
+  },
+  "dependency": "jimu-arcgis"
 }
