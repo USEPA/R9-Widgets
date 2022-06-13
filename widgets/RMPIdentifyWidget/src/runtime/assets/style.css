@@ -41,10 +41,34 @@ div.modal.jimu-outline-inside.fade.show {
     border: none;
 }
 
+div.rdg {
+    border: none;
+}
+
+div[role=row] {
+    border: none;
+}
+
 div[role=row]:hover {
     cursor: pointer;
 }
 
 Button:hover {
     cursor: pointer;
+}
+
+div[role=row].rdg-row-odd {
+    background-color: rgba(76, 76, 76, .04);
+}
+
+div[role=row].rdg-row-even {
+    background-color: rgba(76, 76, 76, .1);
+}
+
+div[role=row].rdg-row-even div {
+    border: none;
+}
+
+div.rdg-cell {
+    border: none;
 }

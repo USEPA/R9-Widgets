@@ -12,5 +12,6 @@
   "defaultSize": {
     "width": 800,
     "height": 500
-  }
+  },
+  "dependency": "jimu-arcgis"
 }
