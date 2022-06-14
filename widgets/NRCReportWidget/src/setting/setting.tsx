@@ -4,44 +4,48 @@ import {IMConfig} from "../config";
 import defaultI18nMessages from "./translations/default";
 import {JimuMapViewSelector} from 'jimu-ui/advanced/setting-components';
 import {AllDataSourceTypes, DataSourceSelector} from 'jimu-ui/advanced/data-source-selector';
+import {Input} from 'jimu-ui';
 
-export default class Setting extends BaseWidgetSetting<AllWidgetSettingProps<IMConfig>,
-    any> {
-    supportedTypes = Immutable([AllDataSourceTypes.FeatureLayer]);
 
-    onMapSelected = (useMapWidgetIds: string[]) => {
-        this.props.onSettingChange({
-            id: this.props.id,
-            useMapWidgetIds: useMapWidgetIds
-        });
-    };
+export default class Setting extends BaseWidgetSetting<AllWidgetSettingProps<IMConfig>, any> {
+  supportedTypes = Immutable([AllDataSourceTypes.FeatureLayer]);
 
-    onToggleUseDataEnabled = (useDataSourcesEnabled: boolean) => {
-        this.props.onSettingChange({
-            id: this.props.id,
-            useDataSourcesEnabled
-        });
-    }
+  updateConfigProperty = (reportProxy) => {
+    this.props.onSettingChange({
+      id: this.props.id,
+      reportProxy,
+    });
 
-    onDataSourceChange = (useDataSources: UseDataSource[]) => {
-        this.props.onSettingChange({
-            id: this.props.id,
-            useDataSources: useDataSources,
-        });
-    }
+  }
 
-    render() {
-        return (
-            <div className="widget-setting-demo">
-                <JimuMapViewSelector onSelect={this.onMapSelected} useMapWidgetIds={this.props.useMapWidgetIds}/>
-                <DataSourceSelector
-                    types={this.supportedTypes}
-                    mustUseDataSource
-                    useDataSources={this.props.useDataSources}
-                    onChange={this.onDataSourceChange}
-                    widgetId={this.props.id}
-                />
-            </div>
-        );
-    }
+  onMapSelected = (useMapWidgetIds: string[]) => {
+    this.props.onSettingChange({
+      id: this.props.id,
+      useMapWidgetIds: useMapWidgetIds
+    });
+  };
+
+  onDataSourceChange = (useDataSources: UseDataSource[]) => {
+    this.props.onSettingChange({
+      id: this.props.id,
+      useDataSources: useDataSources,
+    });
+  }
+
+  render() {
+    return (
+      <div className="widget-setting-demo">
+        <JimuMapViewSelector onSelect={this.onMapSelected} useMapWidgetIds={this.props.useMapWidgetIds}/>
+        <Input placeholder='Report Proxy URL' value={this.props.reportProxy}
+               onChange={e => this.updateConfigProperty(e.target.value)}/>
+        <DataSourceSelector
+          types={this.supportedTypes}
+          mustUseDataSource
+          useDataSources={this.props.useDataSources}
+          onChange={this.onDataSourceChange}
+          widgetId={this.props.id}
+        />
+      </div>
+    );
+  }
 }
