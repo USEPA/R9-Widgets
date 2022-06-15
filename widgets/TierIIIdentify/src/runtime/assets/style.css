@@ -40,3 +40,19 @@ div[role=row]:hover {
 Button:hover {
     cursor: pointer;
 }
+
+div[role=row].rdg-row-odd {
+    background-color: rgba(76, 76, 76, .04);
+}
+
+div[role=row].rdg-row-even {
+    background-color: rgba(76, 76, 76, .1);
+}
+
+div[role=row].rdg-row-even div {
+    border: none;
+}
+
+div.rdg-cell {
+    border: none;
+}
