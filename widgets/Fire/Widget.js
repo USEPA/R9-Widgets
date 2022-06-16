@@ -102,9 +102,8 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           var tribes = fireData.hasOwnProperty('tribes')? fireData.tribes.split(",").filter(function(d) {return d !== "";}): undefined;
           var facilities = fireData.facilities? fireData.facilities: undefined;
           var rmpFacilities = facilities && facilities["Active RMP Facilities"] ? facilities["Active RMP Facilities"] : 0;
-          var nplPoints = facilities && facilities["NationalPriorityListPoint_R9_2019_R9"] ? facilities["NationalPriorityListPoint_R9_2019_R9"] : 0;
-          var nplPolys = facilities && facilities["NationalPriorityListBoundaryTypes_R9_2020_R9"] ? facilities["NationalPriorityListBoundaryTypes_R9_2020_R9"] : 0;
-          var nplFacilities = facilities? nplPoints+nplPolys: 0;
+          var nplPoints = facilities && facilities["NPL Sites"] ? facilities["NPL Sites"] : 0;
+          var nplFacilities = facilities? nplPoints: 0;
 
           //get min and max acres
           vs.acresArray = vs.all_fires.map(function (a) {
