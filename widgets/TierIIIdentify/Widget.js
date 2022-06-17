@@ -76,61 +76,61 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
           //     '<table><tbody id="tierii_contacts"></tbody></table>';
           //     '<table><tbody id="tierii_chemicals"></tbody></table>';
           // } else
-          if (service.config.state.abbr === 'AZ') {
-            mapIdNode.innerHTML = '<h1>' + attributes.NAME + '</h1><br/>' +
-              '<table><tbody id="tierii_facility">' +
-              '<tr><td>Physical Address: ' + attributes.ADDRESS + ', ' + attributes.CITY + '</td></tr>' +
-              '<tr><td>Fire District: ' + (attributes.FD ? attributes.FD : 'Not Reported') + '</td></tr>' +
-              '<tr><td>Email: ' + (attributes.EMAIL ? attributes.EMAIL : 'Not Reported') + '</td></tr>' +
-              '<tr><td>Phone: ' + (attributes.PHONE ? attributes.PHONE : 'Not Reported') + '</td></tr>' +
-              '</tbody></table>';
-          } else {
-            // todo: need to look at records to see what is available for CA, NV an dHI
-            mapIdNode.innerHTML = '<h1>' + attributes.FacilityName + '</h1><br/>' +
-              '<table><tbody id="tierii_facility">' +
-              '<tr><td>Physical Address: ' + attributes.StreetAddress + ', ' + attributes.City + '</td></tr>' +
-              '<tr><td>Fire District: ' + (attributes.FireDistrict ? attributes.FireDistrict : 'Not Reported') + '</td></tr>' +
-              (attributes.Manned ? '<tr><td>' + (attributes.Manned === 'true' ? 'Max Occupants: ' : 'Manned: No') + (attributes.MaxNumOccupants ? attributes.MaxNumOccupants : '') + '</td></tr>' : '') +
-              (attributes.SubjectToChemAccidentPrevention ? '<tr><td>Subject to Chemical Accident Prevention: ' + (attributes.SubjectToChemAccidentPrevention === 'true' ? 'Yes' : 'No') + '</td></tr>' : '') +
-              (attributes.SubjectToEmergencyPlanning ? '<tr><td>Subject to Emergency Planning: ' + (attributes.SubjectToEmergencyPlanning === 'true' ? 'Yes' : 'No') + '</td></tr>' : '') +
-              '</tbody></table>' +
-              '<h3 style="text-decoration: underline;">Contacts</h3>' +
-              '<table><tbody id="tierii_contacts"></tbody></table>' +
-              '<h3 style="text-decoration: underline;">Chemicals</h3>' +
-              '<table><tbody id="tierii_chemicals"></tbody></table>';
-          }
+          // if (service.config.state.abbr === 'AZ') {
+          //   mapIdNode.innerHTML = '<h1>' + attributes.NAME + '</h1><br/>' +
+          //     '<table><tbody id="tierii_facility">' +
+          //     '<tr><td>Physical Address: ' + attributes.ADDRESS + ', ' + attributes.CITY + '</td></tr>' +
+          //     '<tr><td>Fire District: ' + (attributes.FD ? attributes.FD : 'Not Reported') + '</td></tr>' +
+          //     '<tr><td>Email: ' + (attributes.EMAIL ? attributes.EMAIL : 'Not Reported') + '</td></tr>' +
+          //     '<tr><td>Phone: ' + (attributes.PHONE ? attributes.PHONE : 'Not Reported') + '</td></tr>' +
+          //     '</tbody></table>';
+          // } else {
+          // todo: need to look at records to see what is available for CA, NV an dHI
+          mapIdNode.innerHTML = '<h1>' + attributes.FacilityName + '</h1><br/>' +
+            '<table><tbody id="tierii_facility">' +
+            '<tr><td>Physical Address: ' + attributes.StreetAddress + ', ' + attributes.City + '</td></tr>' +
+            '<tr><td>Fire District: ' + (attributes.FireDistrict ? attributes.FireDistrict : 'Not Reported') + '</td></tr>' +
+            (attributes.Manned ? '<tr><td>' + (attributes.Manned === 'true' ? 'Max Occupants: ' : 'Manned: No') + (attributes.MaxNumOccupants ? attributes.MaxNumOccupants : '') + '</td></tr>' : '') +
+            (attributes.SubjectToChemAccidentPrevention ? '<tr><td>Subject to Chemical Accident Prevention: ' + (attributes.SubjectToChemAccidentPrevention === 'true' ? 'Yes' : 'No') + '</td></tr>' : '') +
+            (attributes.SubjectToEmergencyPlanning ? '<tr><td>Subject to Emergency Planning: ' + (attributes.SubjectToEmergencyPlanning === 'true' ? 'Yes' : 'No') + '</td></tr>' : '') +
+            '</tbody></table>' +
+            '<h3 style="text-decoration: underline;">Contacts</h3>' +
+            '<table><tbody id="tierii_contacts"></tbody></table>' +
+            '<h3 style="text-decoration: underline;">Chemicals</h3>' +
+            '<table><tbody id="tierii_chemicals"></tbody></table>';
+          // }
 
           // HI specific data attributes/format
-          if (service.config.state.abbr === 'HI') {
-            // deal with boolean tables
-            if (attributes.SubjectToChemAccidentPreventi_1 === 'T') {
-              var row = '<tr><td>Subject to Chemical Accident Prevention: No</td></tr>';
-            } else if (attributes.SubjectToChemAccidentPrevention === 'T') {
-              var row = '<tr><td>Subject to Chemical Accident Prevention: Yes</td></tr>';
-            } else {
-              var row = '<tr><td>Subject to Chemical Accident Prevention: Unknown</td></tr>';
-            }
-            domConstruct.place(row, "tierii_facility");
-
-            if (attributes.SubjectToEmergencyPlanning_Y === 'T') {
-              var row = '<tr><td>Subject to Emergency Planning: Yes</td></tr>';
-            } else if (attributes.SubjectToEmergencyPlanning_N === 'T') {
-              var row = '<tr><td>Subject to Emergency Planning: No</td></tr>';
-            } else {
-              var row = '<tr><td>Subject to Emergency Planning: Unknown</td></tr>';
-            }
-            domConstruct.place(row, "tierii_facility");
-
-            if (attributes.Manned_Y === 'T') {
-              var row = '<tr><td>Manned: Yes</td></tr>' +
-                '<tr><td>Max Occupants: ' + (attributes.MaxNumOccupants ? attributes.MaxNumOccupants : 'Unknown') + '</td></tr>';
-            } else if (attributes.Manned_N === 'T') {
-              var row = '<tr><td>Manned: No</td></tr>';
-            } else {
-              var row = '<tr><td>Manned: No</td></tr>';
-            }
-            domConstruct.place(row, "tierii_facility");
-          }
+          // if (service.config.state.abbr === 'HI') {
+          //   // deal with boolean tables
+          //   if (attributes.SubjectToChemAccidentPreventi_1 === 'T') {
+          //     var row = '<tr><td>Subject to Chemical Accident Prevention: No</td></tr>';
+          //   } else if (attributes.SubjectToChemAccidentPrevention === 'T') {
+          //     var row = '<tr><td>Subject to Chemical Accident Prevention: Yes</td></tr>';
+          //   } else {
+          //     var row = '<tr><td>Subject to Chemical Accident Prevention: Unknown</td></tr>';
+          //   }
+          //   domConstruct.place(row, "tierii_facility");
+          //
+          //   if (attributes.SubjectToEmergencyPlanning_Y === 'T') {
+          //     var row = '<tr><td>Subject to Emergency Planning: Yes</td></tr>';
+          //   } else if (attributes.SubjectToEmergencyPlanning_N === 'T') {
+          //     var row = '<tr><td>Subject to Emergency Planning: No</td></tr>';
+          //   } else {
+          //     var row = '<tr><td>Subject to Emergency Planning: Unknown</td></tr>';
+          //   }
+          //   domConstruct.place(row, "tierii_facility");
+          //
+          //   if (attributes.Manned_Y === 'T') {
+          //     var row = '<tr><td>Manned: Yes</td></tr>' +
+          //       '<tr><td>Max Occupants: ' + (attributes.MaxNumOccupants ? attributes.MaxNumOccupants : 'Unknown') + '</td></tr>';
+          //   } else if (attributes.Manned_N === 'T') {
+          //     var row = '<tr><td>Manned: No</td></tr>';
+          //   } else {
+          //     var row = '<tr><td>Manned: No</td></tr>';
+          //   }
+          //   domConstruct.place(row, "tierii_facility");
+          // }
 
           // if contacts are available get them
           if (service.config.contacts.relationshipId !== 'none' && service.config.contacts.relationshipId !== undefined && service.config.contacts !== undefined && service.config.state !== 'GU') {
@@ -202,6 +202,9 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
             chemicalQuery.relationshipId = service.config.chemicals.relationshipId;
             chemicalQuery.objectIds = [attributes.OBJECTID];
 
+            const maxAmountCodeDomain = service.chemicals.getDomain("MaxAmountCode");
+            const avgAmountCodeDomain = service.chemicals.getDomain("AvgAmountCode");
+
             service.facilities.queryRelatedFeatures(chemicalQuery, function (e) {
               dojo.forEach(e[attributes.OBJECTID].features, function (chemical, i) {
                 // these attributes could be different for each state
@@ -226,7 +229,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                     '<tr><td>Location: ' + (chemical.attributes.StorageLocation ? chemical.attributes.StorageLocation : 'Not Reported') + '</td></tr>' +
                     '<tr><td>Max Dailly Amount: ' + (chemical.attributes.MaxDailyAmount ? chemical.attributes.MaxDailyAmount : 'Not Reported') + '</td></tr>' +
                     '<tr><td>Avg Dailly Amount: ' + (chemical.attributes.AvgDailyAmount ? chemical.attributes.AvgDailyAmount : 'Not Reported') + '</td></tr>' +
-                    '<tr><td>Container: ' + (chemical.attributes.ContainerType  ? chemical.attributes.ContainerType  : 'Not Reported') + '</td></tr>'
+                    '<tr><td>Container: ' + (chemical.attributes.ContainerType ? chemical.attributes.ContainerType : 'Not Reported') + '</td></tr>'
                   );
                   domConstruct.place(row, "tierii_chemicals");
                   that.loadingShelter.hide();
@@ -242,28 +245,42 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                   service.chemicals.queryRelatedFeatures(chemicalLocationQuery, function (e) {
                     // these attributes could be different for each state
                     // the service.config.state object helps you identify which state you are working with
-                    if (service.config.state.abbr === 'HI') {
-                      var row = domConstruct.toDom(
-                        '<tr><td style="padding-top: 10px;"><b>' + chemical.attributes.EnteredChemName
-                        + (chemical.attributes.CiCAS ? ' (' + chemical.attributes.CiCAS + ')' : '') + '</b></td></tr>' +
-                        '<tr><td>Days: ' + chemical.attributes.DaysOnSite + '</td></tr>'
-                      );
-                      domConstruct.place(row, "tierii_chemicals");
-                    } else if (service.config.state.abbr === 'CA' || service.config.state.abbr === 'NV') {
-                      var row = domConstruct.toDom(
-                        '<tr><td style="padding-top: 10px;"><b>' + chemical.attributes.chemical_name
-                        + (chemical.attributes.cas_code ? ' (' + chemical.attributes.cas_code + ')' : '') + '</b></td></tr>' +
-                        '<tr><td>Days: ' + chemical.attributes.DaysOnSite + '</td></tr>'
-                      );
-                      domConstruct.place(row, "tierii_chemicals");
+                    // if (service.config.state.abbr === 'HI') {
+                    //   var row = domConstruct.toDom(
+                    //     '<tr><td style="padding-top: 10px;"><b>' + chemical.attributes.EnteredChemName
+                    //     + (chemical.attributes.CiCAS ? ' (' + chemical.attributes.CiCAS + ')' : '') + '</b></td></tr>' +
+                    //     '<tr><td>Days: ' + chemical.attributes.DaysOnSite + '</td></tr>'
+                    //   );
+                    //   domConstruct.place(row, "tierii_chemicals");
+                    // } else if (service.config.state.abbr === 'CA' || service.config.state.abbr === 'NV') {
+                    var row = domConstruct.toDom(
+                      '<tr><td style="padding-top: 10px;"><b>' + chemical.attributes.chemical_name
+                      + (chemical.attributes.cas_code ? ' (' + chemical.attributes.cas_code + ')' : '') + '</b></td></tr>' +
+                      '<tr><td>Days: ' + chemical.attributes.DaysOnSite + '</td></tr>'
+                    );
+                    domConstruct.place(row, "tierii_chemicals");
+                    // }
+
+                    let maxAmount = 'Not Reported'
+                    if (chemical.attributes.MaxAmountCode && maxAmountCodeDomain === undefined) {
+                      maxAmount = chemical.attributes.MaxAmountCode
+                    } else if (chemical.attributes.MaxAmountCode && maxAmountCodeDomain) {
+                      maxAmount = maxAmountCodeDomain.getName(chemical.attributes.MaxAmountCode)
                     }
+                    let AveAmountCode = 'Not Reported'
+                    if (chemical.attributes.AveAmountCode && avgAmountCodeDomain === undefined) {
+                      maxAmount = chemical.attributes.AveAmountCode;
+                    } else if (chemical.attributes.AveAmountCode && avgAmountCodeDomain) {
+                      maxAmount = avgAmountCodeDomain.getName(chemical.attributes.AveAmountCode);
+                    }
+
 
                     var row = domConstruct.toDom(
                       '<tr><td>Max Amount: ' + (chemical.attributes.MaxAmount ? chemical.attributes.MaxAmount + ' lbs' : "Not Reported") + '</td></tr>' +
-                      '<tr><td>Max Amount Range: ' + (chemical.attributes.MaxAmountCode ? service.chemicals.getDomain("MaxAmountCode").getName(chemical.attributes.MaxAmountCode) : 'Not Reported') + '</td></tr>' +
+                      '<tr><td>Max Amount Range: ' + maxAmount + '</td></tr>' +
                       '<tr><td>Max Amount Container: ' + (chemical.attributes.MaxAmountContainer ? chemical.attributes.MaxAmountContainer : "Not Reported") + '</td></tr>' +
                       '<tr><td>Average Amount: ' + (chemical.attributes.AveAmount ? chemical.attributes.AveAmount + ' lbs' : "Not Reported") + '</td></tr>' +
-                      '<tr><td>Average Amount Range: ' + (chemical.attributes.AveAmountCode ? service.chemicals.getDomain("AveAmountCode").getName(chemical.attributes.AveAmountCode) : 'Not Reported') + '</td></tr>'
+                      '<tr><td>Average Amount Range: ' + AveAmountCode + '</td></tr>'
                     );
 
                     domConstruct.place(row, "tierii_chemicals");
@@ -306,22 +323,22 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                     var row = domConstruct.toDom('<tr id="hazards_' + chemical.attributes.OBJECTID + '"><td>Hazard(s): ' + hazards + '</td></tr>');
                     domConstruct.place(row, 'tierii_chemicals');
 
-                    if (service.config.state.abbr === 'NV') {
-                      var chemicalHazardsQuery = new RelationshipQuery();
+                    // if (service.config.state.abbr === 'NV') {
+                    var chemicalHazardsQuery = new RelationshipQuery();
 
-                      chemicalHazardsQuery.outFields = ['*'];
-                      // chemicals to chemical locations relationship id
-                      chemicalHazardsQuery.relationshipId = service.config.chemicals.hazards.relationshipId;
-                      chemicalHazardsQuery.objectIds = [chemical.attributes.OBJECTID];
-                      service.chemicals.queryRelatedFeatures(chemicalHazardsQuery, function (response) {
-                        var hazardsNode = dojo.byId('hazards_' + chemical.attributes.OBJECTID);
-                        var hazards = [];
-                        dojo.forEach(response[chemical.attributes.OBJECTID].features, function (hazard, j) {
-                          hazards.push(hazard.attributes.category);
-                        });
-                        hazardsNode.innerHTML = '<td>Hazard(s): ' + hazards.join(", ") + '</td>';
+                    chemicalHazardsQuery.outFields = ['*'];
+                    // chemicals to chemical locations relationship id
+                    chemicalHazardsQuery.relationshipId = service.config.chemicals.hazards.relationshipId;
+                    chemicalHazardsQuery.objectIds = [chemical.attributes.OBJECTID];
+                    service.chemicals.queryRelatedFeatures(chemicalHazardsQuery, function (response) {
+                      var hazardsNode = dojo.byId('hazards_' + chemical.attributes.OBJECTID);
+                      var hazards = [];
+                      dojo.forEach(response[chemical.attributes.OBJECTID].features, function (hazard, j) {
+                        hazards.push(hazard.attributes.category);
                       });
-                    }
+                      hazardsNode.innerHTML = '<td>Hazard(s): ' + hazards.join(", ") + '</td>';
+                    });
+                    // }
 
 
                     dojo.forEach(e[chemical.attributes.OBJECTID].features, function (chemical_location, j) {
@@ -423,15 +440,15 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
 
                 // these attributes could be different for each state
                 // the that.config.state object helps you identify which state you are working with
-                if (service.config.state.abbr === 'AZ') {
-                  var layout = [
-                    {'name': '', 'field': 'NAME', 'width': '100%'}
-                  ];
-                } else {
-                  var layout = [
-                    {'name': '', 'field': 'FacilityName', 'width': '100%'}
-                  ];
-                }
+                // if (service.config.state.abbr === 'AZ') {
+                //   var layout = [
+                //     {'name': '', 'field': 'NAME', 'width': '100%'}
+                //   ];
+                // } else {
+                var layout = [
+                  {'name': '', 'field': 'FacilityName', 'width': '100%'}
+                ];
+                // }
 
                 grid = new DataGrid({
                   id: 'grid',
@@ -481,41 +498,40 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
           that.clickHandler.resume();
         }
 
-        var statusLayer = new FeatureLayer(this.config.baseurl + this.config.statusLayer,
-          {outFields: ['*']}),
-          statusQuery = new Query();
-
-        statusQuery.outFields = ['*'];
-        statusQuery.where = "1=1";
-
-        this.mapIdNode.innerHTML = '<h1>Tier II Records Status</h1><br/>' +
-          '<table><tbody id="tierii_status"></tbody></table>' +
+        // var statusLayer = new FeatureLayer(this.config.baseurl + this.config.statusLayer,
+        //     {outFields: ['*']}),
+        //   statusQuery = new Query();
+        //
+        // statusQuery.outFields = ['*'];
+        // statusQuery.where = "1=1";
+        //
+        this.mapIdNode.innerHTML = '<h1>Tier II Identify</h1><br/>' +
           '<p>Click Facility to view contact and chemical information.</p><br/>' +
           '<p>More info on the Emergency Planning and Community Right-to-Know Act (EPCRA): ' +
           '<a href="https://www.epa.gov/epcra">https://www.epa.gov/epcra</a></p><br/>' +
           '<p>EPCRA Fact Sheet: <a href="https://www.epa.gov/sites/production/files/2017-08/documents/epcra_fact_sheet_overview_8-2-17.pdf">https://www.epa.gov/sites/production/files/2017-08/documents/epcra_fact_sheet_overview_8-2-17.pdf</a></p>';
-
-        // could pull this once and check if the values are set instead of pulling data each time
-        statusLayer.queryFeatures(statusQuery, function (records) {
-          const sortedRecords = [records.features.find((r) => r.attributes.State === 'California')]
-            .concat(records.features.filter((r)=> r.attributes.State !== 'California')
-            .sort((a,b) => a.attributes.State > b.attributes.State? 1: -1));
-          dojo.forEach(sortedRecords, function (record) {
-            var lastUpdate = dojo.date.locale.format(new Date(record.attributes.LastUpdate), {
-              datePattern: "yyyy-MM-dd",
-              selector: "date"
-            });
-            that.status = "<tr><td>State: " + record.attributes.State + "</td></tr>" +
-              "<tr><td>Status Year: " + record.attributes.CurrentReportingYear + "</td></tr>" +
-              "<tr><td>Last Updated: " + lastUpdate + "</td></tr>" +
-              "<tr><td>Contact: " + record.attributes.ContactName + "</td></tr>" +
-              "<tr><td>Contact Phone: " + record.attributes.ContactPhone + "</td></tr>" +
-              "<tr><td>Contact Email: " + record.attributes.ContactEmail + "</td></tr>" +
-              "<tr><td> <br/></td></tr>";
-            domConstruct.place(that.status, "tierii_status");
-          });
-          that.loadingShelter.hide();
-        });
+        //
+        // // could pull this once and check if the values are set instead of pulling data each time
+        // statusLayer.queryFeatures(statusQuery, function (records) {
+        //   const sortedRecords = [records.features.find((r) => r.attributes.State === 'California')]
+        //     .concat(records.features.filter((r) => r.attributes.State !== 'California')
+        //       .sort((a, b) => a.attributes.State > b.attributes.State ? 1 : -1));
+        //   dojo.forEach(sortedRecords, function (record) {
+        //     var lastUpdate = dojo.date.locale.format(new Date(record.attributes.LastUpdate), {
+        //       datePattern: "yyyy-MM-dd",
+        //       selector: "date"
+        //     });
+        //     that.status = "<tr><td>State: " + record.attributes.State + "</td></tr>" +
+        //       "<tr><td>Status Year: " + record.attributes.CurrentReportingYear + "</td></tr>" +
+        //       "<tr><td>Last Updated: " + lastUpdate + "</td></tr>" +
+        //       "<tr><td>Contact: " + record.attributes.ContactName + "</td></tr>" +
+        //       "<tr><td>Contact Phone: " + record.attributes.ContactPhone + "</td></tr>" +
+        //       "<tr><td>Contact Email: " + record.attributes.ContactEmail + "</td></tr>" +
+        //       "<tr><td> <br/></td></tr>";
+        //     domConstruct.place(that.status, "tierii_status");
+        //   });
+        that.loadingShelter.hide();
+        // });
       },
 
       onClose: function () {
