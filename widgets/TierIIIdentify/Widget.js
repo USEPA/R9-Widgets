@@ -506,7 +506,6 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         // statusQuery.where = "1=1";
         //
         this.mapIdNode.innerHTML = '<h1>Tier II Identify</h1><br/>' +
-          '<table><tbody id="tierii_status"></tbody></table>' +
           '<p>Click Facility to view contact and chemical information.</p><br/>' +
           '<p>More info on the Emergency Planning and Community Right-to-Know Act (EPCRA): ' +
           '<a href="https://www.epa.gov/epcra">https://www.epa.gov/epcra</a></p><br/>' +
