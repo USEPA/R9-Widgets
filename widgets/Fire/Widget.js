@@ -192,6 +192,15 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           // setup zoom listener
           on(dom.byId(`F${vs.all_fires[fire].attributes.OBJECTID}`), "click", vs._zoomToFire(vs.all_fires[fire].geometry));
         }
+        if (!vs.all_fires || !vs.all_fires.length) {
+          var noFireNode = domConstruct.toDom(
+            `<div class='layerDiv'>
+            <div class='fireNameTxt'>Warning</div>
+            There are currently no active incidents in Region 9 greater than 10 acres or within 10 miles of
+            EPA-monitored facilities. All active incidents, regardless of criteria, are displayed on the map.
+            </div>`);
+          domConstruct.place(noFireNode, vs.fireList);
+        }
       },
 
       _queryFireAttachment: function (results) {
@@ -236,6 +245,10 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
           if (!bufferLayerStatus) {
             vs.map.addLayer(vs.perimeterbufferFC);
           }
+        });
+        this.getLastRetrieval(vs.perimeterbufferFC.url).then(r => {
+          vs.lastRetrieved.innerText = `Data current as of ${new Date(r).toLocaleString()}.`;
+          domStyle.set(vs.lastRetrieved, "display", "block");
         });
         //uncheck by default
         dojo.byId("fire_toggle").checked=false;
@@ -292,7 +305,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
 
               vs.r9Geom.then(r9Geom => {
                 const q = new Query();
-                q.where = 'DailyAcres > 5';
+                q.where = 'DailyAcres >= 5';
                 q.geometry = r9Geom;
                 q.orderByFields = ['IncidentName ASC'];
                 q.spatialRelationship = "esriSpatialRelIntersects";
@@ -319,6 +332,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
               layerStructure.traversal(function (layerNode) {
                 var fireLayer = Array(vs.irwinLabel, vs.perimeterLabel).find(x => x === layerNode.title);
                 if (fireLayer) {
+                  layerNode.hide();
                   const isIrwin = fireLayer === vs.irwinLabel? true: false;
                   let filter = isIrwin? 'DailyAcres >= 5': 'GISAcres >= 5';
                   // layerNode.getLayerObject()
@@ -333,6 +347,7 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
                       filter += ' AND ' + idStr;
                     }
                     layerNode.setFilter(filter);
+                    layerNode.show()
                   });
                   // layerNode.getUrl();
                   // console.log(filter);
@@ -403,24 +418,20 @@ define(['dojo/_base/declare', 'jimu/BaseWidget', 'dojo/dom', 'dojo/dom-construct
         this.vertexCount.innerHTML = 'The vertex count is: ' + count;
       },
 
-      loadAllFires: function () {
+      getLastRetrieval: function (layerUrl, where = '1=1', outFields = ['*']) {
+        const newQuery = new Query();
+        const qTask = new QueryTask(layerUrl);
+        newQuery.where = where;
+        newQuery.returnGeometry = false;
+        newQuery.orderByFields = ['Retrieved DESC'];
+        newQuery.num = 1;
+        newQuery.outFields = outFields;
+        return qTask.execute(newQuery).then(results => {
+          if (results.features) {
+            return results.features[0].attributes.Retrieved;
+          }
+        });
       },
-
-      // queryIdsByGeometry: function(geomLayerUrl, targetLayerUrl, geomLayerWhere, targetLayerWhere='1=1', outSR = 102100){
-      //   const srcGeometry = getGeometryUnion(geomLayerUrl);
-      //   const newQuery = new Query();
-      //   const targetFl = new FeatureLayer(targetLayerUrl);
-      //   newQuery.where = targetLayerWhere;
-      //   newQuery.geometry = srcGeometry;
-      //   newQuery.outSpatialReference = {wkid: outSR};
-      //   newQuery.returnGeometry = true;
-      //   newQuery.spatialRelationship='SPATIAL_REL_INTERSECTS';
-      //   newQuery.outFields = ['*'];
-      //   targetFl.queryIds(newQuery).then(ids => {
-      //     return ids;
-      //   });
-      //
-      // },
 
       getGeometryUnion: function(layerUrl, where='1=1', outFields=['*'], outSR = 4326) {
         const newQuery = new Query();
