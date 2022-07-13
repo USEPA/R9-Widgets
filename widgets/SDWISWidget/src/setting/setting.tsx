@@ -16,31 +16,10 @@ export default class Setting extends BaseWidgetSetting<AllWidgetSettingProps<IMC
         });
     };
 
-    onToggleUseDataEnabled = (useDataSourcesEnabled: boolean) => {
-        this.props.onSettingChange({
-            id: this.props.id,
-            useDataSourcesEnabled
-        });
-    }
-
-    onDataSourceChange = (useDataSources: UseDataSource[]) => {
-        this.props.onSettingChange({
-            id: this.props.id,
-            useDataSources: useDataSources,
-        });
-    }
-
     render() {
         return (
             <div className="widget-setting-demo">
                 <JimuMapViewSelector onSelect={this.onMapSelected} useMapWidgetIds={this.props.useMapWidgetIds}/>
-                <DataSourceSelector
-                    types={this.supportedTypes}
-                    mustUseDataSource
-                    useDataSources={this.props.useDataSources}
-                    onChange={this.onDataSourceChange}
-                    widgetId={this.props.id}
-                />
             </div>
         );
     }

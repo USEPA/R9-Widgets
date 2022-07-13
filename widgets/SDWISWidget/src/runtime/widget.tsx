@@ -14,6 +14,7 @@ import Graphic from "esri/Graphic";
 import esriRequest from "esri/request";
 import urlUtils from "esri/core/urlUtils";
 import esriConfig from "esri/config";
+import {Loading} from 'jimu-ui';
 
 function getComparator(sortColumn: string) {
   switch (sortColumn) {
@@ -622,11 +623,15 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
 
   render() {
+    if (!this.props.useMapWidgetIds) {
+      return <h2>Please complete widget configuration.</h2>
+    }
+
     return (
       <div className="widget-addLayers jimu-widget p-2"
            style={{overflow: "auto", height: "97%"}}>
 
-        {this.loading ? <h2 style={{background: 'white'}}>Loading...</h2> :
+        {this.loading ? <Loading type='SECONDARY'/> :
           <div>
             <this.Grid/>
             <this.Facility/>
