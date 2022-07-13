@@ -925,6 +925,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   }
 
   render() {
+    if (this.props.useDataSources?.length === 0 || this.props.useMapWidgetIds?.length === 0) {
+      return <h2>Please complete widget configuration.</h2>
+    }
     return (
       <div className="widget-addLayers jimu-widget p-2" style={{overflow: "auto"}}>
         {this.state?.loading ? <Loading/> :
