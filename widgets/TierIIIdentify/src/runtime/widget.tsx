@@ -925,7 +925,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   }
 
   render() {
-    if (this.props.useDataSources?.length === 0 || this.props.useMapWidgetIds?.length === 0) {
+    if (!this.props.useDataSources?.length || !this.props.useMapWidgetIds?.length) {
       return <h2>Please complete widget configuration.</h2>
     }
     return (
