@@ -623,7 +623,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
 
   render() {
-    if (!this.props.useMapWidgetIds) {
+    if (!this.props.useMapWidgetIds?.length) {
       return <h2>Please complete widget configuration.</h2>
     }
 

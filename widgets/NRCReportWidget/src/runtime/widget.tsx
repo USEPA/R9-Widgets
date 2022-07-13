@@ -376,6 +376,9 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
 
 
   render() {
+    if (!this.props.useDataSources?.length || !this.props.useMapWidgetIds?.length) {
+      return <h2>Please complete widget configuration.</h2>
+    }
     let output;
     // if (!this.state?.configured) {
     //   output = (<div>Please finish configuring the widget.</div>)
