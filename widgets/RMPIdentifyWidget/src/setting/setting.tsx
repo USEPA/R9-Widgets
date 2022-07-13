@@ -40,6 +40,7 @@ export default class Setting extends BaseWidgetSetting<AllWidgetSettingProps<IMC
                     useDataSources={this.props.useDataSources}
                     onChange={this.onDataSourceChange}
                     widgetId={this.props.id}
+                    buttonLabel='Select RMP Facilities Layer'
                 />
             </div>
         );

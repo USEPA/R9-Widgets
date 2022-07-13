@@ -1057,10 +1057,14 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   }
 
   render() {
+    if (!this.props.useDataSources || this.props.useMapWidgetIds.length == 0) {
+      return <h2>Please complete widget configuration.</h2>
+    }
+
     if (this.state?.loading) {
       return <div>
         <Loading type='SECONDARY'/>
-        <DataSourceComponent useDataSource={this.props.useDataSources[0]}
+        <DataSourceComponent useDataSource={this.props.useDataSources?.[0]}
                              onDataSourceCreated={this.rmpLayerCreated}></DataSourceComponent>
         <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
                               onActiveViewChange={this.onActiveViewChange}/>
@@ -1082,7 +1086,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           <ExecModal modalVis={this.modalVis} openModal={this.openModal}
                      executiveSummaryText={this.executiveSummaryText}/>
         </div>
-        <DataSourceComponent useDataSource={this.props.useDataSources[0]}
+        <DataSourceComponent useDataSource={this.props.useDataSources?.[0]}
                              onDataSourceCreated={this.rmpLayerCreated}></DataSourceComponent>
         <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
                               onActiveViewChange={this.onActiveViewChange}/>
