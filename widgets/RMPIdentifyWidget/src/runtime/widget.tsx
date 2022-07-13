@@ -260,7 +260,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       this.state.jimuMapView.view.popup = this.currentPopup
     }
 
-    if (this.state.jimuMapView && prevState.jimuMapView === undefined && this.state.rmpFacilityLayer) {
+    if (this.state.jimuMapView && prevState?.jimuMapView === undefined && this.state.rmpFacilityLayer) {
       this.state.jimuMapView.view.on('click', event => {
         this.mapClick(event)
       })
