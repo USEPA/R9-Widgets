@@ -16,6 +16,7 @@ import {Button, Loading} from "jimu-ui"
 import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
 import FeatureEffect from "esri/views/layers/support/FeatureEffect";
 import FeatureFilter from "esri/views/layers/support/FeatureFilter";
+import {getViewIDs, visibilityChanged} from '../../../shared';
 
 function getComparator(sortColumn: string) {
   switch (sortColumn) {
@@ -30,20 +31,20 @@ function getComparator(sortColumn: string) {
 
 interface State {
   jimuMapView: JimuMapView
-  tierIILayer: MapImageLayer | FeatureLayer
-  loading: boolean,
-  attributes: any,
-  facilities: any,
-  nothingThere: boolean,
-  featureSet: any[],
-  columns: any[],
-  rows: any[],
-  sortedRows: any[],
-  sortColumns: any[],
-  contactInfo: any[],
-  chemicalInfo: any[],
-  recordsText: any[],
-  mainText: boolean,
+  loading: boolean
+  attributes: any
+  facilities: any
+  nothingThere: boolean
+  featureSet: any[]
+  columns: any[]
+  rows: any[]
+  sortedRows: any[]
+  sortColumns: any[]
+  contactInfo: any[]
+  chemicalInfo: any[]
+  recordsText: any[]
+  mainText: boolean
+  visible: boolean
 }
 
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, State> {
@@ -52,7 +53,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   first: boolean = true;
   loading: boolean = true;
   mainText: boolean = false;
-  tierIILayer: MapImageLayer;
   graphicsLayer: GraphicsLayer;
   symbol: SimpleMarkerSymbol = new SimpleMarkerSymbol({color: 'yellow', style: 'diamond'});
   // todo: move to settings
@@ -99,28 +99,19 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.setState({
       loading: this.loading,
     });
-
-
-    // let addedToMap: boolean;
-
-    // if (this.tierIILayer == undefined) {
-    //   addedToMap = false;
-    //   this.tierIILayer = new MapImageLayer({
-    //     url: "https://utility.arcgis.com/usrsvcs/servers/ea77cd05c98e44a98fdaddc83948015d/rest/services/EPA_EPCRA/TierIIFacilities_new_dev/MapServer"
-    //   });
-    // } else {
-    //   addedToMap = true;
-    // }
-    //
-    // this.getLayerVis();
-
-    // url for new service layer https://utility.arcgis.com/usrsvcs/servers/ea77cd05c98e44a98fdaddc83948015d/rest/services/EPA_EPCRA/TierIIFacilities_new_dev/MapServer
-    //records url is layer 10
-    // this.recordsLayer = new FeatureLayer({
-    //   url: "https://utility.arcgis.com/usrsvcs/servers/f7e36ad5c73f4a19a24877d920a27c0a/rest/services/EPA_EPCRA/TierIIFacilities/MapServer/10",
-    //   outFields: ['*']
-    // });
+    const appStore = getAppStore();
+    this.viewIds = getViewIDs(appStore.getState(), this.props.id)
+    if (visibilityChanged(appStore.getState(), this.state?.visible === true, this.viewIds)) {
+      this.setState({visible: !(this.state?.visible === true)})
+    }
+    appStore.subscribe(() => {
+      const s = getAppStore().getState();
+      if (visibilityChanged(s, this.state.visible, this.viewIds)) {
+        this.setState({visible: !this.state.visible})
+      }
+    })
   }
+
 
   initLayer(lyr) {
 
@@ -196,6 +187,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     }
   }
 
+  setupViewListening(jmv) {
+
+  }
+
   // initFeatureEffect() {
   //   this.allTierIIfl.forEach(lyr => {
   //     this.jmv.view.whenLayerView(lyr).then(layerView => {
@@ -208,7 +203,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     if (this.jmv && this.allTierIIfl.length > 0) {
       let widgetState: WidgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
       // do anything on open/close of widget here
-      if (widgetState === WidgetState.Opened || widgetState === undefined) {
+      if (widgetState === WidgetState.Opened || this.state.visible === true) {
         if (this.first) {
           this.setLayerVis(true);
           this.badPoints = false;
@@ -231,7 +226,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
             center: [-117.7881, 35.6117]
           });
         }
-        this.tierIILayer.visible = this.openVisState;
+        this.setLayerVis(this.openVisState);
         this.badPoints = false;
         this.featureSet = [];
         this.rows = [];
@@ -255,13 +250,26 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       if (mapLayer) {
         if (mapLayer?.sublayers) {
           mapLayer.sublayers.forEach(sl => {
-            sl.visible = visible
+            if (!(l.id in this.openVisState)) {
+              this.openVisState[l.id] = mapLayer.visible
+            }
+            if (visible === true) {
+              sl.visible = visible
+            } else {
+              sl.visible = this.openVisState[sl.id]
+            }
+
           })
+          if (!(l.id in this.openVisState)) {
+            this.openVisState[l.id] = mapLayer.visible
+          }
         }
-        if (!(l.id in this.openVisState)) {
-          this.openVisState[l.id] = mapLayer.visible
+
+        if (visible === true) {
+          mapLayer.visible = visible
+        } else {
+          mapLayer.visible = this.openVisState[mapLayer.id]
         }
-        mapLayer.visible = visible
       }
     })
   }
@@ -922,6 +930,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   }
 
   tierIILayerCreated = (e) => {
+    if (this.allTierIIfl.length === 0) {
+      // capture parent
+      this.allTierIIfl.push(e.parentDataSource.layer)
+    }
     this.allTierIIfl.push(e.layer)
     this.initLayer(e.layer)
   }

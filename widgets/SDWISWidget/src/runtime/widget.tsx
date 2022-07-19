@@ -15,6 +15,7 @@ import esriRequest from "esri/request";
 import urlUtils from "esri/core/urlUtils";
 import esriConfig from "esri/config";
 import {Loading} from 'jimu-ui';
+import {getViewIDs, visibilityChanged} from '../../../shared';
 
 function getComparator(sortColumn: string) {
   switch (sortColumn) {
@@ -138,6 +139,18 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     });
 
     this.symbol = new SimpleMarkerSymbol();
+    const appStore = getAppStore();
+    this.viewIds = getViewIDs(appStore.getState(), this.props.id)
+    if (visibilityChanged(appStore.getState(), this.state?.visible === true, this.viewIds)) {
+      this.setState({visible: !(this.state?.visible === true)})
+    }
+    appStore.subscribe(() => {
+      const s = getAppStore().getState();
+      if (visibilityChanged(s, this.state.visible, this.viewIds)) {
+        this.setState({visible: !this.state.visible})
+      }
+    })
+
   }
 
   onActiveViewChange = (jmv: JimuMapView) => {
@@ -158,7 +171,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     let widgetState: WidgetState;
     widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
     // do anything on open/close of widget here
-    if (widgetState == WidgetState.Opened || widgetState === undefined) {
+    if (widgetState == WidgetState.Opened || this.state.visible === true) {
       if (this.first) {
         this.loading = true;
         this.featureLayer.visible = true

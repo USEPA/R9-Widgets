@@ -12,6 +12,7 @@ import Graphic from "esri/Graphic";
 import Color from "esri/Color";
 import {Loading} from 'jimu-ui';
 import {DataSourceComponent} from 'jimu-core';
+import {getViewIDs, listenForViewChanges, visibilityChanged} from '../../../shared';
 
 function getComparator(sortColumn: string) {
   switch (sortColumn) {
@@ -39,11 +40,12 @@ interface State {
   sortColumns: any[]
   nothingThere: any[]
   record: any[]
-  configured: boolean
+  configured: boolean;
+  visible: boolean;
 }
 
 export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, State> {
-  state = {loading: true}
+  state = {loading: true, visible: false}
   jmv: JimuMapView;
   first: boolean = true;
   loading: boolean = false;
@@ -59,9 +61,10 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
   symbol: SimpleMarkerSymbol = new SimpleMarkerSymbol({size: 20, color: new Color([255, 255, 0, 0.5])});
   token: any = null;
   record: any[] = [];
-  openVisState: boolean = true;
+  openVisState: boolean;
   nrcTitle: string = 'WebEOCHotlineLogGeoJSON';
   currentPopup: any;
+  viewIds = new Set;
 
   onActiveViewChange = (jmv: JimuMapView) => {
     this.jmv = jmv;
@@ -93,7 +96,22 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
     view.popup = this.currentPopup;
   }
 
+  componentDidMount() {
+    const appStore = getAppStore();
+    this.viewIds = getViewIDs(appStore.getState(), this.props.id)
+    if (visibilityChanged(appStore.getState(), this.state?.visible === true, this.viewIds)) {
+      this.setState({visible: !(this.state?.visible === true)})
+    }
+    appStore.subscribe(() => {
+      const s = getAppStore().getState();
+      if (visibilityChanged(s, this.state.visible, this.viewIds)) {
+        this.setState({visible: !this.state.visible})
+      }
+    })
+  }
+
   componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView }>, snapshot?: any) {
+
     if (this.state.jimuMapView && prevState.jimuMapView === undefined) {
       this.initMapClick(this.state.jimuMapView.view)
       this.disablePopup(this.jmv.view)
@@ -106,13 +124,13 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
     if (this.state.jimuMapView && this.nrcLayer) {
       const widgetState: WidgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
       // do anything on open/close of widget here
-      if ((widgetState === WidgetState.Opened || widgetState === undefined)) {
+      if ((widgetState === WidgetState.Opened || this.state.visible === true)) {
         if (this.first) {
           this.setLayerVis(true)
         }
         this.first = false;
       }
-      if (widgetState === WidgetState.Closed) {
+      if (widgetState === WidgetState.Closed || this.state.visible === false) {
         this.first = true;
         this.nrcLayer.visible = this.openVisState;
         this.mainText = true

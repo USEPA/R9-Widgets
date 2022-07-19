@@ -28,6 +28,7 @@ import type {Column, SortColumn} from 'react-data-grid'
 import LandingText from './LandingText';
 import ExecModal from './ExecModal';
 import Facility from './Facility';
+import {getViewIDs, visibilityChanged} from '../../../shared';
 
 interface Row {
 }
@@ -75,6 +76,7 @@ interface State {
   sortColumns: SortColumn[]
   sortedRows: any[]
   refreshDate: any[]
+  visible: boolean
 }
 
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, State> {
@@ -127,6 +129,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   refreshDate: any[] = [];
   rmpVisibleOnOpen: boolean = false;
   currentPopup: any;
+  viewIds = new Set();
 
   constructor(props) {
     super(props)
@@ -150,6 +153,17 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     // } else {
     //   addedToMap = true
     // }
+    const appStore = getAppStore();
+    this.viewIds = getViewIDs(appStore.getState(), this.props.id)
+    if (visibilityChanged(appStore.getState(), this.state?.visible === true, this.viewIds)) {
+      this.setState({visible: !(this.state?.visible === true)})
+    }
+    appStore.subscribe(() => {
+      const s = getAppStore().getState();
+      if (visibilityChanged(s, this.state.visible, this.viewIds)) {
+        this.setState({visible: !this.state.visible})
+      }
+    })
 
     this.openModal = false
   }
@@ -224,7 +238,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
 
     // do anything on open/close of widget here
-    if ((widgetState === WidgetState.Opened || widgetState === undefined) && this.state.jimuMapView && this.state.rmpFacilityLayer) {
+    if ((widgetState === WidgetState.Opened || this.state?.visible === true)
+      && this.state.jimuMapView && this.state.rmpFacilityLayer) {
       if (this.first) {
         // this.rmpLayer = this.state.jimuMapView.view.map.layers.find(lyr => {
         //   return lyr.id === this.state.rmpFacilityLayer.id
@@ -253,8 +268,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       this.first = false
     }
 
-    if (widgetState === WidgetState.Closed) {
+    if (widgetState === WidgetState.Closed || this.state.visible === false) {
       this.state.rmpParentLayer.visible = this.rmpVisibleOnOpen
+      this.state.rmpFacilityLayer.visible = this.rmpVisibleOnOpen
       this.first = true
       // this.state.jimuMapView.view.map.layers.remove(this.graphicsLayer)
       this.state.jimuMapView.view.popup = this.currentPopup
