@@ -3,6 +3,9 @@ import {getAppStore} from 'jimu-core';
 export function getWidgetLayouts(state, widgetId) {
   return Object.keys(state.appConfig.layouts)
     .filter(k => {
+      if (state.appConfig.layouts[k].content === undefined) {
+        return false
+      }
       const found = Object.keys(state.appConfig.layouts[k].content)
         .find(c => state.appConfig.layouts[k].content[c].type === 'WIDGET' &&
           state.appConfig.layouts[k].content[c].widgetId === widgetId)
