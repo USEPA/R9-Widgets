@@ -98,7 +98,7 @@ export default function ({useMapWidgetIds}: AllWidgetProps<{}>) {
 
   useEffect(() => {
     if (jimuMapView) {
-      const t = jimuMapView.view.allLayerViews.filter(l => l.layer.timeInfo)
+      const t = jimuMapView.view.allLayerViews.filter(l => l.layer.timeInfo && l.layer.timeInfo.useTime)
       t.forEach(l => l.watch('visible', () => {
         setTimeLayers(t.filter(l => l.layer.visible))
       }))
