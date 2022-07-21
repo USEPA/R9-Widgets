@@ -146,8 +146,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     }
     appStore.subscribe(() => {
       const s = getAppStore().getState();
-      if (visibilityChanged(s, this.state.visible, this.viewIds)) {
-        this.setState({visible: !this.state.visible})
+      if (visibilityChanged(s, this.state?.visible === true, this.viewIds)) {
+        this.setState({visible: !(this.state?.visible === true)})
       }
     })
 
@@ -171,7 +171,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     let widgetState: WidgetState;
     widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
     // do anything on open/close of widget here
-    if (widgetState == WidgetState.Opened || this.state.visible === true) {
+    if (widgetState == WidgetState.Opened || this.state?.visible === true) {
       if (this.first) {
         this.loading = true;
         this.featureLayer.visible = true
