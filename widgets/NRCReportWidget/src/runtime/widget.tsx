@@ -167,7 +167,7 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
   }
 
   setLayerVis(visible) {
-    const mapLayer = this.jmv.view.map.layers.find(lyr => lyr.title == this.nrcLayer.title);
+    const mapLayer = this.jmv.view.map.allLayers.find(lyr => lyr.url === this.nrcLayer.url);
     if (mapLayer) {
       if (this.openVisState === undefined) {
         this.openVisState = mapLayer.visible
