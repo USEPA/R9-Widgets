@@ -105,8 +105,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     }
     appStore.subscribe(() => {
       const s = getAppStore().getState();
-      if (visibilityChanged(s, this.state.visible, this.viewIds)) {
-        this.setState({visible: !this.state.visible})
+      if (visibilityChanged(s, this.state?.visible === true, this.viewIds)) {
+        this.setState({visible: !(this.state?.visible === true)})
       }
     })
   }
