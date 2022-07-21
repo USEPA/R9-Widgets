@@ -246,7 +246,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
   setLayerVis(visible) {
     this.allTierIIfl.forEach(l => {
-      const mapLayer = this.jmv.view.map.layers.find(ml => ml.url === l.url)
+      const mapLayer = this.jmv.view.map.allLayers.find(ml => ml.url === l.url)
       if (mapLayer) {
         if (mapLayer?.sublayers) {
           mapLayer.sublayers.forEach(sl => {
