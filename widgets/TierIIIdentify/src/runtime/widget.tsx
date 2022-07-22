@@ -332,7 +332,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       query.returnGeometry = true;
       query.outFields = ['*'];
       let promises = [];
-      this.allTierIIfl.forEach(fl => {
+      this.allTierIIfl.filter(fl => !('sublayers' in fl)).forEach(fl => {
         let promise = fl.queryFeatures(query).then(featureSet => {
           if (featureSet.features.length > 0) {
             this.featureSet.push(...featureSet.features)
@@ -527,7 +527,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.columns = [{key: 'FacilityName', name: 'Name'}];
     let promises = [];
     this.queryLayer = undefined;
-    this.allTierIIfl.forEach(fl => {
+    this.allTierIIfl.filter(fl => !('sublayers' in fl)).forEach(fl => {
       let promise = fl.queryFeatures(featureQuery).then((featureSet) => {
         this.featureSet.push(...featureSet.features);
         if (this.featureSet.length === 1) {
