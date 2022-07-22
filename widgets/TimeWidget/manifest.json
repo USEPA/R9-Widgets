@@ -1,6 +1,6 @@
 {
   "name": "TimeWidget",
-  "label": "JS API Widget",
+  "label": "Time Slider Widget",
   "type": "widget",
   "version": "1.8.0",
   "exbVersion": "1.8.0",
