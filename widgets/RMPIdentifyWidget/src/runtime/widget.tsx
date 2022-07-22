@@ -268,7 +268,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       this.first = false
     }
 
-    if (widgetState === WidgetState.Closed || this.state.visible === false) {
+    if (widgetState === WidgetState.Closed || this.state.visible === false && !this.state.loading) {
       this.state.rmpParentLayer.visible = this.rmpVisibleOnOpen
       this.state.rmpFacilityLayer.visible = this.rmpVisibleOnOpen
       this.first = true
@@ -283,6 +283,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       this.state.jimuMapView.view.map.add(this.state.rmpFacilityLayer)
     }
   }
+
 
   // use this only if you have a single page experience and want the widgets to automatically use the first mapView
   // getArbitraryFirstMapWidgetId = (): string => {
