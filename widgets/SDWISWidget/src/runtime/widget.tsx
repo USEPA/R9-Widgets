@@ -339,7 +339,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
           data.push(attrs)
         })
 
-        this.columns = [{key: 'FacilityName', name: 'Name'}]
+        this.columns = [{key: 'facilityname', name: 'Name'}]
         this.rows = data
         this.sortedRows = data
         this.multipleLocations = true
