@@ -1,31 +1,31 @@
 /** @jsx jsx */
-import './assets/style.css';
-import {React, AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState, SessionManager} from "jimu-core";
-import {IMConfig} from "../config";
-import {JimuMapView, JimuMapViewComponent} from "jimu-arcgis";
-import DataGrid, {SelectColumn} from "react-data-grid";
-import GraphicsLayer from "esri/layers/GraphicsLayer";
-import Extent from "esri/geometry/Extent";
-import Query from "esri/rest/support/Query";
-import FeatureLayer from "esri/layers/FeatureLayer";
-import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
-import geometry from "esri/geometry";
-import Graphic from "esri/Graphic";
-import esriRequest from "esri/request";
-import urlUtils from "esri/core/urlUtils";
-import esriConfig from "esri/config";
-import {Loading} from 'jimu-ui';
-import {getViewIDs, visibilityChanged} from '../../../shared';
+import './assets/style.css'
+import {React, AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState, SessionManager} from 'jimu-core'
+import {IMConfig} from '../config'
+import {JimuMapView, JimuMapViewComponent} from 'jimu-arcgis'
+import DataGrid, {SelectColumn} from 'react-data-grid'
+import GraphicsLayer from 'esri/layers/GraphicsLayer'
+import Extent from 'esri/geometry/Extent'
+import Query from 'esri/rest/support/Query'
+import FeatureLayer from 'esri/layers/FeatureLayer'
+import SimpleMarkerSymbol from 'esri/symbols/SimpleMarkerSymbol'
+import geometry from 'esri/geometry'
+import Graphic from 'esri/Graphic'
+import esriRequest from 'esri/request'
+import urlUtils from 'esri/core/urlUtils'
+import esriConfig from 'esri/config'
+import {Loading} from 'jimu-ui'
+import {getViewIDs, visibilityChanged} from '../../../shared'
 
 function getComparator(sortColumn: string) {
   switch (sortColumn) {
     // todo: configure for SDWIS columns
     case 'FacilityName':
       return (a, b) => {
-        return a[sortColumn].localeCompare(b[sortColumn]);
-      };
+        return a[sortColumn].localeCompare(b[sortColumn])
+      }
     default:
-      throw new Error(`unsupported sortColumn: "${sortColumn}"`);
+      throw new Error(`unsupported sortColumn: "${sortColumn}"`)
   }
 }
 
@@ -33,7 +33,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
   jimuMapView: JimuMapView, loading: boolean, columns: any[], rows: any[], sortedRows: any[], sortColumns: any[],
   onOpenText: any[], nothingThere: any[], facilityText: any[], pwsText: any[], regulatoryText: any[], adminContactText: any[],
 }> {
-
   jmv: JimuMapView;
   first: boolean = false;
   loading: boolean = true;
@@ -59,126 +58,124 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
   token: string = '';
 
   constructor(props) {
-    super(props);
+    super(props)
     // bind this to class methods
-    this.NothingFound = this.NothingFound.bind(this);
-    this.LandingText = this.LandingText.bind(this);
-    this.mapClick = this.mapClick.bind(this);
-    this.rowClick = this.rowClick.bind(this);
-    this.Grid = this.Grid.bind(this);
-    this.Facility = this.Facility.bind(this);
-    this.onSortColsChange = this.onSortColsChange.bind(this);
-
+    this.NothingFound = this.NothingFound.bind(this)
+    this.LandingText = this.LandingText.bind(this)
+    this.mapClick = this.mapClick.bind(this)
+    this.rowClick = this.rowClick.bind(this)
+    this.Grid = this.Grid.bind(this)
+    this.Facility = this.Facility.bind(this)
+    this.onSortColsChange = this.onSortColsChange.bind(this)
   }
 
   componentDidMount() {
-    let sessions = SessionManager.getInstance().getSessions();
+    const sessions = SessionManager.getInstance().getSessions()
     if (sessions.length > 0) {
-      this.token = sessions[0].token;
-    } else if (this.props.token !== undefined && this.props.token !== "") {
-      this.token = this.props.token;
+      this.token = sessions[0].token
+    } else if (this.props.token !== undefined && this.props.token !== '') {
+      this.token = this.props.token
     }
 
     // todo: check if this is needed, adjust URLs
-    esriConfig.request.trustedServers.push('https://gis.r09.epa.gov/api/portal_proxy/');
+    esriConfig.request.trustedServers.push('https://gis.r09.epa.gov/api/portal_proxy/')
 
     esriConfig.request.interceptors.unshift({
       urls: ['https://gis.r09.epa.gov/api/portal_proxy/', 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL'],
       before: (params) => {
-        console.log(params);
+        console.log(params)
         //     params.requestOptions.headers = {'Authorization': this.token};
       },
-      headers: {'Authorization': `Token ${this.token}`}
-    });
+      headers: {Authorization: `Token ${this.token}`}
+    })
 
     // setup proxy rules for internal
     urlUtils.addProxyRule({
-      proxyUrl: "https://gis.r09.epa.gov/api/portal_proxy/",
-      urlPrefix: "https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL"
-    });
+      proxyUrl: 'https://gis.r09.epa.gov/api/portal_proxy/',
+      urlPrefix: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL'
+    })
 
     // facilities
     this.featureLayer = new FeatureLayer({
       url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/0',
       outFields: ['*']
-    });
+    })
     // public water systems
     this.featureLayerPWS = new FeatureLayer({
       url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/1',
       outFields: ['*']
-    });
+    })
 
     // pws primary agencies - TABLE
     this.featureLayerTable = new FeatureLayer({
       url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/3',
       outFields: ['*']
-    });
+    })
     // Admin contacts - TABLE
     this.featureLayerAdmin = new FeatureLayer({
       url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/5',
       outFields: ['*']
-    });
+    })
 
     this.graphicsLayer = new GraphicsLayer({
-      listMode: "hide"
-    });
+      listMode: 'hide'
+    })
 
     this.featureLayer.on('layerview-create-error', (e) => {
-      this.loading = false;
-      this.onOpenText = [];
+      this.loading = false
+      this.onOpenText = []
       this.onOpenText.push(
         <div>
           The R9 SDWIS service resides on the EPA Intranet. Connect to the Pulse Secure client to access the
           data.
         </div>
-      );
+      )
       this.setState({
         loading: this.loading,
-        onOpenText: this.onOpenText,
-      });
-    });
+        onOpenText: this.onOpenText
+      })
+    })
 
-    this.symbol = new SimpleMarkerSymbol();
-    const appStore = getAppStore();
+    this.symbol = new SimpleMarkerSymbol()
+    const appStore = getAppStore()
     this.viewIds = getViewIDs(appStore.getState(), this.props.id)
     if (visibilityChanged(appStore.getState(), this.state?.visible === true, this.viewIds)) {
       this.setState({visible: !(this.state?.visible === true)})
     }
     appStore.subscribe(() => {
-      const s = getAppStore().getState();
+      const s = getAppStore().getState()
       if (visibilityChanged(s, this.state?.visible === true, this.viewIds)) {
         this.setState({visible: !(this.state?.visible === true)})
       }
     })
-
   }
 
   onActiveViewChange = (jmv: JimuMapView) => {
-    this.jmv = jmv;
+    this.jmv = jmv
     if (jmv) {
       this.setState({
         jimuMapView: jmv
-      });
-      this.jmv.view.on("click", event => {
+      })
+      this.jmv.view.on('click', event => {
         this.mapClick(event)
-      });
+      })
     }
-    this.jmv.view.map.layers.add(this.featureLayer);
-    this.jmv.view.map.layers.add(this.featureLayerPWS);
+    this.jmv.view.map.layers.add(this.featureLayer)
+    this.jmv.view.map.layers.add(this.featureLayerPWS)
   }
 
   componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView }>, snapshot?: any) {
-    let widgetState: WidgetState;
-    widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
+    let widgetState: WidgetState
+    widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state
     // do anything on open/close of widget here
     if (widgetState == WidgetState.Opened || this.state?.visible === true) {
       if (this.first) {
-        this.loading = true;
+        this.loading = true
         this.featureLayer.visible = true
-        this.featureLayerPWS.visible = true;
+        this.featureLayerPWS.visible = true
         // if (this.featureLayer.loaded) {
-        let query = new Query;
-        query.where = '1=1';
+        const query = new Query()
+        query.where = '1=1'
         this.featureLayer.queryFeatureCount(query).then(count => {
           this.onOpenText.push(
             <div>
@@ -193,13 +190,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
               location. Detailed information about the <b>SDWIS Federal Reporting Services</b> can be
               found <b>
               <a
-                href={"https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-information-system-sdwis-federal-reporting"}
+                href={'https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-information-system-sdwis-federal-reporting'}
                 target="_blank"> here.</a></b>
               <h2 style={{textDecoration: 'underline'}}>Enforcement & Compliance History Online
                 (ECHO)</h2>EPA's ECHO website provides details for facilities in your community to
               assess their compliance with environmental regulations. The interaction in this widget
               uses the Public Water System (PWS) ID to search the records. Check out the ECHO
-              website <a href={"https://echo.epa.gov/"} target="_blank"><b>here</b></a> for more
+              website <a href={'https://echo.epa.gov/'} target="_blank"><b>here</b></a> for more
               information and guidance.<br/>
               The <i><b>ECHO Detailed System Report</b></i> is linked with the selected facility
               record and opens the ECHO website details for the associated public water system in a
@@ -210,7 +207,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
               Facility ID and Facility Name. The PWS ID indicates the public water system the selected
               facility falls under.<br/>
               <img id="Legend" src={`${this.props.context.folderUrl}dist/runtime/assets/Symbology.png`}
-                   style={{width: "75%", height: "75%"}}/><br/>
+                   style={{width: '75%', height: '75%'}}/><br/>
               <b>Public Water Systems (PWS) - </b> The public water system information is linked from
               the facility selected in the map. The PWS ID and PWS Name provide the unique
               identification for the public water system associated with the facility record.<br/>
@@ -235,7 +232,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 borderColor: '#000000',
                 marginLeft: 'auto',
                 marginRight: 'auto',
-                width: '100%',
+                width: '100%'
               }}>
                 <tbody>
                 <td style={{textAlign: 'left', width: '287px'}}><b>Regulatory Agency - </b> This
@@ -245,36 +242,35 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                 </tbody>
               </table>
             </div>
-          );
-          this.loading = false;
+          )
+          this.loading = false
           this.setState({
             onOpenText: this.onOpenText,
             loading: this.loading
           }, () => {
-            this.LandingText();
+            this.LandingText()
           })
-
-        });
+        })
         // }
       }
-      this.first = false;
+      this.first = false
     } else {
       this
-        .first = true;
+        .first = true
       this
         .featureLayer
-        .visible = false;
+        .visible = false
       this
         .featureLayerPWS
-        .visible = false;
+        .visible = false
       this
-        .mainText = true;
+        .mainText = true
       this
-        .loading = false;
+        .loading = false
       this
-        .rows = [];
+        .rows = []
       this
-        .sortedRows = [];
+        .sortedRows = []
     }
   }
 
@@ -306,80 +302,78 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
   }
 
   mapClick = (e) => {
-    this.mainText = false;
-    this.loading = true;
-    this.rows = [];
-    this.sortedRows = [];
+    this.mainText = false
+    this.loading = true
+    this.rows = []
+    this.sortedRows = []
     this.setState({
       loading: this.loading,
       rows: this.rows,
-      sortedRows: this.sortedRows,
-    });
+      sortedRows: this.sortedRows
+    })
 
-    this.graphicsLayer.removeAll();
-    let pixelWidth = this.jmv.view.extent.width / this.jmv.view.width;
-    let toleraceInMapCoords = 10 * pixelWidth;
-    let clickExtent = new Extent({
+    this.graphicsLayer.removeAll()
+    const pixelWidth = this.jmv.view.extent.width / this.jmv.view.width
+    const toleraceInMapCoords = 10 * pixelWidth
+    const clickExtent = new Extent({
       xmin: e.mapPoint.x - toleraceInMapCoords,
       ymin: e.mapPoint.y - toleraceInMapCoords,
       xmax: e.mapPoint.x + toleraceInMapCoords,
       ymax: e.mapPoint.y + toleraceInMapCoords,
-      spatialReference: this.jmv.view.spatialReference,
-    });
+      spatialReference: this.jmv.view.spatialReference
+    })
 
-    let featureQuery = new Query();
-    featureQuery.outFields = ['*'];
-    featureQuery.geometry = clickExtent;
-    featureQuery.returnGeometry = true;
+    const featureQuery = new Query()
+    featureQuery.outFields = ['*']
+    featureQuery.geometry = clickExtent
+    featureQuery.returnGeometry = true
     this.featureLayer.queryFeatures(featureQuery).then(featureSet => {
-      this.featureSet = featureSet.features;
+      this.featureSet = featureSet.features
       if (this.featureSet.length === 1) {
-        this.loadFacility(this.featureSet[0]);
+        this.loadFacility(this.featureSet[0])
       } else if (this.featureSet.length > 1) {
-
-        let data = [];
+        const data = []
 
         this.featureSet.forEach((feature) => {
-          let attrs = feature.attributes;
-          data.push(attrs);
-        });
+          const attrs = feature.attributes
+          data.push(attrs)
+        })
 
-        this.columns = [{key: 'FacilityName', name: 'Name'}];
-        this.rows = data;
+        this.columns = [{key: 'FacilityName', name: 'Name'}]
+        this.rows = data
         this.sortedRows = data
-        this.multipleLocations = true;
+        this.multipleLocations = true
         this.setState({
           columns: this.columns,
           rows: this.rows,
-          sortedRows: this.sortedRows,
-        });
+          sortedRows: this.sortedRows
+        })
 
-        this.Grid();
-        this.loading = false;
+        this.Grid()
+        this.loading = false
         this.setState({
-          loading: this.loading,
+          loading: this.loading
         })
       } else {
-        this.nothingThere = [<div>No facilities found at this location</div>];
-        this.loading = false;
+        this.nothingThere = [<div>No facilities found at this location</div>]
+        this.loading = false
         this.setState({
           nothingThere: this.nothingThere,
-          loading: this.loading,
-        });
+          loading: this.loading
+        })
       }
-    });
-
+    })
   }
 
   rowKeyGetter(row) {
-    return row;
+    return row
   }
 
   rowClick(row) {
-    let location = this.featureSet.filter((feature) => {
-      return feature.attributes.OBJECTID === this.sortedRows[row].OBJECTID;
-    });
-    this.loadFacility(location[0]);
+    const location = this.featureSet.filter((feature) => {
+      return feature.attributes.OBJECTID === this.sortedRows[row].OBJECTID
+    })
+    this.loadFacility(location[0])
   }
 
   NothingFound() {
@@ -397,74 +391,75 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
   Grid() {
     return (
       <div>
-        {this.multipleLocations ?
-          <div>
+        {this.multipleLocations
+          ? <div>
             <div><h3>Multiple Facilities at that Location</h3><br/><h5>Select one to
               continue</h5></div>
             <DataGrid style={{
               height: `${(this.sortedRows.length * 35) + 37}px`,
-              maxHeight: "700px"
+              maxHeight: '700px',
+              backgroundColor: 'white'
             }}
+                      className={'rdg-light'}
                       columns={this.columns} rows={this.sortedRows}
                       onRowClick={this.rowClick}
                       rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
               sortable: true,
               resizable: true
-            }} onSortColumnsChange={this.onSortColsChange}
+            }}        onSortColumnsChange={this.onSortColsChange}
                       sortColumns={this.sortColumns}/>
-          </div> : null}
+          </div>
+          : null}
       </div>
     )
   }
 
   onSortColsChange(cols) {
     if (cols.length === 0) {
-      this.sortedRows = this.rows;
-      this.sortColumns = [];
+      this.sortedRows = this.rows
+      this.sortColumns = []
       this.setState({
         sortedRows: this.sortedRows,
-        sortColumns: this.sortColumns,
+        sortColumns: this.sortColumns
       })
       return this.rows
     }
 
-    this.sortColumns = cols.slice(-1);
-    this.sortedRows = [...this.rows];
+    this.sortColumns = cols.slice(-1)
+    this.sortedRows = [...this.rows]
     this.sortedRows.sort((a, b) => {
-      for (let col of cols) {
-
-        let comparator = getComparator(col.columnKey);
-        let res = comparator(a, b);
+      for (const col of cols) {
+        const comparator = getComparator(col.columnKey)
+        const res = comparator(a, b)
         if (res !== 0) {
-          return col.direction === 'ASC' ? res : -res;
+          return col.direction === 'ASC' ? res : -res
         }
       }
-      return 0;
-    });
-
+      return 0
+    })
 
     // this.rows = sortedRows;
     this.setState({
       sortedRows: this.sortedRows,
       sortColumns: this.sortColumns
       // columns: this.columns,
-    });
+    })
     return this.sortedRows
   }
 
   loadFacility = (facility) => {
-    let selectedGraphic = new Graphic({geometry: facility.geometry, symbol: this.symbol});
-    this.graphicsLayer.add(selectedGraphic);
-    this.loading = true;
+    const selectedGraphic = new Graphic({geometry: facility.geometry, symbol: this.symbol})
+    this.graphicsLayer.add(selectedGraphic)
+    this.loading = true
     this.setState({
-      loading: this.loading,
-    });
+      loading: this.loading
+    })
 
-    let facilitytype = this.featureLayer.getFieldDomain('fac_type')["getName"](facility.attributes.fac_type);
-    let sourcetype = this.featureLayer.getFieldDomain('fac_sourcetype')["getName"](facility.attributes.fac_sourcetype);
-    let availability = this.featureLayer.getFieldDomain('fac_availability')["getName"](facility.attributes.fac_availability);
-    let sellertreated = this.featureLayer.getFieldDomain('sellertrtcode')["getName"](facility.attributes.sellertrtcode);
-    let trtstatus = this.featureLayer.getFieldDomain('facsourcetrtstatus')["getName"](facility.attributes.facsourcetrtstatus);
+    const facilitytype = this.featureLayer.getFieldDomain('fac_type').getName(facility.attributes.fac_type)
+    const sourcetype = this.featureLayer.getFieldDomain('fac_sourcetype').getName(facility.attributes.fac_sourcetype)
+    const availability = this.featureLayer.getFieldDomain('fac_availability').getName(facility.attributes.fac_availability)
+    const sellertreated = this.featureLayer.getFieldDomain('sellertrtcode').getName(facility.attributes.sellertrtcode)
+    const trtstatus = this.featureLayer.getFieldDomain('facsourcetrtstatus').getName(facility.attributes.facsourcetrtstatus)
 
     this.facilityText = []
     this.facilityText.push(<div>
@@ -473,28 +468,28 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
       <p style={{fontSize: '14px'}}>
         <b>Name: </b>{facility.attributes.fac_pws_name ? facility.attributes.fac_pws_name : 'Not Reported'}<br/><b>ID: </b>
         {facility.attributes.fac_pwsid ? facility.attributes.fac_pwsid : 'Not Reported'}</p>
-      <br/><b><p style={{textAlign: "center"}}>Water System Facility Details</p></b>
+      <br/><b><p style={{textAlign: 'center'}}>Water System Facility Details</p></b>
       <hr/>
       <b>Facility Name:</b>
       {facility.attributes.facilityname ? facility.attributes.facilityname : 'Not Reported'}<br/><b>Facility
       ID: </b>
       {facility.attributes.facilityid ? facility.attributes.facilityid : 'Not Reported'}<br/><b>Facility
       Type: </b>
-      {facilitytype ? facilitytype : 'Not Reported'}<br/><b>Source
-      Type:</b>{sourcetype ? sourcetype : 'Not Reported'}<br/>
-      <b>Source Treated: </b>{trtstatus ? trtstatus : 'Not Reported'}<br/>
-      <b>Facility Availability:</b>{availability ? availability : 'Not Reported'}<br/>
+      {facilitytype || 'Not Reported'}<br/><b>Source
+      Type:</b>{sourcetype || 'Not Reported'}<br/>
+      <b>Source Treated: </b>{trtstatus || 'Not Reported'}<br/>
+      <b>Facility Availability:</b>{availability || 'Not Reported'}<br/>
       <b>Last
         Updated: </b>{facility.attributes.last_reported ? facility.attributes.last_reported : 'Not Reported'}<br/>
       <b>PWS Purchased
         From: </b>{facility.attributes.pwsid_seller ? facility.attributes.pwsid_seller : 'Not Reported'}<br/>
       <b>Purchased Water
-        Treated: </b>{sellertreated ? sellertreated : 'Not Reported'}<br/><br/>
+        Treated: </b>{sellertreated || 'Not Reported'}<br/><br/>
       <div id="pwsinfo"></div>
-      <p style={{textAlign: "center"}}><a
-        href={"https://echo.epa.gov/detailed-facility-report?fid=" + facility.attributes.fac_pwsid}
+      <p style={{textAlign: 'center'}}><a
+        href={'https://echo.epa.gov/detailed-facility-report?fid=' + facility.attributes.fac_pwsid}
         target="_blank\"><b>ECHO Detailed System Report</b> </a></p>
-      <p style={{textAlign: "center"}}>&nbsp;</p>
+      <p style={{textAlign: 'center'}}>&nbsp;</p>
       <table style={{
         height: '98px',
         borderColor: '#000000',
@@ -518,7 +513,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         borderColor: '#000000',
         marginLeft: 'auto',
         marginRight: 'auto',
-        width: "100%"
+        width: '100%'
       }}>
         <tbody>
         <tr>
@@ -532,70 +527,69 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         </tbody>
       </table>
 
-
       <p>&nbsp;</p>
     </div>)
-    this.loading = false;
+    this.loading = false
     this.setState({
       loading: this.loading,
-      facilityText: this.facilityText,
+      facilityText: this.facilityText
     })
-    this.loadFacilityPWS(facility.attributes.fac_pwsid);
-    this.loadFacilityTable(facility.attributes.pacode);
-    this.loadFacilityAdmin(facility.attributes.fac_pwsid);
+    this.loadFacilityPWS(facility.attributes.fac_pwsid)
+    this.loadFacilityTable(facility.attributes.pacode)
+    this.loadFacilityAdmin(facility.attributes.fac_pwsid)
   }
 
   loadFacilityPWS = (PWS_ID) => {
-    let query = new Query();
-    query.outFields = ['*'];
-    query.where = "PWSID='" + PWS_ID + "'";
+    const query = new Query()
+    query.outFields = ['*']
+    query.where = "PWSID='" + PWS_ID + "'"
     this.featureLayerPWS.queryFeatures(query).then(featureSet => {
-      var facilityPWS = featureSet.features[0];
-      var tribe = this.featureLayerPWS.getFieldDomain('tribe')["getName"](facilityPWS.attributes.tribe);
-      var school = this.featureLayerPWS.getFieldDomain('pws_schoolordaycare')["getName"](facilityPWS.attributes.pws_schoolordaycare);
-      var ownertype = this.featureLayerPWS.getFieldDomain('pws_ownertype')["getName"](facilityPWS.attributes.pws_ownertype);
-      var wholesale = this.featureLayerPWS.getFieldDomain('pws_wholesale')["getName"](facilityPWS.attributes.pws_wholesale);
-      var watertype = this.featureLayerPWS.getFieldDomain('pws_wsourcetype')["getName"](facilityPWS.attributes.pws_wsourcetype);
-      var state = this.featureLayerPWS.getFieldDomain('pws_agencycode')["getName"](facilityPWS.attributes.pws_agencycode);
+      const facilityPWS = featureSet.features[0]
+      const tribe = this.featureLayerPWS.getFieldDomain('tribe').getName(facilityPWS.attributes.tribe)
+      const school = this.featureLayerPWS.getFieldDomain('pws_schoolordaycare').getName(facilityPWS.attributes.pws_schoolordaycare)
+      const ownertype = this.featureLayerPWS.getFieldDomain('pws_ownertype').getName(facilityPWS.attributes.pws_ownertype)
+      const wholesale = this.featureLayerPWS.getFieldDomain('pws_wholesale').getName(facilityPWS.attributes.pws_wholesale)
+      const watertype = this.featureLayerPWS.getFieldDomain('pws_wsourcetype').getName(facilityPWS.attributes.pws_wsourcetype)
+      const state = this.featureLayerPWS.getFieldDomain('pws_agencycode').getName(facilityPWS.attributes.pws_agencycode)
       this.pwsText.push(<div>
         <b><p style={{textAlign: 'center'}}>Public Water System Details</p></b>
         <hr/>
         <b>City
           Served: </b>{facilityPWS.attributes.city ? facilityPWS.attributes.city : 'Not Reported'}<br/>
         <b>County
-          Served: </b>{facilityPWS.attributes.county ? facilityPWS.attributes.county : 'Not Reported'}<br/><b>State: </b>{state ? state : 'Not Reported'}<br/>
-        <b>Tribe Name: </b>{tribe ? tribe : 'Not Reported'}<br/>
+          Served: </b>{facilityPWS.attributes.county ? facilityPWS.attributes.county : 'Not Reported'}<br/><b>State: </b>{state || 'Not Reported'}<br/>
+        <b>Tribe Name: </b>{tribe || 'Not Reported'}<br/>
         <b>PWS Population
           Served: </b>{facilityPWS.attributes.pws_popserve ? facilityPWS.attributes.pws_popserve : 'Not Reported'}<br/>
-        <b>Is the PWS a School or Daycare? </b>{school ? school : 'Not Reported'}<br/>
-        <b>PWS Owner Type: </b>{ownertype ? ownertype : 'Not Reported'}<br/>
+        <b>Is the PWS a School or Daycare? </b>{school || 'Not Reported'}<br/>
+        <b>PWS Owner Type: </b>{ownertype || 'Not Reported'}<br/>
         <b>Is PWS Wholesaler to Another
-          PWS? </b>{wholesale ? wholesale : 'Not Reported'}<br/>
-        <b>PWS Source Water Type: </b>{watertype ? watertype : 'Not Reported'}<p
+          PWS? </b>{wholesale || 'Not Reported'}<br/>
+        <b>PWS Source Water Type: </b>{watertype || 'Not Reported'}<p
         style={{textAlign: 'center'}}>&nbsp;</p>
-      </div>);
+      </div>)
       this.setState({
-        pwsText: this.pwsText,
-      });
-    });
+        pwsText: this.pwsText
+      })
+    })
   }
 
-
-//pulls information from Primacy Agency table for the Regulatory section (bottom) "Regulatory Agency"
+  //pulls information from Primacy Agency table for the Regulatory section (bottom) "Regulatory Agency"
   loadFacilityTable = (PAcode) => {
-    var query = new Query();
-    query.outFields = ['*'];
-    query.where = "PACode='" + PAcode + "'";
+    const query = new Query()
+    query.outFields = ['*']
+    query.where = "PACode='" + PAcode + "'"
     this.featureLayerTable.queryFeatures(query).then(featureSet => {
-      var facilityTable = featureSet.features[0];
+      const facilityTable = featureSet.features[0]
       this.regulatoryText.push(<div>
         <p style={{textAlign: 'center'}}>{facilityTable.attributes.regauthority}</p>
         <p style={{textAlign: 'left'}}><b>Primary
           Contact: </b>{facilityTable.attributes.primarycontactname ? facilityTable.attributes.primarycontactname : 'Not Reported'}<br/>
           <b>Phone: </b>{facilityTable.attributes.phone_number ? facilityTable.attributes.phone_number : 'Not Reported'}<br/>
-          <b>Email: </b>{facilityTable.attributes.email ?
-            <a href={"mailto:" + facilityTable.attributes.email}
-               target="_blank"/> : 'Not Reported'} <br/>
+          <b>Email: </b>{facilityTable.attributes.email
+            ? <a href={'mailto:' + facilityTable.attributes.email}
+                 target="_blank"/>
+            : 'Not Reported'} <br/>
           <b>Website: </b><a href={facilityTable.attributes.website} target="_blank">Click
             Here for
             Website</a><br/>
@@ -603,37 +597,36 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
         </p>
       </div>)
       this.setState({
-        regulatoryText: this.regulatoryText,
-      });
-    });
+        regulatoryText: this.regulatoryText
+      })
+    })
   }
 
-
-//pulls information from Admin Contact table for the Point of Contact section (top) "PWS Contact Information"
+  //pulls information from Admin Contact table for the Point of Contact section (top) "PWS Contact Information"
   loadFacilityAdmin = (pwsid) => {
-    var query = new Query();
-    query.where = "PWSID='" + pwsid + "'";
+    const query = new Query()
+    query.where = "PWSID='" + pwsid + "'"
     this.featureLayerAdmin.queryFeatures(query).then(featureSet => {
-      var facilityAdmin = featureSet.features[0];
+      const facilityAdmin = featureSet.features[0]
       this.adminContactText.push(
         <div>
           <p style={{textAlign: 'left'}}><b>Primary
             Contact: </b>{facilityAdmin.attributes.org_name ? facilityAdmin.attributes.org_name : 'Not Reported'}<br/>
             <b>Phone: </b>{facilityAdmin.attributes.phone_number ? facilityAdmin.attributes.phone_number : 'Not Reported'}<br/>
-            <b>Email: </b>{facilityAdmin.attributes.email_addr ?
-              <a href={"mailto:" + facilityAdmin.attributes.email_addr}
-                 target="_blank"/> : 'Not Reported'}<br/>
+            <b>Email: </b>{facilityAdmin.attributes.email_addr
+              ? <a href={'mailto:' + facilityAdmin.attributes.email_addr}
+                   target="_blank"/>
+              : 'Not Reported'}<br/>
             <b>Address: </b>{facilityAdmin.attributes.address_line1 ? facilityAdmin.attributes.address_line1 : 'Not Reported'}<br/>
             {facilityAdmin.attributes.city_name ? facilityAdmin.attributes.city_name : ''} {facilityAdmin.attributes.state_code ? facilityAdmin.attributes.state_code : ''} {facilityAdmin.attributes.zip_code ? facilityAdmin.attributes.zip_code : ''}
           </p>
         </div>
-      );
+      )
       this.setState({
-        adminContactText: this.adminContactText,
-      });
-    });
+        adminContactText: this.adminContactText
+      })
+    })
   }
-
 
   render() {
     if (!this.props.useMapWidgetIds?.length) {
@@ -642,10 +635,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
 
     return (
       <div className="widget-addLayers jimu-widget p-2"
-           style={{overflow: "auto", height: "97%"}}>
+           style={{overflow: 'auto', height: '97%'}}>
 
-        {this.loading ? <Loading type='SECONDARY'/> :
-          <div>
+        {this.loading
+          ? <Loading type='SECONDARY'/>
+          : <div>
             <this.Grid/>
             <this.Facility/>
             <this.NothingFound/>
