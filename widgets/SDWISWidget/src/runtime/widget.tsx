@@ -16,6 +16,7 @@ import urlUtils from 'esri/core/urlUtils'
 import esriConfig from 'esri/config'
 import {Loading} from 'jimu-ui'
 import {getViewIDs, listenForViewVisibilityChanges, visibilityChanged} from '../../../shared'
+import Facility from './Facility'
 
 function getComparator(sortColumn: string) {
   switch (sortColumn) {
@@ -38,7 +39,7 @@ interface State {
   sortColumns: any[],
   onOpenText: any[],
   nothingThere: any[],
-  facilityText: any[],
+  facility: any
   pwsText: any[],
   regulatoryText: any[],
   adminContactText: any[]
@@ -292,20 +293,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     }
   }
 
-  Facility() {
-    if (this.facilityText.length > 0) {
-      return (
-        <div>
-          {this.facilityText}
-          {this.pwsText}
-          {this.regulatoryText}
-          {this.adminContactText}
-        </div>
-      )
-    } else {
-      return null
-    }
-  }
 
   mapClick = (e) => {
     this.mainText = false
@@ -456,129 +443,16 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   loadFacility = (facility) => {
     const selectedGraphic = new Graphic({geometry: facility.geometry, symbol: this.symbol})
     this.graphicsLayer.add(selectedGraphic)
-    this.loading = true
+
     this.setState({
-      loading: this.loading
-    })
-
-    const facilitytype = this.featureLayer.getFieldDomain('fac_type').getName(facility.attributes.fac_type)
-    const sourcetype = this.featureLayer.getFieldDomain('fac_sourcetype').getName(facility.attributes.fac_sourcetype)
-    const availability = this.featureLayer.getFieldDomain('fac_availability').getName(facility.attributes.fac_availability)
-    const sellertreated = this.featureLayer.getFieldDomain('sellertrtcode').getName(facility.attributes.sellertrtcode)
-    const trtstatus = this.featureLayer.getFieldDomain('facsourcetrtstatus').getName(facility.attributes.facsourcetrtstatus)
-
-    this.facilityText = []
-    this.facilityText.push(<div>
-      <p style={{fontSize: '16px'}}>
-        <b>Public Water System (PWS)</b></p>
-      <p style={{fontSize: '14px'}}>
-        <b>Name: </b>{facility.attributes.fac_pws_name ? facility.attributes.fac_pws_name : 'Not Reported'}<br/><b>ID: </b>
-        {facility.attributes.fac_pwsid ? facility.attributes.fac_pwsid : 'Not Reported'}</p>
-      <br/><b><p style={{textAlign: 'center'}}>Water System Facility Details</p></b>
-      <hr/>
-      <b>Facility Name:</b>
-      {facility.attributes.facilityname ? facility.attributes.facilityname : 'Not Reported'}<br/><b>Facility
-      ID: </b>
-      {facility.attributes.facilityid ? facility.attributes.facilityid : 'Not Reported'}<br/><b>Facility
-      Type: </b>
-      {facilitytype || 'Not Reported'}<br/><b>Source
-      Type:</b>{sourcetype || 'Not Reported'}<br/>
-      <b>Source Treated: </b>{trtstatus || 'Not Reported'}<br/>
-      <b>Facility Availability:</b>{availability || 'Not Reported'}<br/>
-      <b>Last
-        Updated: </b>{facility.attributes.last_reported ? facility.attributes.last_reported : 'Not Reported'}<br/>
-      <b>PWS Purchased
-        From: </b>{facility.attributes.pwsid_seller ? facility.attributes.pwsid_seller : 'Not Reported'}<br/>
-      <b>Purchased Water
-        Treated: </b>{sellertreated || 'Not Reported'}<br/><br/>
-      <div id="pwsinfo"></div>
-      <p style={{textAlign: 'center'}}><a
-        href={'https://echo.epa.gov/detailed-facility-report?fid=' + facility.attributes.fac_pwsid}
-        target="_blank\"><b>ECHO Detailed System Report</b> </a></p>
-      <p style={{textAlign: 'center'}}>&nbsp;</p>
-      <table style={{
-        height: '98px',
-        borderColor: '#000000',
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        width: '100%'
-      }}>
-        <tbody>
-        <tr>
-          <td style={{textAlign: 'center', width: '287px'}}><b>Public Water System
-            Contact</b>
-            <hr/>
-            <div id="admincontacts"></div>
-          </td>
-        </tr>
-        </tbody>
-      </table>
-      <p>&nbsp;</p>
-      <table style={{
-        height: '98px',
-        borderColor: '#000000',
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        width: '100%'
-      }}>
-        <tbody>
-        <tr>
-          <td style={{textAlign: 'center', width: '287px'}}>
-            <strong>
-              <p style={{textAlign: 'center'}}>Regulatory Agency Contact</p></strong>
-            <hr/>
-            <div id="tableinfo"></div>
-          </td>
-        </tr>
-        </tbody>
-      </table>
-
-      <p>&nbsp;</p>
-    </div>)
-    this.loading = false
-    this.setState({
-      loading: this.loading,
-      facilityText: this.facilityText
+      facility
     })
     this.loadFacilityPWS(facility.attributes.fac_pwsid)
     this.loadFacilityTable(facility.attributes.pacode)
     this.loadFacilityAdmin(facility.attributes.fac_pwsid)
   }
 
-  loadFacilityPWS = (PWS_ID) => {
-    const query = new Query()
-    query.outFields = ['*']
-    query.where = "PWSID='" + PWS_ID + "'"
-    this.featureLayerPWS.queryFeatures(query).then(featureSet => {
-      const facilityPWS = featureSet.features[0]
-      const tribe = this.featureLayerPWS.getFieldDomain('tribe').getName(facilityPWS.attributes.tribe)
-      const school = this.featureLayerPWS.getFieldDomain('pws_schoolordaycare').getName(facilityPWS.attributes.pws_schoolordaycare)
-      const ownertype = this.featureLayerPWS.getFieldDomain('pws_ownertype').getName(facilityPWS.attributes.pws_ownertype)
-      const wholesale = this.featureLayerPWS.getFieldDomain('pws_wholesale').getName(facilityPWS.attributes.pws_wholesale)
-      const watertype = this.featureLayerPWS.getFieldDomain('pws_wsourcetype').getName(facilityPWS.attributes.pws_wsourcetype)
-      const state = this.featureLayerPWS.getFieldDomain('pws_agencycode').getName(facilityPWS.attributes.pws_agencycode)
-      this.pwsText.push(<div>
-        <b><p style={{textAlign: 'center'}}>Public Water System Details</p></b>
-        <hr/>
-        <b>City
-          Served: </b>{facilityPWS.attributes.city ? facilityPWS.attributes.city : 'Not Reported'}<br/>
-        <b>County
-          Served: </b>{facilityPWS.attributes.county ? facilityPWS.attributes.county : 'Not Reported'}<br/><b>State: </b>{state || 'Not Reported'}<br/>
-        <b>Tribe Name: </b>{tribe || 'Not Reported'}<br/>
-        <b>PWS Population
-          Served: </b>{facilityPWS.attributes.pws_popserve ? facilityPWS.attributes.pws_popserve : 'Not Reported'}<br/>
-        <b>Is the PWS a School or Daycare? </b>{school || 'Not Reported'}<br/>
-        <b>PWS Owner Type: </b>{ownertype || 'Not Reported'}<br/>
-        <b>Is PWS Wholesaler to Another
-          PWS? </b>{wholesale || 'Not Reported'}<br/>
-        <b>PWS Source Water Type: </b>{watertype || 'Not Reported'}<p
-        style={{textAlign: 'center'}}>&nbsp;</p>
-      </div>)
-      this.setState({
-        pwsText: this.pwsText
-      })
-    })
-  }
+
 
   //pulls information from Primacy Agency table for the Regulatory section (bottom) "Regulatory Agency"
   loadFacilityTable = (PAcode) => {
@@ -639,6 +513,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       return <h2>Please complete widget configuration.</h2>
     }
 
+    if (this.state.facility) {
+      return <Facility facility={this.state.facility}
+                       featureLayer={this.featureLayer}/>
+    }
+
     return (
       <div className="widget-addLayers jimu-widget p-2"
            style={{overflow: 'auto', height: '97%'}}>
@@ -647,7 +526,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           ? <Loading type='SECONDARY'/>
           : <div>
             <this.Grid/>
-            <this.Facility/>
             <this.NothingFound/>
             {this.mainText ? this.LandingText() : null}
           </div>
