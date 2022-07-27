@@ -15,7 +15,7 @@ import esriRequest from 'esri/request'
 import urlUtils from 'esri/core/urlUtils'
 import esriConfig from 'esri/config'
 import {Loading} from 'jimu-ui'
-import {getViewIDs, visibilityChanged} from '../../../shared'
+import {getViewIDs, listenForViewVisibilityChanges, visibilityChanged} from '../../../shared'
 
 function getComparator(sortColumn: string) {
   switch (sortColumn) {
@@ -29,10 +29,23 @@ function getComparator(sortColumn: string) {
   }
 }
 
-export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
-  jimuMapView: JimuMapView, loading: boolean, columns: any[], rows: any[], sortedRows: any[], sortColumns: any[],
-  onOpenText: any[], nothingThere: any[], facilityText: any[], pwsText: any[], regulatoryText: any[], adminContactText: any[],
-}> {
+interface State {
+  jimuMapView: JimuMapView,
+  loading: boolean,
+  columns: any[],
+  rows: any[],
+  sortedRows: any[],
+  sortColumns: any[],
+  onOpenText: any[],
+  nothingThere: any[],
+  facilityText: any[],
+  pwsText: any[],
+  regulatoryText: any[],
+  adminContactText: any[]
+  visible: boolean
+}
+
+export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, State> {
   jmv: JimuMapView;
   first: boolean = false;
   loading: boolean = true;
@@ -137,18 +150,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     })
 
     this.symbol = new SimpleMarkerSymbol()
-    const appStore = getAppStore()
-    this.viewIds = getViewIDs(appStore.getState(), this.props.id)
-    if (visibilityChanged(appStore.getState(), this.state?.visible === true, this.viewIds)) {
-      this.setState({visible: !(this.state?.visible === true)})
-    }
-    appStore.subscribe(() => {
-      const s = getAppStore().getState()
-      if (visibilityChanged(s, this.state?.visible === true, this.viewIds)) {
-        this.setState({visible: !(this.state?.visible === true)})
-      }
-    })
+
+    listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
   }
+
+  updateVisibility = (visible) => this.setState({ visible })
 
   onActiveViewChange = (jmv: JimuMapView) => {
     this.jmv = jmv
@@ -406,7 +412,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
                       rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
               sortable: true,
               resizable: true
-            }}        onSortColumnsChange={this.onSortColsChange}
+            }} onSortColumnsChange={this.onSortColsChange}
                       sortColumns={this.sortColumns}/>
           </div>
           : null}

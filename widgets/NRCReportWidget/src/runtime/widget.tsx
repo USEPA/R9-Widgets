@@ -12,7 +12,7 @@ import Graphic from "esri/Graphic";
 import Color from "esri/Color";
 import {Loading} from 'jimu-ui';
 import {DataSourceComponent} from 'jimu-core';
-import {getViewIDs, listenForViewChanges, visibilityChanged} from '../../../shared';
+import {getViewIDs, listenForViewChanges, listenForViewVisibilityChanges, visibilityChanged} from '../../../shared';
 
 function getComparator(sortColumn: string) {
   switch (sortColumn) {
@@ -96,18 +96,10 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
     view.popup = this.currentPopup;
   }
 
+  updateVisibility = (visible) => this.setState({ visible })
+
   componentDidMount() {
-    const appStore = getAppStore();
-    this.viewIds = getViewIDs(appStore.getState(), this.props.id)
-    if (visibilityChanged(appStore.getState(), this.state?.visible === true, this.viewIds)) {
-      this.setState({visible: !(this.state?.visible === true)})
-    }
-    appStore.subscribe(() => {
-      const s = getAppStore().getState();
-      if (visibilityChanged(s, this.state.visible, this.viewIds)) {
-        this.setState({visible: !this.state.visible})
-      }
-    })
+    listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
   }
 
   componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView }>, snapshot?: any) {

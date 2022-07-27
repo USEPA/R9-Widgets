@@ -16,7 +16,7 @@ import {Button, Loading} from "jimu-ui"
 import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
 import FeatureEffect from "esri/views/layers/support/FeatureEffect";
 import FeatureFilter from "esri/views/layers/support/FeatureFilter";
-import {getViewIDs, visibilityChanged} from '../../../shared';
+import {getViewIDs, listenForViewVisibilityChanges, visibilityChanged} from '../../../shared';
 
 function getComparator(sortColumn: string) {
   switch (sortColumn) {
@@ -98,19 +98,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.setState({
       loading: this.loading,
     });
-    const appStore = getAppStore();
-    this.viewIds = getViewIDs(appStore.getState(), this.props.id)
-    if (visibilityChanged(appStore.getState(), this.state?.visible === true, this.viewIds)) {
-      this.setState({visible: !(this.state?.visible === true)})
-    }
-    appStore.subscribe(() => {
-      const s = getAppStore().getState();
-      if (visibilityChanged(s, this.state?.visible === true, this.viewIds)) {
-        this.setState({visible: !(this.state?.visible === true)})
-      }
-    })
+    listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
   }
 
+  updateVisibility = (visible) => this.setState({ visible })
 
   initLayer(lyr) {
 

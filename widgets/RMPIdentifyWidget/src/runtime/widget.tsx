@@ -28,7 +28,7 @@ import type {Column, SortColumn} from 'react-data-grid'
 import LandingText from './LandingText';
 import ExecModal from './ExecModal';
 import Facility from './Facility';
-import {getViewIDs, visibilityChanged} from '../../../shared';
+import {listenForViewVisibilityChanges} from '../../../shared';
 
 interface Row {
 }
@@ -136,6 +136,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.mainText = true
   }
 
+  updateVisibility = (visible) => {
+    this.setState({
+      visible
+    })
+  }
+
   componentDidMount() {
     this.setState({
       loading: true
@@ -153,17 +159,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     // } else {
     //   addedToMap = true
     // }
-    const appStore = getAppStore();
-    this.viewIds = getViewIDs(appStore.getState(), this.props.id)
-    if (visibilityChanged(appStore.getState(), this.state?.visible === true, this.viewIds)) {
-      this.setState({visible: !(this.state?.visible === true)})
-    }
-    appStore.subscribe(() => {
-      const s = getAppStore().getState();
-      if (visibilityChanged(s, this.state.visible, this.viewIds)) {
-        this.setState({visible: !this.state.visible})
-      }
-    })
+    listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
 
     this.openModal = false
   }

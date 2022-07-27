@@ -10,12 +10,14 @@ import query from "esri/rest/query";
 import SpatialReference from "esri/geometry/SpatialReference";
 import Query from "esri/rest/support/Query";
 import geometryEngine from "esri/geometry/geometryEngine";
+import {listenForViewVisibilityChanges} from '../../../shared';
 
 interface State {
-  jimuMapView: JimuMapView;
-  fires: any[];
-  acresArray: any[];
-  checked: boolean;
+  jimuMapView: JimuMapView
+  fires: any[]
+  acresArray: any[]
+  checked: boolean
+  visible: boolean
 }
 
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, State> {
@@ -59,13 +61,16 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     });
 
     this.checked = false;
+    listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
   }
+
+  updateVisibility = (visible) => this.setState({visible})
 
   componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView; fires: any[]; acresArray: any[] }>, snapshot?: any) {
     if (this.state?.jimuMapView) {
       let widgetState: WidgetState;
       widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
-      if (widgetState == WidgetState.Closed) {
+      if (widgetState == WidgetState.Closed || this.state?.visible !== true) {
         this.resetFireFilter(false, true);
 
         this.jmv.view.map.layers.forEach(lyr => {
@@ -84,7 +89,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         this.resetFireFilter(true, true);
         this.first = true;
 
-      } else if (widgetState == WidgetState.Opened || widgetState === undefined) {
+      } else if (widgetState == WidgetState.Opened || this.state?.visible === true) {
         // // do stuff here on widget open if needed
         if (this.first) { // first time after reopening so we dont end up in an infinite loop
           this.loadFires().then(() => {

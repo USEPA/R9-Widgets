@@ -44,14 +44,19 @@ export function visibilityChanged(currentState, currentVisibility, viewIds) {
   return currentVisibility !== visible
 }
 
-// export function listenForViewChanges(appStore, widgetId) {
-//   const state = appStore.getState()
-//   const layout_ids = getWidgetLayouts(state)
-//   setVisibleConfig(state, layout_ids)
-//   // updateVisibility(state)
-//
-//   appStore.subscribe(() => {
-//     const state = getAppStore().getState();
-//     updateVisibility(state)
-//   })
-// }
+export function listenForViewVisibilityChanges(widgetId, callback) {
+  const appStore = getAppStore()
+  const viewIds = getViewIDs(appStore.getState(), widgetId)
+  // if (visibilityChanged(appStore.getState(), this.state?.visible === true, this.viewIds)) {
+  //   this.setState({visible: !(this.state?.visible === true)})
+  // }
+  let currentVisibility = false
+  appStore.subscribe(() => {
+    const s = getAppStore().getState()
+    if (visibilityChanged(s, currentVisibility, viewIds)) {
+      currentVisibility = !currentVisibility
+      callback(currentVisibility)
+      // this.setState({visible: !(this.state?.visible === true)})
+    }
+  })
+}
