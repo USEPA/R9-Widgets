@@ -512,7 +512,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       return <h2>Please complete widget configuration.</h2>
     }
 
-    if (this.state.facility) {
+    if (this.state?.facility) {
       return <Facility facility={this.state.facility}
                        featureLayer={this.featureLayer}/>
     }
