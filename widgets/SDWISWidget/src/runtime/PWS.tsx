@@ -17,7 +17,8 @@ export default function PWS (props) {
       const tribe = props.featureLayerPWS.getFieldDomain('tribe').getName(facility.attributes.tribe)
       const school = props.featureLayerPWS.getFieldDomain('pws_schoolordaycare').getName(facility.attributes.pws_schoolordaycare)
       const ownertype = props.featureLayerPWS.getFieldDomain('pws_ownertype').getName(facility.attributes.pws_ownertype)
-      const wholesale = props.featureLayerPWS.getFieldDomain('pws_wholesale').getName(facility.attributes.pws_wholesale)
+      const pws_wholesale_domain = props.featureLayerPWS.getFieldDomain('pws_wholesale')
+      const wholesale = pws_wholesale_domain ?  props.featureLayerPWS.getFieldDomain('pws_wholesale').getName(facility.attributes.pws_wholesale) : facility.attributes.pws_wholesale
       const watertype = props.featureLayerPWS.getFieldDomain('pws_wsourcetype').getName(facility.attributes.pws_wsourcetype)
       const state = props.featureLayerPWS.getFieldDomain('pws_agencycode').getName(facility.attributes.pws_agencycode)
       setPWS({
