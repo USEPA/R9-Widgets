@@ -11,7 +11,7 @@ export default function PWS (props) {
   useEffect(() => {
     const query = new Query()
     query.outFields = ['*']
-    query.where = "PWSID='" + props.PWS_ID + "'"
+    query.where = "PWSID='" + props.PWSID + "'"
     props.featureLayerPWS.queryFeatures(query).then(featureSet => {
       const facility = featureSet.features[0]
       const tribe = props.featureLayerPWS.getFieldDomain('tribe').getName(facility.attributes.tribe)
