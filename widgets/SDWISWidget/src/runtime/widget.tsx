@@ -96,7 +96,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     esriConfig.request.interceptors.unshift({
       urls: ['https://gis.r09.epa.gov/api/portal_proxy/', 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL'],
       before: (params) => {
-        console.log(params)
+        // console.log(params)
         //     params.requestOptions.headers = {'Authorization': this.token};
       },
       headers: {Authorization: `Token ${this.token}`}
