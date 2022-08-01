@@ -446,7 +446,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.setState({
       facility
     })
-    this.loadFacilityPWS(facility.attributes.fac_pwsid)
+    // this.loadFacilityPWS(facility.attributes.fac_pwsid)
     this.loadFacilityTable(facility.attributes.pacode)
     this.loadFacilityAdmin(facility.attributes.fac_pwsid)
   }
