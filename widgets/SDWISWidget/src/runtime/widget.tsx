@@ -70,13 +70,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   regulatoryText: any[] = [];
   adminContactText: any[] = [];
   token: string = '';
+  mapClickHandler;
 
   constructor(props) {
     super(props)
     // bind this to class methods
     this.NothingFound = this.NothingFound.bind(this)
     this.LandingText = this.LandingText.bind(this)
-    this.mapClick = this.mapClick.bind(this)
     this.rowClick = this.rowClick.bind(this)
     this.Grid = this.Grid.bind(this)
     this.onSortColsChange = this.onSortColsChange.bind(this)
@@ -154,16 +154,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
   }
 
-  updateVisibility = (visible) => this.setState({ visible })
+  updateVisibility = (visible) => this.setState({visible})
 
   onActiveViewChange = (jmv: JimuMapView) => {
     this.jmv = jmv
     if (jmv) {
       this.setState({
         jimuMapView: jmv
-      })
-      this.jmv.view.on('click', event => {
-        this.mapClick(event)
       })
     }
     this.jmv.view.map.layers.add(this.featureLayer)
@@ -257,6 +254,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
             this.LandingText()
           })
         })
+        this.mapClickHandler = this.jmv.view.on('click', event => {
+          this.mapClick(event)
+        })
         // }
       }
       this.first = false
@@ -277,6 +277,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         .rows = []
       this
         .sortedRows = []
+      if (this.mapClickHandler) {
+        this.mapClickHandler.remove()
+      }
     }
   }
 
@@ -450,7 +453,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.loadFacilityTable(facility.attributes.pacode)
     this.loadFacilityAdmin(facility.attributes.fac_pwsid)
   }
-
 
 
   //pulls information from Primacy Agency table for the Regulatory section (bottom) "Regulatory Agency"
