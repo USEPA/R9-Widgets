@@ -79,7 +79,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.mapClick = this.mapClick.bind(this)
     this.rowClick = this.rowClick.bind(this)
     this.Grid = this.Grid.bind(this)
-    this.Facility = this.Facility.bind(this)
     this.onSortColsChange = this.onSortColsChange.bind(this)
   }
 
