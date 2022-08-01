@@ -514,7 +514,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
     if (this.state?.facility) {
       return <Facility facility={this.state.facility}
-                       featureLayer={this.featureLayer}/>
+                       featureLayer={this.featureLayer}
+                       featureLayerPWS={this.featureLayerPWS}/>
     }
 
     return (

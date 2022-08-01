@@ -12,14 +12,14 @@ export default function PWS (props) {
     const query = new Query()
     query.outFields = ['*']
     query.where = "PWSID='" + props.PWS_ID + "'"
-    this.featureLayerPWS.queryFeatures(query).then(featureSet => {
+    props.featureLayerPWS.queryFeatures(query).then(featureSet => {
       const facility = featureSet.features[0]
-      const tribe = this.featureLayerPWS.getFieldDomain('tribe').getName(facility.attributes.tribe)
-      const school = this.featureLayerPWS.getFieldDomain('pws_schoolordaycare').getName(facility.attributes.pws_schoolordaycare)
-      const ownertype = this.featureLayerPWS.getFieldDomain('pws_ownertype').getName(facility.attributes.pws_ownertype)
-      const wholesale = this.featureLayerPWS.getFieldDomain('pws_wholesale').getName(facility.attributes.pws_wholesale)
-      const watertype = this.featureLayerPWS.getFieldDomain('pws_wsourcetype').getName(facility.attributes.pws_wsourcetype)
-      const state = this.featureLayerPWS.getFieldDomain('pws_agencycode').getName(facility.attributes.pws_agencycode)
+      const tribe = props.featureLayerPWS.getFieldDomain('tribe').getName(facility.attributes.tribe)
+      const school = props.featureLayerPWS.getFieldDomain('pws_schoolordaycare').getName(facility.attributes.pws_schoolordaycare)
+      const ownertype = props.featureLayerPWS.getFieldDomain('pws_ownertype').getName(facility.attributes.pws_ownertype)
+      const wholesale = props.featureLayerPWS.getFieldDomain('pws_wholesale').getName(facility.attributes.pws_wholesale)
+      const watertype = props.featureLayerPWS.getFieldDomain('pws_wsourcetype').getName(facility.attributes.pws_wsourcetype)
+      const state = props.featureLayerPWS.getFieldDomain('pws_agencycode').getName(facility.attributes.pws_agencycode)
       setPWS({
         facility,
         tribe,
