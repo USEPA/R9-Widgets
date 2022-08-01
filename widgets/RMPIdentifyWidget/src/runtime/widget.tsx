@@ -130,6 +130,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   rmpVisibleOnOpen: boolean = false;
   currentPopup: any;
   viewIds = new Set();
+  mapClickHandler;
 
   constructor(props) {
     super(props)
@@ -228,6 +229,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   };
 
 
+  setLayerVisibility(layer, visible) {
+    const l = this.state.jimuMapView.view.map.allLayers.find(ml => ml.url === layer.url);
+    l.visible = visible;
+  }
+
   componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView, landingText: string }>, snapshot?: any) {
     let widgetState: WidgetState
     widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state
@@ -246,8 +252,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         // this.state.jimuMapView.view.map.add(this.graphicsLayer)
         // get/set visibility of map layers
         this.rmpVisibleOnOpen = this.state.rmpParentLayer.visible
-        this.state.rmpParentLayer.visible = true
-        this.state.rmpFacilityLayer.visible = true
+        this.setLayerVisibility(this.state.rmpParentLayer, true)
+        this.setLayerVisibility(this.state.rmpFacilityLayer, true)
+
 
         this.mainText = true
         this.nothingThere = []
@@ -260,24 +267,25 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         this.initRMP();
         this.currentPopup = this.state.jimuMapView.view.popup;
         this.state.jimuMapView.view.popup = null;
+        this.mapClickHandler = this.state.jimuMapView.view.on('click', event => {
+          this.mapClick(event)
+        })
       }
+
       this.first = false
     }
 
     if (widgetState === WidgetState.Closed || this.state.visible === false && !this.state.loading) {
-      this.state.rmpParentLayer.visible = this.rmpVisibleOnOpen
-      this.state.rmpFacilityLayer.visible = this.rmpVisibleOnOpen
+
+      this.setLayerVisibility(this.state.rmpParentLayer, this.rmpVisibleOnOpen)
       this.first = true
       // this.state.jimuMapView.view.map.layers.remove(this.graphicsLayer)
       this.state.jimuMapView.view.popup = this.currentPopup
+      if (this.mapClickHandler) {
+        this.mapClickHandler.remove();
+      }
     }
 
-    if (this.state.jimuMapView && prevState?.jimuMapView === undefined && this.state.rmpFacilityLayer) {
-      this.state.jimuMapView.view.on('click', event => {
-        this.mapClick(event)
-      })
-      this.state.jimuMapView.view.map.add(this.state.rmpFacilityLayer)
-    }
   }
 
 

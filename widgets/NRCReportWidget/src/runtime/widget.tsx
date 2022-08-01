@@ -45,7 +45,7 @@ interface State {
 }
 
 export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, State> {
-  state = {loading: true, visible: false}
+  state = {loading: true}
   jmv: JimuMapView;
   first: boolean = true;
   loading: boolean = false;
@@ -65,6 +65,7 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
   nrcTitle: string = 'WebEOCHotlineLogGeoJSON';
   currentPopup: any;
   viewIds = new Set;
+  mapClickHandler;
 
   onActiveViewChange = (jmv: JimuMapView) => {
     this.jmv = jmv;
@@ -74,12 +75,6 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
         loading: false
       });
     }
-  }
-
-  initMapClick(view) {
-    view.on('click', event => {
-      this.mapClick(event)
-    })
   }
 
   nrcLayerCreated = (e) => {
@@ -96,19 +91,13 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
     view.popup = this.currentPopup;
   }
 
-  updateVisibility = (visible) => this.setState({ visible })
+  updateVisibility = (visible) => this.setState({visible})
 
   componentDidMount() {
     listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
   }
 
   componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView }>, snapshot?: any) {
-
-    if (this.state.jimuMapView && prevState.jimuMapView === undefined) {
-      this.initMapClick(this.state.jimuMapView.view)
-      this.disablePopup(this.jmv.view)
-    }
-
     if (this.token === null) {
       this.captureToken();
     }
@@ -116,13 +105,17 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
     if (this.state.jimuMapView && this.nrcLayer) {
       const widgetState: WidgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
       // do anything on open/close of widget here
-      if ((widgetState === WidgetState.Opened || this.state.visible === true)) {
+      if ((widgetState === WidgetState.Opened || this.state?.visible === true)) {
         if (this.first) {
           this.setLayerVis(true)
+          this.mapClickHandler = this.state.jimuMapView.view.on('click', event => {
+            this.mapClick(event)
+          })
+          this.disablePopup(this.jmv.view)
         }
         this.first = false;
       }
-      if (widgetState === WidgetState.Closed || this.state.visible === false) {
+      if (widgetState === WidgetState.Closed || this.state?.visible === false) {
         this.first = true;
         this.nrcLayer.visible = this.openVisState;
         this.mainText = true
@@ -132,6 +125,9 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
         this.nothingThere = [];
         this.enablePopup(this.jmv.view)
         this.setLayerVis(this.openVisState)
+        if (this.mapClickHandler) {
+          this.mapClickHandler.remove()
+        }
       }
     }
   }
@@ -395,7 +391,7 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
     //   output = (<div>Please finish configuring the widget.</div>)
     // }
     if (this.state?.loading) {
-      output = (<Loading/>)
+      output = (<Loading type='SECONDARY'/>)
     }
     if (!this.state?.loading && this.state?.rows === undefined) {
       output = (<this.LandingText/>)

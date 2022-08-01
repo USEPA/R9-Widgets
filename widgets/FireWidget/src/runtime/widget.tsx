@@ -70,7 +70,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     if (this.state?.jimuMapView) {
       let widgetState: WidgetState;
       widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
-      if (widgetState == WidgetState.Closed || this.state?.visible !== true) {
+      if (widgetState == WidgetState.Closed || this.state?.visible === false) {
         this.resetFireFilter(false, true);
 
         this.jmv.view.map.layers.forEach(lyr => {

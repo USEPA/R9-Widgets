@@ -91,7 +91,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     }),
     includedEffect: "hue-rotate(270deg)"
   });
-  currentPopup
+  currentPopup;
+  mapClickHandler;
+
 
   componentDidMount() {
     this.loading = true;
@@ -101,7 +103,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
   }
 
-  updateVisibility = (visible) => this.setState({ visible })
+  updateVisibility = (visible) => this.setState({visible})
 
   initLayer(lyr) {
 
@@ -171,9 +173,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       this.setState({
         jimuMapView: jmv
       });
-      this.jmv.view.on("click", event => {
-        this.mapClick(event)
-      });
     }
   }
 
@@ -193,7 +192,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     if (this.jmv && this.allTierIIfl.length > 0) {
       let widgetState: WidgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
       // do anything on open/close of widget here
-      if (widgetState === WidgetState.Opened || this.state.visible === true) {
+      if (widgetState === WidgetState.Opened || this.state?.visible === true) {
         if (this.first) {
           this.setLayerVis(true);
           this.badPoints = false;
@@ -206,10 +205,14 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           });
           this.currentPopup = this.jmv.view.popup;
           this.jmv.view.popup = null
-
+          this.mapClickHandler = this.jmv.view.on("click", event => {
+            this.mapClick(event)
+          });
         }
+
         this.first = false;
-      } else {
+      }
+      if (widgetState === WidgetState.Closed || this.state?.visible === false) {
         if (this.badPoints) {
           // go back to home if we are in the middle of nowhere looking at an incorrect location
           this.jmv.view.goTo({
@@ -230,7 +233,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         this.jmv.view.graphics.removeAll();
         this.mainText = true;
         this.jmv.view.popup = this.currentPopup
-      }
+        if (this.mapClickHandler) {
+          this.mapClickHandler.remove()
+        }      }
     }
   }
 
@@ -934,7 +939,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     }
     return (
       <div className="widget-addLayers jimu-widget p-2" style={{overflow: "auto"}}>
-        {this.state?.loading ? <Loading/> :
+        {this.state?.loading ? <Loading type='SECONDARY'/> :
           <div>
             <this.NothingFound/>
             <this.Grid/>

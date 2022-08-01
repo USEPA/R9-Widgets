@@ -44,6 +44,18 @@ export function visibilityChanged(currentState, currentVisibility, viewIds) {
   return currentVisibility !== visible
 }
 
+export function isViewVisible(viewIds, state) {
+  let visible = false
+  viewIds.forEach(v => {
+    Object.keys(state.appRuntimeInfo.sectionNavInfos).forEach(s => {
+      if (state.appRuntimeInfo.sectionNavInfos[s].currentViewId === v) {
+        visible = true
+      }
+    })
+  })
+  return visible
+}
+
 export function listenForViewVisibilityChanges(widgetId, callback) {
   const appStore = getAppStore()
   const viewIds = getViewIDs(appStore.getState(), widgetId)
