@@ -6,7 +6,7 @@ import {Loading} from 'jimu-ui';
 export default function PWS (props) {
 
   const [PWS, setPWS] = useState({})
-  const [loading, setLoading] = useState(true)
+  // const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const query = new Query()
@@ -30,12 +30,12 @@ export default function PWS (props) {
         watertype,
         state
       })
-      setLoading(false)
+      // setLoading(false)
     })
   }, [])
 
 
-  return <div> {loading
+  return <div> {!('facility' in PWS)
     ? <Loading type='SECONDARY'/>
     : <div>
       <b><p style={{textAlign: 'center'}}>Public Water System Details</p></b>
