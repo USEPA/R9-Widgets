@@ -78,8 +78,6 @@ export default function Facility(props) {
 
         <p>&nbsp;</p>
       </div>
-      <PWS PWSID={props.facility.attributes.fac_pwsid}
-           featureLayerPWS={props.featureLayerPWS}/>
       {/*{this.regulatoryText}*/}
       {/*{this.adminContactText}*/}
     </div>

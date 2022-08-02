@@ -17,6 +17,7 @@ import esriConfig from 'esri/config'
 import {Loading} from 'jimu-ui'
 import {getViewIDs, listenForViewVisibilityChanges, visibilityChanged} from '../../../shared'
 import Facility from './Facility'
+import PWS from './PWS';
 
 function getComparator(sortColumn: string) {
   switch (sortColumn) {
@@ -515,9 +516,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     }
 
     if (this.state?.facility) {
-      return <Facility facility={this.state.facility}
-                       featureLayer={this.featureLayer}
-                       featureLayerPWS={this.featureLayerPWS}></Facility>
+      return <div>
+        <Facility facility={this.state.facility}
+                  featureLayer={this.featureLayer}></Facility>
+        <PWS PWSID={this.state.facility.attributes.fac_pwsid}
+             featureLayerPWS={this.featureLayerPWS}/>
+      </div>
     }
 
     return (
