@@ -49,7 +49,7 @@ interface State {
 
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, State> {
   jmv: JimuMapView;
-  first: boolean = false;
+  first: boolean = true;
   loading: boolean = true;
   mainText: boolean = true;
   rows: any[] = [];
