@@ -35,7 +35,7 @@ export default function PWS (props) {
   }, [])
 
 
-  return loading
+  return <div> {loading
     ? <Loading type='SECONDARY'/>
     : <div>
       <b><p style={{textAlign: 'center'}}>Public Water System Details</p></b>
@@ -54,4 +54,5 @@ export default function PWS (props) {
       <b>PWS Source Water Type: </b>{PWS.watertype || 'Not Reported'}<p
       style={{textAlign: 'center'}}>&nbsp;</p>
     </div>
+  }</div>
 }
