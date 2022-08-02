@@ -9,7 +9,8 @@ export default function PWS (props) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const query = new Query()
+    const fetchPWS = async () => {
+      const query = new Query()
     query.outFields = ['*']
     query.where = "PWSID='" + props.PWSID + "'"
     props.featureLayerPWS.queryFeatures(query).then(featureSet => {
@@ -21,21 +22,24 @@ export default function PWS (props) {
       const wholesale = pws_wholesale_domain ?  props.featureLayerPWS.getFieldDomain('pws_wholesale').getName(facility.attributes.pws_wholesale) : facility.attributes.pws_wholesale
       const watertype = props.featureLayerPWS.getFieldDomain('pws_wsourcetype').getName(facility.attributes.pws_wsourcetype)
       const state = props.featureLayerPWS.getFieldDomain('pws_agencycode').getName(facility.attributes.pws_agencycode)
-      // setPWS({
-      //   facility,
-      //   tribe,
-      //   school,
-      //   ownertype,
-      //   wholesale,
-      //   watertype,
-      //   state
-      // })
-      setLoading(false)
+      setPWS({
+        facility,
+        tribe,
+        school,
+        ownertype,
+        wholesale,
+        watertype,
+        state
+      })
+
     })
+    }
+    fetchPWS()
+
   }, [])
 
 
-  return loading
+  return PWS.facility === undefined
     ? <Loading type='SECONDARY'/>
     : <span>WTH</span>
     // <div>
@@ -45,7 +49,7 @@ export default function PWS (props) {
     //     Served: </b>{PWS.facility.attributes.city ? PWS.facility.attributes.city : 'Not Reported'}<br/>
     //   <b>County
     //     Served: </b>{PWS.facility.attributes.county ? PWS.facility.attributes.county : 'Not Reported'}<br/><b>State: </b>{PWS.state || 'Not Reported'}<br/>
-    //   <b>Tribe Name: </b>{PWS.tribe ? PWS.tribe : 'Not Reported'}<br/>
+    //   <b>`Tribe` Name: </b>{PWS.tribe ? PWS.tribe : 'Not Reported'}<br/>
     //   <b>PWS Population
     //     Served: </b>{PWS.facility.attributes.pws_popserve ? PWS.facility.attributes.pws_popserve : 'Not Reported'}<br/>
     //   <b>Is the PWS a School or Daycare? </b>{PWS.school || 'Not Reported'}<br/>
