@@ -34,7 +34,9 @@ export default function Facility(props) {
           From: </b>{props.facility.attributes.pwsid_seller ? props.facility.attributes.pwsid_seller : 'Not Reported'}<br/>
         <b>Purchased Water
           Treated: </b>{sellertreated || 'Not Reported'}<br/><br/>
-        <div id="pwsinfo"></div>
+        <div id="pwsinfo">
+          <PWS PWSID={props.facility.attributes.fac_pwsid}/>
+        </div>
         <p style={{textAlign: 'center'}}><a
           href={'https://echo.epa.gov/detailed-facility-report?fid=' + props.facility.attributes.fac_pwsid}
           target="_blank\"><b>ECHO Detailed System Report</b> </a></p>
@@ -78,7 +80,7 @@ export default function Facility(props) {
 
         <p>&nbsp;</p>
       </div>
-      Where is PWS?
+
       {/*{this.regulatoryText}*/}
       {/*{this.adminContactText}*/}
     </div>

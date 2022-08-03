@@ -518,13 +518,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     }
 
     if (this.state?.facility) {
-      return <div>
-        <Facility facility={this.state.facility}
+      return <Facility facility={this.state.facility}
                   featureLayer={this.featureLayer}></Facility>
-        PWS SHOULD BE HERE?
-        <PWS PWSID={this.state.facility.attributes.fac_pwsid}
-             featureLayerPWS={this.featureLayerPWS}></PWS>
-      </div>
     }
 
     return (
