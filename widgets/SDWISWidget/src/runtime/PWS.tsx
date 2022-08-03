@@ -40,7 +40,7 @@ export default function PWS (props) {
 
 
   return PWS.facility === undefined
-    ? <Loading type='SECONDARY'/>
+    ? <div>LOOOOOOOOOADING<Loading type='SECONDARY'/></div>
     : <span>WTH</span>
     // <div>
     //   <b><p style={{textAlign: 'center'}}>Public Water System Details</p></b>
