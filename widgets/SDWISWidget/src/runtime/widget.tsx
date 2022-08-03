@@ -521,8 +521,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       return <div>
         <Facility facility={this.state.facility}
                   featureLayer={this.featureLayer}></Facility>
+        PWS SHOULD BE HERE?
         <PWS PWSID={this.state.facility.attributes.fac_pwsid}
-             featureLayerPWS={this.featureLayerPWS}/>
+             featureLayerPWS={this.featureLayerPWS}></PWS>
       </div>
     }
 
