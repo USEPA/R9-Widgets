@@ -35,7 +35,7 @@ export default function Facility(props) {
         <b>Purchased Water
           Treated: </b>{sellertreated || 'Not Reported'}<br/><br/>
         <div id="pwsinfo">
-          <PWS PWSID={props.facility.attributes.fac_pwsid}/>
+          <PWS PWSID={props.facility.attributes.fac_pwsid} featureLayerPWS={props.featureLayerPWS}/>
         </div>
         <p style={{textAlign: 'center'}}><a
           href={'https://echo.epa.gov/detailed-facility-report?fid=' + props.facility.attributes.fac_pwsid}
