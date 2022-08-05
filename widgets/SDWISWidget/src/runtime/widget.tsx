@@ -486,31 +486,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     })
   }
 
-  //pulls information from Admin Contact table for the Point of Contact section (top) "PWS Contact Information"
-  loadFacilityAdmin = (pwsid) => {
-    const query = new Query()
-    query.where = "PWSID='" + pwsid + "'"
-    this.featureLayerAdmin.queryFeatures(query).then(featureSet => {
-      const facilityAdmin = featureSet.features[0]
-      this.adminContactText.push(
-        <div>
-          <p style={{textAlign: 'left'}}><b>Primary
-            Contact: </b>{facilityAdmin.attributes.org_name ? facilityAdmin.attributes.org_name : 'Not Reported'}<br/>
-            <b>Phone: </b>{facilityAdmin.attributes.phone_number ? facilityAdmin.attributes.phone_number : 'Not Reported'}<br/>
-            <b>Email: </b>{facilityAdmin.attributes.email_addr
-              ? <a href={'mailto:' + facilityAdmin.attributes.email_addr}
-                   target="_blank"/>
-              : 'Not Reported'}<br/>
-            <b>Address: </b>{facilityAdmin.attributes.address_line1 ? facilityAdmin.attributes.address_line1 : 'Not Reported'}<br/>
-            {facilityAdmin.attributes.city_name ? facilityAdmin.attributes.city_name : ''} {facilityAdmin.attributes.state_code ? facilityAdmin.attributes.state_code : ''} {facilityAdmin.attributes.zip_code ? facilityAdmin.attributes.zip_code : ''}
-          </p>
-        </div>
-      )
-      this.setState({
-        adminContactText: this.adminContactText
-      })
-    })
-  }
 
   render() {
     if (!this.props.useMapWidgetIds?.length) {
@@ -522,7 +497,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
                   style={{overflow: 'auto', height: '97%'}}>
         <Facility facility={this.state.facility}
                   featureLayer={this.featureLayer}
-                  featureLayerPWS={this.featureLayerPWS}></Facility>
+                  featureLayerPWS={this.featureLayerPWS}
+                  featureLayerAdmin={this.featureLayerAdmin}></Facility>
       </div>
     }
 

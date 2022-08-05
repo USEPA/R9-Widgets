@@ -1,5 +1,6 @@
 import {React, jsx} from 'jimu-core';
 import PWS from './PWS';
+import PWSContact from './PWSContact';
 
 
 export default function Facility(props) {
@@ -34,31 +35,15 @@ export default function Facility(props) {
           From: </b>{props.facility.attributes.pwsid_seller ? props.facility.attributes.pwsid_seller : 'Not Reported'}<br/>
         <b>Purchased Water
           Treated: </b>{sellertreated || 'Not Reported'}<br/><br/>
-        <div id="pwsinfo">
           <PWS PWSID={props.facility.attributes.fac_pwsid}
                featureLayerPWS={props.featureLayerPWS}/>
-        </div>
         <p style={{textAlign: 'center'}}><a
           href={'https://echo.epa.gov/detailed-facility-report?fid=' + props.facility.attributes.fac_pwsid}
           target="_blank\"><b>ECHO Detailed System Report</b> </a></p>
         <p style={{textAlign: 'center'}}>&nbsp;</p>
-        <table style={{
-          height: '98px',
-          borderColor: '#000000',
-          marginLeft: 'auto',
-          marginRight: 'auto',
-          width: '100%'
-        }}>
-          <tbody>
-          <tr>
-            <td style={{textAlign: 'center', width: '287px'}}><b>Public Water System
-              Contact</b>
-              <hr/>
-              <div id="admincontacts"></div>
-            </td>
-          </tr>
-          </tbody>
-        </table>
+
+        <PWSContact pwsid={props.facility.attributes.fac_pwsid}
+                    featureLayerAdmin={props.featureLayerAdmin}/>
         <p>&nbsp;</p>
         <table style={{
           height: '98px',
@@ -83,7 +68,6 @@ export default function Facility(props) {
       </div>
 
       {/*{this.regulatoryText}*/}
-      {/*{this.adminContactText}*/}
     </div>
   )
 }
