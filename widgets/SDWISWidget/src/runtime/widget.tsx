@@ -56,7 +56,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   sortedRows: any[] = [];
   columns: any[] = [];
   sortColumns: any[] = [];
-  graphicsLayer: GraphicsLayer;
   nothingThere: any[] = [];
   multipleLocations: boolean = false;
   featureLayer: FeatureLayer;
@@ -129,10 +128,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.featureLayerAdmin = new FeatureLayer({
       url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/5',
       outFields: ['*']
-    })
-
-    this.graphicsLayer = new GraphicsLayer({
-      listMode: 'hide'
     })
 
     this.featureLayer.on('layerview-create-error', (e) => {
@@ -311,7 +306,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       facility: null
     })
 
-    this.graphicsLayer.removeAll()
+    this.jmv.view.graphics.removeAll()
     const pixelWidth = this.jmv.view.extent.width / this.jmv.view.width
     const toleraceInMapCoords = 10 * pixelWidth
     const clickExtent = new Extent({
@@ -448,12 +443,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
   loadFacility = (facility) => {
     const selectedGraphic = new Graphic({geometry: facility.geometry, symbol: this.symbol})
-    this.graphicsLayer.add(selectedGraphic)
-
+    this.jmv.view.graphics.add(selectedGraphic)
     this.setState({
       facility
     })
-    // this.loadFacilityTable(facility.attributes.pacode)
   }
 
 
