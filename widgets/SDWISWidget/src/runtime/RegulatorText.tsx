@@ -19,7 +19,9 @@ export default function RegulatorText(props) {
   }
 
 
-  return <table style={{
+  return RegulatoryText === undefined
+    ? <Loading type='SECONDARY'/>
+    : <table style={{
     height: '98px',
     borderColor: '#000000',
     marginLeft: 'auto',

@@ -277,6 +277,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         if (this.mapClickHandler) {
           this.mapClickHandler.remove()
         }
+        // remove graphics on close
+        this.jmv.view.graphics.removeAll()
       }
     }
   }
