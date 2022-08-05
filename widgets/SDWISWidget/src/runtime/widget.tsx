@@ -518,9 +518,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     }
 
     if (this.state?.facility) {
-      return <Facility facility={this.state.facility}
+      return <div className="widget-addLayers jimu-widget p-2"
+                  style={{overflow: 'auto', height: '97%'}}>
+        <Facility facility={this.state.facility}
                   featureLayer={this.featureLayer}
                   featureLayerPWS={this.featureLayerPWS}></Facility>
+      </div>
     }
 
     return (
