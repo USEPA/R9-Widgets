@@ -48,7 +48,7 @@ export default function Facility(props) {
         <p>&nbsp;</p>
 
         <RegulatorText featureLayerTable={props.featureLayerTable}
-                       PACode={props.facility.attributes.pacode}/>
+                       PAcode={props.facility.attributes.pacode}/>
 
         <p>&nbsp;</p>
       </div>
