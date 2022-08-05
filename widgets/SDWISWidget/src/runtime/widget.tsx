@@ -307,7 +307,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.setState({
       loading: this.loading,
       rows: this.rows,
-      sortedRows: this.sortedRows
+      sortedRows: this.sortedRows,
+      facility: null
     })
 
     this.graphicsLayer.removeAll()
@@ -452,9 +453,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.setState({
       facility
     })
-    // this.loadFacilityPWS(facility.attributes.fac_pwsid)
     this.loadFacilityTable(facility.attributes.pacode)
-    this.loadFacilityAdmin(facility.attributes.fac_pwsid)
   }
 
 
