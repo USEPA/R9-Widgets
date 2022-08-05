@@ -12,6 +12,7 @@ export default function PWSContact(props) {
   useEffect(() => {
     const query = new Query()
     query.where = "PWSID='" + props.pwsid + "'"
+    query.outFields = ['*']
     props.featureLayerAdmin.queryFeatures(query).then(featureSet => {
       setPWSContact(featureSet.features[0].attributes)
     })

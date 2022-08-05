@@ -453,36 +453,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.setState({
       facility
     })
-    this.loadFacilityTable(facility.attributes.pacode)
-  }
-
-
-  //pulls information from Primacy Agency table for the Regulatory section (bottom) "Regulatory Agency"
-  loadFacilityTable = (PAcode) => {
-    const query = new Query()
-    query.outFields = ['*']
-    query.where = "PACode='" + PAcode + "'"
-    this.featureLayerTable.queryFeatures(query).then(featureSet => {
-      const facilityTable = featureSet.features[0]
-      this.regulatoryText.push(<div>
-        <p style={{textAlign: 'center'}}>{facilityTable.attributes.regauthority}</p>
-        <p style={{textAlign: 'left'}}><b>Primary
-          Contact: </b>{facilityTable.attributes.primarycontactname ? facilityTable.attributes.primarycontactname : 'Not Reported'}<br/>
-          <b>Phone: </b>{facilityTable.attributes.phone_number ? facilityTable.attributes.phone_number : 'Not Reported'}<br/>
-          <b>Email: </b>{facilityTable.attributes.email
-            ? <a href={'mailto:' + facilityTable.attributes.email}
-                 target="_blank"/>
-            : 'Not Reported'} <br/>
-          <b>Website: </b><a href={facilityTable.attributes.website} target="_blank">Click
-            Here for
-            Website</a><br/>
-          <b>Address: </b>{facilityTable.attributes.mailing_address ? facilityTable.attributes.mailing_address : 'Not Reported'}
-        </p>
-      </div>)
-      this.setState({
-        regulatoryText: this.regulatoryText
-      })
-    })
+    // this.loadFacilityTable(facility.attributes.pacode)
   }
 
 
@@ -497,7 +468,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         <Facility facility={this.state.facility}
                   featureLayer={this.featureLayer}
                   featureLayerPWS={this.featureLayerPWS}
-                  featureLayerAdmin={this.featureLayerAdmin}></Facility>
+                  featureLayerAdmin={this.featureLayerAdmin}
+                  featureLayerTable={this.featureLayerTable}
+        ></Facility>
       </div>
     }
 
