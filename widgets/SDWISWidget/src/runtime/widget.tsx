@@ -130,20 +130,20 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       outFields: ['*']
     })
 
-    this.featureLayer.on('layerview-create-error', (e) => {
-      this.loading = false
-      this.onOpenText = []
-      this.onOpenText.push(
-        <div>
-          The R9 SDWIS service resides on the EPA Intranet. Connect to the Pulse Secure client to access the
-          data.
-        </div>
-      )
-      this.setState({
-        loading: this.loading,
-        onOpenText: this.onOpenText
-      })
-    })
+    // this.featureLayer.on('layerview-create-error', (e) => {
+    //   this.loading = false
+    //   this.onOpenText = []
+    //   this.onOpenText.push(
+    //     <div>
+    //       The R9 SDWIS service resides on the EPA Intranet. Connect to the Pulse Secure client to access the
+    //       data.
+    //     </div>
+    //   )
+    //   this.setState({
+    //     loading: this.loading,
+    //     onOpenText: this.onOpenText
+    //   })
+    // })
 
     this.symbol = new SimpleMarkerSymbol()
 
@@ -176,13 +176,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           // if (this.featureLayer.loaded) {
           const query = new Query()
           query.where = '1=1'
-          this.featureLayer.queryFeatureCount(query).then(count => {
+          // this.featureLayer.queryFeatureCount(query).then(count => {
             this.onOpenText.push(
               <div>
                 There are currently <b>{count}</b> facilities in the SDWIS feature service.<br/>
-                <b><i>This data is scale-dependent, please zoom in to see the points.</i></b><h2
+                <b><i>This data is scale-dependent, please zoom in to see the points.</i></b><h4
                 style={{textDecoration: 'underline'}}>Safe Drinking Water Information System
-                (SDWIS)</h2>
+                (SDWIS)</h4>
                 The data is directly from the <b>National SDWIS Database</b> and updated on a quarterly
                 basis. The service provides information on facilities, public water systems, primacy
                 agencies, administrative contacts, and tribal entities. The facility symbols
@@ -192,15 +192,15 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
                 <a
                   href={'https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-information-system-sdwis-federal-reporting'}
                   target="_blank"> here.</a></b>
-                <h2 style={{textDecoration: 'underline'}}>Enforcement & Compliance History Online
-                  (ECHO)</h2>EPA's ECHO website provides details for facilities in your community to
+                <h4 style={{textDecoration: 'underline'}}>Enforcement & Compliance History Online
+                  (ECHO)</h4>EPA's ECHO website provides details for facilities in your community to
                 assess their compliance with environmental regulations. The interaction in this widget
                 uses the Public Water System (PWS) ID to search the records. Check out the ECHO
                 website <a href={'https://echo.epa.gov/'} target="_blank"><b>here</b></a> for more
                 information and guidance.<br/>
                 The <i><b>ECHO Detailed System Report</b></i> is linked with the selected facility
                 record and opens the ECHO website details for the associated public water system in a
-                new browser window. <h2 style={{textDecoration: 'underline'}}>Definitions</h2><b>Facilities
+                new browser window. <h4 style={{textDecoration: 'underline'}}>Definitions</h4><b>Facilities
                 - </b>These points represent facilities within a public water system. The facility types
                 include but are not limited to wells, well heads, treatment plants, sampling stations,
                 valves, transmission mains, pumps, pressure control, etc. Facilities are identified with
@@ -250,7 +250,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
             }, () => {
               this.LandingText()
             })
-          })
+          // })
           this.mapClickHandler = this.jmv.view.on('click', event => {
             this.mapClick(event)
           })
