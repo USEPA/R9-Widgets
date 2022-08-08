@@ -130,20 +130,20 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       outFields: ['*']
     })
 
-    // this.featureLayer.on('layerview-create-error', (e) => {
-    //   this.loading = false
-    //   this.onOpenText = []
-    //   this.onOpenText.push(
-    //     <div>
-    //       The R9 SDWIS service resides on the EPA Intranet. Connect to the Pulse Secure client to access the
-    //       data.
-    //     </div>
-    //   )
-    //   this.setState({
-    //     loading: this.loading,
-    //     onOpenText: this.onOpenText
-    //   })
-    // })
+    this.featureLayer.on('layerview-create-error', (e) => {
+      this.loading = false
+      this.onOpenText = []
+      this.onOpenText.push(
+        <div>
+          The R9 SDWIS service resides on the EPA Intranet. Connect to the Pulse Secure client to access the
+          data.
+        </div>
+      )
+      this.setState({
+        loading: this.loading,
+        onOpenText: this.onOpenText
+      })
+    })
 
     this.symbol = new SimpleMarkerSymbol()
 
@@ -176,7 +176,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           // if (this.featureLayer.loaded) {
           const query = new Query()
           query.where = '1=1'
-          // this.featureLayer.queryFeatureCount(query).then(count => {
+          this.featureLayer.queryFeatureCount(query).then(count => {
             this.onOpenText.push(
               <div>
                 There are currently <b>{count}</b> facilities in the SDWIS feature service.<br/>
@@ -250,7 +250,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
             }, () => {
               this.LandingText()
             })
-          // })
+          })
           this.mapClickHandler = this.jmv.view.on('click', event => {
             this.mapClick(event)
           })
