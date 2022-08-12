@@ -39,7 +39,7 @@ interface State {
   sortedRows: any[],
   sortColumns: any[],
   onOpenText: any[],
-  nothingThere: any[],
+  nothingThere: boolean,
   facility: any
   pwsText: any[],
   regulatoryText: any[],
@@ -57,7 +57,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   columns: any[] = [];
   sortColumns: any[] = [];
   graphicsLayer: GraphicsLayer;
-  nothingThere: any[] = [];
   multipleLocations: boolean = false;
   featureLayer: FeatureLayer;
   featureLayerPWS: FeatureLayer;
@@ -76,10 +75,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   constructor(props) {
     super(props)
     // bind this to class methods
-    this.NothingFound = this.NothingFound.bind(this)
     this.LandingText = this.LandingText.bind(this)
     this.rowClick = this.rowClick.bind(this)
-    this.Grid = this.Grid.bind(this)
     this.onSortColsChange = this.onSortColsChange.bind(this)
   }
 
@@ -304,10 +301,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.loading = true
     this.rows = []
     this.sortedRows = []
+    this.multipleLocations = false
     this.setState({
       loading: this.loading,
       rows: this.rows,
-      sortedRows: this.sortedRows
+      sortedRows: this.sortedRows,
     })
 
     this.graphicsLayer.removeAll()
@@ -347,16 +345,16 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           sortedRows: this.sortedRows
         })
 
-        this.Grid()
+        // this.Grid()
         this.loading = false
         this.setState({
-          loading: this.loading
+          loading: this.loading,
+          nothingThere: false
         })
       } else {
-        this.nothingThere = [<div>No facilities found at this location</div>]
         this.loading = false
         this.setState({
-          nothingThere: this.nothingThere,
+          nothingThere: true,
           loading: this.loading
         })
       }
@@ -374,40 +372,26 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.loadFacility(location[0])
   }
 
-  NothingFound() {
-    if (this.nothingThere.length > 0) {
-      return (
-        <div>
-          <h3>{this.nothingThere}</h3><br/>
-        </div>
-      )
-    } else {
-      return null
-    }
-  }
-
-  Grid() {
+  Grid = () => {
     return (
       <div>
-        {this.multipleLocations
-          ? <div>
-            <div><h3>Multiple Facilities at that Location</h3><br/><h5>Select one to
-              continue</h5></div>
-            <DataGrid style={{
-              height: `${(this.sortedRows.length * 35) + 37}px`,
-              maxHeight: '700px',
-              backgroundColor: 'white'
-            }}
-                      className={'rdg-light'}
-                      columns={this.columns} rows={this.sortedRows}
-                      onRowClick={this.rowClick}
-                      rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
-              sortable: true,
-              resizable: true
-            }} onSortColumnsChange={this.onSortColsChange}
-                      sortColumns={this.sortColumns}/>
-          </div>
-          : null}
+        <div>
+          <div><h3>Multiple Facilities at that Location</h3><br/><h5>Select one to
+            continue</h5></div>
+          <DataGrid style={{
+            height: `${(this.sortedRows.length * 35) + 37}px`,
+            maxHeight: '700px',
+            backgroundColor: 'white'
+          }}
+                    className={'rdg-light'}
+                    columns={this.columns} rows={this.sortedRows}
+                    onRowClick={this.rowClick}
+                    rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
+            sortable: true,
+            resizable: true
+          }} onSortColumnsChange={this.onSortColsChange}
+                    sortColumns={this.sortColumns}/>
+        </div>
       </div>
     )
   }
@@ -512,29 +496,38 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     })
   }
 
-  render() {
-    if (!this.props.useMapWidgetIds?.length) {
-      return <h2>Please complete widget configuration.</h2>
-    }
-
-    if (this.state?.facility) {
-      return <Facility facility={this.state.facility}
-                  featureLayer={this.featureLayer}
-                  featureLayerPWS={this.featureLayerPWS}></Facility>
-    }
-
+  render () {
     return (
       <div className="widget-addLayers jimu-widget p-2"
            style={{overflow: 'auto', height: '97%'}}>
-
-        {this.loading
-          ? <Loading type='SECONDARY'/>
-          : <div>
-            <this.Grid/>
-            <this.NothingFound/>
-            {this.mainText ? this.LandingText() : null}
-          </div>
+        {
+          (!this.props.useMapWidgetIds?.length)
+            ? <h2>Please complete widget configuration.</h2>
+            : null
         }
+
+        {this.loading ? <Loading type='SECONDARY'/> : null}
+
+        {this.state?.facility
+          ? <Facility facility={this.state.facility}
+                      featureLayer={this.featureLayer}
+                      featureLayerPWS={this.featureLayerPWS}></Facility>
+          : null
+        }
+
+        {this.state?.nothingThere
+          ? <div>
+            <h3>
+              <div>No facilities found at this location</div>
+            </h3>
+            <br/>
+          </div>
+          : ''
+        }
+
+        {this.multipleLocations ? <this.Grid/> : null}
+
+        {this.mainText ? this.LandingText() : null}
 
         <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
                               onActiveViewChange={this.onActiveViewChange}/>
