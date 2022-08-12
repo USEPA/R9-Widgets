@@ -10,6 +10,7 @@ export default function PWSContact(props) {
 
 
   useEffect(() => {
+    console.log('loading PWSContact')
     const query = new Query()
     query.where = "PWSID='" + props.pwsid + "'"
     query.outFields = ['*']

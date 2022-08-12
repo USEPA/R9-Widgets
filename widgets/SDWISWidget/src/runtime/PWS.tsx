@@ -9,6 +9,7 @@ export default function PWS(props) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    console.log('loading PWS')
     const fetchPWS = async () => {
       const query = new Query()
       query.outFields = ['*']

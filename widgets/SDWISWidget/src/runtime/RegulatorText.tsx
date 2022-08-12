@@ -10,6 +10,7 @@ export default function RegulatorText(props) {
 
 
   useEffect(() => {
+    console.log('loading RegulatoryText')
     const query = new Query()
     query.outFields = ['*']
     query.where = "PACode='" + props.PAcode + "'"
