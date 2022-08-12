@@ -436,7 +436,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   }
 
 
-  render () {
+  render() {
     return (
       <div className="widget-addLayers jimu-widget p-2"
            style={{overflow: 'auto', height: '97%'}}>
@@ -451,7 +451,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         {this.state?.facility
           ? <Facility facility={this.state.facility}
                       featureLayer={this.featureLayer}
-                      featureLayerPWS={this.featureLayerPWS}></Facility>
+                      featureLayerPWS={this.featureLayerPWS}
+                      featureLayerAdmin={this.featureLayerAdmin}
+                      featureLayerTable={this.featureLayerTable}></Facility>
           : null
         }
 
