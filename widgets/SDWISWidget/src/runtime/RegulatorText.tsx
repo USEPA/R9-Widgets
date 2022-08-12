@@ -16,41 +16,41 @@ export default function RegulatorText(props) {
     props.featureLayerTable.queryFeatures(query).then(featureSet => {
       setRegulatoryText(featureSet.features[0].attributes)
     })
-  }
+  }, [])
 
 
   return RegulatoryText === undefined
     ? <Loading type='SECONDARY'/>
     : <table style={{
-    height: '98px',
-    borderColor: '#000000',
-    marginLeft: 'auto',
-    marginRight: 'auto',
-    width: '100%'
-  }}>
-    <tbody>
-    <tr>
-      <td style={{textAlign: 'center', width: '287px'}}>
-        <strong>
-          <p style={{textAlign: 'center'}}>Regulatory Agency Contact</p></strong>
-        <hr/>
-        <div>
-          <p style={{textAlign: 'center'}}>{RegulatoryText.regauthority}</p>
-          <p style={{textAlign: 'left'}}><b>Primary
-            Contact: </b>{RegulatoryText.primarycontactname ? RegulatoryText.primarycontactname : 'Not Reported'}<br/>
-            <b>Phone: </b>{RegulatoryText.phone_number ? RegulatoryText.phone_number : 'Not Reported'}<br/>
-            <b>Email: </b>{RegulatoryText.email
-              ? <a href={'mailto:' + RegulatoryText.email}
-                   target="_blank"/>
-              : 'Not Reported'} <br/>
-            <b>Website: </b><a href={RegulatoryText.website} target="_blank">Click
-              Here for
-              Website</a><br/>
-            <b>Address: </b>{RegulatoryText.mailing_address ? RegulatoryText.mailing_address : 'Not Reported'}
-          </p>
-        </div>
-      </td>
-    </tr>
-    </tbody>
-  </table>
+      height: '98px',
+      borderColor: '#000000',
+      marginLeft: 'auto',
+      marginRight: 'auto',
+      width: '100%'
+    }}>
+      <tbody>
+      <tr>
+        <td style={{textAlign: 'center', width: '287px'}}>
+          <strong>
+            <p style={{textAlign: 'center'}}>Regulatory Agency Contact</p></strong>
+          <hr/>
+          <div>
+            <p style={{textAlign: 'center'}}>{RegulatoryText.regauthority}</p>
+            <p style={{textAlign: 'left'}}><b>Primary
+              Contact: </b>{RegulatoryText.primarycontactname ? RegulatoryText.primarycontactname : 'Not Reported'}<br/>
+              <b>Phone: </b>{RegulatoryText.phone_number ? RegulatoryText.phone_number : 'Not Reported'}<br/>
+              <b>Email: </b>{RegulatoryText.email
+                ? <a href={'mailto:' + RegulatoryText.email}
+                     target="_blank"/>
+                : 'Not Reported'} <br/>
+              <b>Website: </b><a href={RegulatoryText.website} target="_blank">Click
+                Here for
+                Website</a><br/>
+              <b>Address: </b>{RegulatoryText.mailing_address ? RegulatoryText.mailing_address : 'Not Reported'}
+            </p>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
 }
