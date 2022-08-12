@@ -56,7 +56,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   sortedRows: any[] = [];
   columns: any[] = [];
   sortColumns: any[] = [];
-  graphicsLayer: GraphicsLayer;
   multipleLocations: boolean = false;
   featureLayer: FeatureLayer;
   featureLayerPWS: FeatureLayer;
@@ -128,10 +127,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       outFields: ['*']
     })
 
-    this.graphicsLayer = new GraphicsLayer({
-      listMode: 'hide'
-    })
-
     this.featureLayer.on('layerview-create-error', (e) => {
       this.loading = false
       this.onOpenText = []
@@ -182,9 +177,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
             this.onOpenText.push(
               <div>
                 There are currently <b>{count}</b> facilities in the SDWIS feature service.<br/>
-                <b><i>This data is scale-dependent, please zoom in to see the points.</i></b><h2
+                <b><i>This data is scale-dependent, please zoom in to see the points.</i></b><h4
                 style={{textDecoration: 'underline'}}>Safe Drinking Water Information System
-                (SDWIS)</h2>
+                (SDWIS)</h4>
                 The data is directly from the <b>National SDWIS Database</b> and updated on a quarterly
                 basis. The service provides information on facilities, public water systems, primacy
                 agencies, administrative contacts, and tribal entities. The facility symbols
@@ -194,15 +189,15 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
                 <a
                   href={'https://www.epa.gov/ground-water-and-drinking-water/safe-drinking-water-information-system-sdwis-federal-reporting'}
                   target="_blank"> here.</a></b>
-                <h2 style={{textDecoration: 'underline'}}>Enforcement & Compliance History Online
-                  (ECHO)</h2>EPA's ECHO website provides details for facilities in your community to
+                <h4 style={{textDecoration: 'underline'}}>Enforcement & Compliance History Online
+                  (ECHO)</h4>EPA's ECHO website provides details for facilities in your community to
                 assess their compliance with environmental regulations. The interaction in this widget
                 uses the Public Water System (PWS) ID to search the records. Check out the ECHO
                 website <a href={'https://echo.epa.gov/'} target="_blank"><b>here</b></a> for more
                 information and guidance.<br/>
                 The <i><b>ECHO Detailed System Report</b></i> is linked with the selected facility
                 record and opens the ECHO website details for the associated public water system in a
-                new browser window. <h2 style={{textDecoration: 'underline'}}>Definitions</h2><b>Facilities
+                new browser window. <h4 style={{textDecoration: 'underline'}}>Definitions</h4><b>Facilities
                 - </b>These points represent facilities within a public water system. The facility types
                 include but are not limited to wells, well heads, treatment plants, sampling stations,
                 valves, transmission mains, pumps, pressure control, etc. Facilities are identified with
@@ -279,6 +274,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         if (this.mapClickHandler) {
           this.mapClickHandler.remove()
         }
+        // remove graphics on close
+        this.jmv.view.graphics.removeAll()
       }
     }
   }
@@ -306,9 +303,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       loading: this.loading,
       rows: this.rows,
       sortedRows: this.sortedRows,
+      facility: null
     })
 
-    this.graphicsLayer.removeAll()
+    this.jmv.view.graphics.removeAll()
     const pixelWidth = this.jmv.view.extent.width / this.jmv.view.width
     const toleraceInMapCoords = 10 * pixelWidth
     const clickExtent = new Extent({
@@ -431,70 +429,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
   loadFacility = (facility) => {
     const selectedGraphic = new Graphic({geometry: facility.geometry, symbol: this.symbol})
-    this.graphicsLayer.add(selectedGraphic)
-
+    this.jmv.view.graphics.add(selectedGraphic)
     this.setState({
       facility
     })
-    // this.loadFacilityPWS(facility.attributes.fac_pwsid)
-    this.loadFacilityTable(facility.attributes.pacode)
-    this.loadFacilityAdmin(facility.attributes.fac_pwsid)
   }
 
-
-  //pulls information from Primacy Agency table for the Regulatory section (bottom) "Regulatory Agency"
-  loadFacilityTable = (PAcode) => {
-    const query = new Query()
-    query.outFields = ['*']
-    query.where = "PACode='" + PAcode + "'"
-    this.featureLayerTable.queryFeatures(query).then(featureSet => {
-      const facilityTable = featureSet.features[0]
-      this.regulatoryText.push(<div>
-        <p style={{textAlign: 'center'}}>{facilityTable.attributes.regauthority}</p>
-        <p style={{textAlign: 'left'}}><b>Primary
-          Contact: </b>{facilityTable.attributes.primarycontactname ? facilityTable.attributes.primarycontactname : 'Not Reported'}<br/>
-          <b>Phone: </b>{facilityTable.attributes.phone_number ? facilityTable.attributes.phone_number : 'Not Reported'}<br/>
-          <b>Email: </b>{facilityTable.attributes.email
-            ? <a href={'mailto:' + facilityTable.attributes.email}
-                 target="_blank"/>
-            : 'Not Reported'} <br/>
-          <b>Website: </b><a href={facilityTable.attributes.website} target="_blank">Click
-            Here for
-            Website</a><br/>
-          <b>Address: </b>{facilityTable.attributes.mailing_address ? facilityTable.attributes.mailing_address : 'Not Reported'}
-        </p>
-      </div>)
-      this.setState({
-        regulatoryText: this.regulatoryText
-      })
-    })
-  }
-
-  //pulls information from Admin Contact table for the Point of Contact section (top) "PWS Contact Information"
-  loadFacilityAdmin = (pwsid) => {
-    const query = new Query()
-    query.where = "PWSID='" + pwsid + "'"
-    this.featureLayerAdmin.queryFeatures(query).then(featureSet => {
-      const facilityAdmin = featureSet.features[0]
-      this.adminContactText.push(
-        <div>
-          <p style={{textAlign: 'left'}}><b>Primary
-            Contact: </b>{facilityAdmin.attributes.org_name ? facilityAdmin.attributes.org_name : 'Not Reported'}<br/>
-            <b>Phone: </b>{facilityAdmin.attributes.phone_number ? facilityAdmin.attributes.phone_number : 'Not Reported'}<br/>
-            <b>Email: </b>{facilityAdmin.attributes.email_addr
-              ? <a href={'mailto:' + facilityAdmin.attributes.email_addr}
-                   target="_blank"/>
-              : 'Not Reported'}<br/>
-            <b>Address: </b>{facilityAdmin.attributes.address_line1 ? facilityAdmin.attributes.address_line1 : 'Not Reported'}<br/>
-            {facilityAdmin.attributes.city_name ? facilityAdmin.attributes.city_name : ''} {facilityAdmin.attributes.state_code ? facilityAdmin.attributes.state_code : ''} {facilityAdmin.attributes.zip_code ? facilityAdmin.attributes.zip_code : ''}
-          </p>
-        </div>
-      )
-      this.setState({
-        adminContactText: this.adminContactText
-      })
-    })
-  }
 
   render () {
     return (
