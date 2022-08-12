@@ -17,7 +17,7 @@ export default function PWSContact(props) {
     props.featureLayerAdmin.queryFeatures(query).then(featureSet => {
       setPWSContact(featureSet.features[0].attributes)
     })
-  }
+  }, [])
 
 
   return PWSContact === undefined
