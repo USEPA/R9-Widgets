@@ -462,10 +462,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
             </h3>
             <br/>
           </div>
-          : ''
+          : <this.Grid/>
         }
-
-        {this.multipleLocations ? <this.Grid/> : null}
 
         {this.mainText ? this.LandingText() : null}
 
