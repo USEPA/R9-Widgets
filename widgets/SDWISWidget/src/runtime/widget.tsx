@@ -303,7 +303,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       loading: this.loading,
       rows: this.rows,
       sortedRows: this.sortedRows,
-      facility: null
+      facility: null,
+      nothingThere: false
     })
 
     this.jmv.view.graphics.removeAll()
@@ -337,15 +338,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         this.rows = data
         this.sortedRows = data
         this.multipleLocations = true
-        this.setState({
-          columns: this.columns,
-          rows: this.rows,
-          sortedRows: this.sortedRows
-        })
 
         // this.Grid()
         this.loading = false
         this.setState({
+          columns: this.columns,
+          rows: this.rows,
+          sortedRows: this.sortedRows,
           loading: this.loading,
           nothingThere: false
         })
@@ -431,7 +430,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     const selectedGraphic = new Graphic({geometry: facility.geometry, symbol: this.symbol})
     this.jmv.view.graphics.add(selectedGraphic)
     this.setState({
-      facility
+      facility,
+      loading: false
     })
   }
 
