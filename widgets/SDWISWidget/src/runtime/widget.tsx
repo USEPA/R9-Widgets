@@ -156,8 +156,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         jimuMapView: jmv
       })
     }
-    this.jmv.view.map.layers.add(this.featureLayer)
-    this.jmv.view.map.layers.add(this.featureLayerPWS)
   }
 
   componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView }>, snapshot?: any) {
@@ -251,6 +249,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           this.mapClickHandler = this.jmv.view.on('click', event => {
             this.mapClick(event)
           })
+          this.jmv.view.map.layers.add(this.featureLayer)
+          this.jmv.view.map.layers.add(this.featureLayerPWS)
           // }
         }
         this.first = false
@@ -276,6 +276,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         }
         // remove graphics on close
         this.jmv.view.graphics.removeAll()
+        this.jmv.view.map.layers.remove(this.featureLayer)
+        this.jmv.view.map.layers.remove(this.featureLayerPWS)
       }
     }
   }
