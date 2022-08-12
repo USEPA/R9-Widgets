@@ -430,10 +430,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   loadFacility = (facility) => {
     const selectedGraphic = new Graphic({geometry: facility.geometry, symbol: this.symbol})
     this.jmv.view.graphics.add(selectedGraphic)
+    this.loading = false
     this.setState({
       facility,
-      loading: false,
-
+      loading: false
     })
   }
 
