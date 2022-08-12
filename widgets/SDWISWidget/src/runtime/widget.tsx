@@ -366,6 +366,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     const location = this.featureSet.filter((feature) => {
       return feature.attributes.OBJECTID === this.sortedRows[row].OBJECTID
     })
+    this.multipleLocations = false;
     this.loadFacility(location[0])
   }
 
@@ -431,7 +432,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.jmv.view.graphics.add(selectedGraphic)
     this.setState({
       facility,
-      loading: false
+      loading: false,
+
     })
   }
 
