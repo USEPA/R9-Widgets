@@ -113,7 +113,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
   onActiveViewChange = (jmv: JimuMapView) => {
     this.jmv = jmv;
-    this.jmv.view.map.add(this.perimeterbufferFC, 0);
+    // this.jmv.view.map.add(this.perimeterbufferFC, 0);
 
     if (jmv) {
       this.setState({
@@ -323,7 +323,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.fireLayerVisReset = [];
     this.fireLayerFilterReset = [];
 
-    this.jmv.view.map.layers.forEach(lyr => {
+    this.jmv.view.map.allLayers.forEach(lyr => {
       if (lyr.type == 'feature') {
         var fireLayer = this.fireLayerNames.find((x) => {
           return x.label === lyr.title;
