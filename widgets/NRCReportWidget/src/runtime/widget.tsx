@@ -297,9 +297,15 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
         {this.multipleLocations ?
           <div>
             <div><h3>Multiple Facilities at that Location</h3><br/><h5>Select one to continue</h5></div>
-            <DataGrid style={{height: `${(this.sortedRows.length * 35) + 37}px`, maxHeight: "700px"}}
-                      columns={this.columns} rows={this.sortedRows} onRowClick={this.rowClick}
-                      rowKeyGetter={(r) => r} defaultColumnOptions={{
+            <DataGrid style={{
+              height: `${(this.sortedRows.length * 35) + 37}px`,
+              maxHeight: "700px",
+              backgroundColor: "white'"}}
+              className={'rdg-light'}
+              columns={this.columns}
+              rows={this.sortedRows}
+              onRowClick={this.rowClick}
+              rowKeyGetter={(r) => r} defaultColumnOptions={{
               sortable: true,
               resizable: true
             }} onSortColumnsChange={this.onSortColsChange} sortColumns={this.sortColumns}/>
