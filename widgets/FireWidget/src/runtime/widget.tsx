@@ -73,7 +73,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       if (widgetState == WidgetState.Closed || this.state?.visible === false) {
         this.resetFireFilter(false, true);
 
-        this.jmv.view.map.layers.forEach(lyr => {
+        this.jmv.view.map.allLayers.forEach(lyr => {
           var fireLayer = Array(this.irwinLabel, this.perimeterLabel).find((x) => {
             return x === lyr.title;
           });
@@ -92,6 +92,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       } else if (widgetState == WidgetState.Opened || this.state?.visible === true) {
         // // do stuff here on widget open if needed
         if (this.first) { // first time after reopening so we dont end up in an infinite loop
+          this.openVisState = this.getFireLayerVis();
           this.loadFires().then(() => {
             this.filterFires();
             //Check to see if perimeter buffer layer has been added
@@ -103,7 +104,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           this.getGeometryUnion(`${this.boundaries.url}/${this.boundaries.layerId}`, "STATE_ABBR='CA' OR STATE_ABBR='AZ' OR STATE_ABBR='NV'").then(res => {
             this.r9Geom = res;
           });
-          this.openVisState = this.getFireLayerVis();
           this.checked = false;
           this.first = false
         }
@@ -220,7 +220,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
   getFireLayerVis() {
     var lyrs = [];
-    this.jmv.view.map.layers.forEach(lyr => {
+    this.jmv.view.map.allLayers.forEach(lyr => {
       var fireLayer = Array(this.irwinLabel, this.perimeterLabel).find(function (x) {
         return x === lyr.title;
       });
@@ -261,7 +261,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     });
 
     if (!onClose) {
-      this.jmv.view.map.layers.forEach(lyr => {
+      this.jmv.view.map.allLayers.forEach(lyr => {
         if (lyr.type == 'feature') {
 
 
