@@ -128,6 +128,7 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
         if (this.mapClickHandler) {
           this.mapClickHandler.remove()
         }
+        this.jmv.view.graphics.removeAll();
       }
     }
   }
