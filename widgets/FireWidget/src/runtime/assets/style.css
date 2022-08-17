@@ -22,6 +22,17 @@ div.jimu-progress.progress.progress-primary.progress-linear.fireProgress > div.p
     /*border-bottom-left-radius: 13px 13px !important;*/
 }
 
+.progress-bar-text {
+    display: unset !important;
+    min-width: unset !important;
+    text-align: unset !important;
+    padding-left: unset !important;
+    position: relative;
+    right: 50%;
+    color: white;
+    font-weight: bold;
+    font-size: small;
+}
 
 .report-button {
     outline: none;

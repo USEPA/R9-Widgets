@@ -477,16 +477,14 @@ class Fire extends Component<any, any, any> {
       t = `, ${tribes.length} tribes`;
     }
 
-    let facilities = fireData.hasOwnProperty('current_results') ? fireData.current_results : undefined;
+    let facilities = 'facilities' in fireData ? fireData.facilities : undefined;
 
     if (facilities) {
-      if (facilities.hasOwnProperty('facilities')) {
-        let rmpFacilities = facilities.facilities && facilities.facilities["Active RMP Facilities"] ? facilities.facilities["Active RMP Facilities"] : 0;
-        let nplFacilities = facilities.facilities && facilities.facilities["NationalPriorityListPoint_R9_2019_R9"] ? facilities.facilities["NationalPriorityListPoint_R9_2019_R9"] : 0;
+        let rmpFacilities = facilities["Active RMP Facilities"] ? facilities["Active RMP Facilities"] : 0;
+        let nplFacilities = facilities["NPL Sites"] ? facilities["NPL Sites"] : 0;
         rmp = `, ${rmpFacilities} RMP`;
         npl = `, ${nplFacilities} NPL`;
         this.AcresFacilitySubText = `${parseFloat(this.ReportingAcres).toLocaleString('en') + " acres" + rmp + npl + t}`
-      }
     } else {
       if (tribes) {
         this.AcresFacilitySubText = `${parseFloat(this.ReportingAcres).toLocaleString('en') + " acres" + t}`
@@ -573,20 +571,20 @@ class Fire extends Component<any, any, any> {
       }
       <div className='fireNameTxt'><b>{this.IncidentName}</b></div>
       <div className='acresTxt' title={`${this.Counties}`}>{this.Counties}</div>
-
+      <div>({this.AcresFacilitySubText})</div>
       <Progress
+        tooltip='Percent Contained'
         // showProgress={true}
         className='fireProgress' style={{width: this.BarWidth}}
         color={'primary'} value={Math.round(this.PercentContained)}>
-        {this.PCLabel}
       </Progress>
-      <div id='acresSubtext' style={{
-        width: this.BarWidth,
-        marginTop: '-24px',
-        color: 'white',
-        textAlign: 'center',
-        fontSize: 'medium',
-      }}>{this.AcresFacilitySubText}</div>
+      {/*<div id='acresSubtext' style={{*/}
+      {/*  width: this.BarWidth,*/}
+      {/*  marginTop: '-24px',*/}
+      {/*  color: 'white',*/}
+      {/*  textAlign: 'center',*/}
+      {/*  fontSize: 'medium',*/}
+      {/*}}>{}</div>*/}
     </div>;
   }
 }
