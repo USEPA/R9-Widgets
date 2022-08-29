@@ -91,7 +91,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     esriConfig.request.trustedServers.push('https://gis.r09.epa.gov/api/portal_proxy/')
 
     esriConfig.request.interceptors.unshift({
-      urls: ['https://gis.r09.epa.gov/api/portal_proxy/', 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL'],
+      urls: ['https://gis.r09.epa.gov/api/portal_proxy/', 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS'],
       before: (params) => {
         // console.log(params)
         //     params.requestOptions.headers = {'Authorization': this.token};
@@ -102,28 +102,28 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     // setup proxy rules for internal
     urlUtils.addProxyRule({
       proxyUrl: 'https://gis.r09.epa.gov/api/portal_proxy/',
-      urlPrefix: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL'
+      urlPrefix: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS'
     })
 
     // facilities
     this.featureLayer = new FeatureLayer({
-      url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/0',
+      url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS/FeatureServer/0',
       outFields: ['*']
     })
     // public water systems
     this.featureLayerPWS = new FeatureLayer({
-      url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/1',
+      url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS/FeatureServer/1',
       outFields: ['*']
     })
 
     // pws primary agencies - TABLE
     this.featureLayerTable = new FeatureLayer({
-      url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/3',
+      url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS/FeatureServer/3',
       outFields: ['*']
     })
     // Admin contacts - TABLE
     this.featureLayerAdmin = new FeatureLayer({
-      url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/Safe_Drinking_Water_SDWIS_Region_9_V1_HFL/FeatureServer/5',
+      url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS/FeatureServer/5',
       outFields: ['*']
     })
 
