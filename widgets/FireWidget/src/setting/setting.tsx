@@ -6,6 +6,7 @@ import {JimuMapViewSelector} from 'jimu-ui/advanced/setting-components';
 import {AllDataSourceTypes, DataSourceSelector} from 'jimu-ui/advanced/data-source-selector';
 import { TextArea} from 'jimu-ui';
 
+
 export default class Setting extends BaseWidgetSetting<AllWidgetSettingProps<IMConfig>,
     any> {
     supportedTypes = Immutable([AllDataSourceTypes.FeatureLayer]);

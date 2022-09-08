@@ -72,7 +72,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     // this.loadFires().then(f => console.log(f));
   }
 
-  updateVisibility = (visible) => this.setState({visible})
+  updateVisibility = (visible) => this.setState({visible});
 
   componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView; fires: any[]; acresArray: any[] }>, snapshot?: any) {
     if (this.state?.jimuMapView) {
