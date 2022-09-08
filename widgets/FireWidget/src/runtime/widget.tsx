@@ -1,6 +1,6 @@
 /** @jsx jsx */
 import './assets/style.css';
-import {AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState} from "jimu-core";
+import {AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState, DataSourceManager} from "jimu-core";
 import {IMConfig} from "../config";
 import {Progress, Switch, Button, Icon, Loading} from 'jimu-ui';
 import React, {Component} from 'react';
@@ -40,17 +40,24 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   child;
   first: boolean = true;
   perimeterBufferFC: FeatureLayer;
-
+  // datasource: DataSourceManager;
 
   constructor(props) {
     super(props);
     this.checked = false;
     this.child = React.createRef();
+    // Add this to use layer selection as configurable data source
+    // this.datasource = DataSourceManager.getInstance().getDataSource(this.props.useDataSources[0].mainDataSourceId);
   }
 
   componentDidMount() {
     this.setUpFeatureLayers({
-        url: "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9Notifiable/FeatureServer/0",
+        // Hard coded url
+        // url: "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9Notifiable/FeatureServer/0",
+
+        // Use this one if going back to the layer select
+        // url: this.datasource._url,
+        url: this.props.dataSourceUrl,
         definitionExpression: "display = 1"
       },
       {
@@ -61,7 +68,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     });
 
     this.checked = false;
-    listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
+    listenForViewVisibilityChanges(this.props.id, this.updateVisibility);
+    // this.loadFires().then(f => console.log(f));
   }
 
   updateVisibility = (visible) => this.setState({visible})
