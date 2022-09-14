@@ -35,9 +35,14 @@ function initTimeSlider(view, fullTimeExtent) {
   container.setAttribute('style', 'bottom: 30px; width: 80%; margin: 0 10% 0 10%;')
   const newTimeSlider = new TimeSlider({
     container,
-    // view,
+    view,
     mode: 'time-window',
     fullTimeExtent,
+    // setting timeExtent here prevents the bug where the slider has no time extent on first being opened
+    timeExtent: {
+      start: fullTimeExtent.start,
+      end: moment(fullTimeExtent.start).add(1, 'h')
+    },
     timeVisible: true,
     stops: {
       interval: {
@@ -66,6 +71,10 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
     start: null,
     end: null
   })
+  const [fullTimeExtent, setFullTimeExtent] = useState({
+    start: null,
+    end: null
+  });
   const [windLayers, setWindLayers] = useState([])
   const [smokeLayer, setSmokeLayer] = useState([])
   const [smokeVisible, setSmokeVisible] = useState(false)
@@ -78,12 +87,25 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
         const newTimeSlider = initTimeSlider(jimuMapView.view, timeExtent);
         setTimeSlider(newTimeSlider)
       } else {
-        timeSlider.fullTimeExtent = new TimeExtent(timeExtent);
+        timeSlider.fullTimeExtent = fullTimeExtent;
         setTimeSlider(timeSlider);
+        timeLayers.forEach((lyr) => {
+          lyr.layer.useViewTime = false;
+          lyr.layer.timeExtent = timeExtent;
+        })
       }
-
     }
   }, [jimuMapView, timeExtent])
+
+  useEffect(() => {
+    if (timeSlider) {
+      timeSlider.watch('timeExtent', (value) => {
+        if (value !== null) {
+          setTimeExtent({start: value.start, end: value.end});
+        }
+      })
+    }
+  }, [timeSlider])
 
   useEffect(() => {
     const widgetState: WidgetState = getAppStore().getState().widgetsRuntimeInfo[id].state;
@@ -106,10 +128,11 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
           newTimeExtent.end = tl.layer.timeInfo.fullTimeExtent.end
         }
       })
-      setTimeExtent(newTimeExtent)
+      setFullTimeExtent(newTimeExtent);
+      setTimeExtent(newTimeExtent);
     } else if (timeSlider) {
       timeSlider.destroy();
-      setTimeSlider(null)
+      setTimeSlider(null);
     }
   }, [timeLayers])
 
@@ -122,7 +145,6 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
       setTimeLayers(t.filter(l => l.layer.visible))
       // captureCurrentTimeExtent();
       TimeSlider.getPropertiesFromWebMap(jimuMapView.view.map).then(tss => console.log(tss))
-
     }
   }, [jimuMapView])
 
@@ -144,6 +166,7 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
       setSmokeVisible(l.visible)
     }
   }, [jimuMapView, smokeGroupLayer])
+
 
   const onActiveViewChange = (jmv: JimuMapView) => {
     if (jmv) {
