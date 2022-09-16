@@ -69,7 +69,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
     this.checked = false;
     listenForViewVisibilityChanges(this.props.id, this.updateVisibility);
-    // this.loadFires().then(f => console.log(f));
+    this.loadFires();
   }
 
   updateVisibility = (visible) => this.setState({visible});

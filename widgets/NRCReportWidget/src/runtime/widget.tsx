@@ -78,6 +78,9 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
   }
 
   nrcLayerCreated = (e) => {
+    const webEocLayer = this.jmv.view.map.layers.filter(lyr => lyr.type === 'group' && lyr.title === 'Emergency Response')
+        .items[0].layers.filter(l => l.title === 'WebEOC Hotline Log').items[0];
+    webEocLayer.visible = true;
     this.nrcLayer = e.layer
     this.initNrcLayer();
   }
