@@ -192,6 +192,13 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
     smokeLayer.visible = !smokeLayer.visible
     setSmokeVisible(smokeLayer.visible)
   }
+
+  const toggleWindModels = (lyrName) => {
+    windLayers.forEach((lyr) => {
+      lyr.visible ? lyr.visible = false : lyr.visible = lyr.title === lyrName;
+    });
+  }
+
   return <div className="widget-use-map-view" style={{width: '100%', height: '100%', overflow: 'hidden'}}>
     <JimuMapViewComponent
       useMapWidgetId={useMapWidgetIds?.[0]}
@@ -206,16 +213,25 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
       onDataSourceCreated={captureSmokeLayer}
     />
     {windLayers
-      ? <Select onChange={updateSelectedWindModel} placeholder="Select Wind Forecast Model">
-        {windLayers.map(l => <Option value={l}>{l.title}</Option>)}
-      </Select>
-      : null}
+        ? <div>
+          {windLayers.map(lyr =>
+          <div style={{display: 'flex', justifyContent: 'flex-start', gap: '10px', margin: "10px"}}>
+            <Switch style={{marginRight: "10px"}} checked={lyr.visible} onChange={() => toggleWindModels(lyr.title)} />
+            <p>{lyr.title}</p>
+          </div>)}
+        </div>
+        : null}
+    {/*{windLayers*/}
+    {/*  ? <Select onChange={updateSelectedWindModel} placeholder="Select Wind Forecast Model">*/}
+    {/*    {windLayers.map(l => <Option value={l}>{l.title}</Option>)}*/}
+    {/*  </Select>*/}
+    {/*  : null}*/}
     {smokeLayer
-      ? <div style={{"margin": "10px"}}>
-        <Switch checked={smokeVisible} style={{"margin-right": "10px"}}
-                onChange={toggleSmoke}/>
-        Toggle Smoke
-        .</div>
+      ? <div style={{display: 'flex', justifyContent: 'flex-start', gap: '10px', margin: "10px"}}>
+          <Switch checked={smokeVisible} style={{marginRight: "10px"}}
+                  onChange={toggleSmoke}/>
+          <p>Smoke</p>
+        </div>
       : null}
   </div>
 }
