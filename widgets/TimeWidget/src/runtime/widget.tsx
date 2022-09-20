@@ -80,6 +80,7 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
   const [smokeVisible, setSmokeVisible] = useState(false)
   const [windGroupLayer, setWindGroupLayer] = useState(null)
   const [smokeGroupLayer, setSmokeGroupLayer] = useState(null)
+  const [isUsingController, setIsUsingController] = useState(false)
 
   useEffect(() => {
     if (jimuMapView && timeExtent.start && timeExtent.end) {
@@ -108,8 +109,10 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
   }, [timeSlider])
 
   useEffect(() => {
+    const widgets = getAppStore().getState().appConfig.widgets;
+    Object.keys(widgets).filter(w => widgets[w].label === 'Widget Controller').length > 0 && setIsUsingController(true);
     const widgetState: WidgetState = getAppStore().getState().widgetsRuntimeInfo[id].state;
-    if (timeSlider) {
+    if (timeSlider && isUsingController) {
       timeSlider.visible = widgetState === 'OPENED'
     }
   })
@@ -170,7 +173,7 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
 
   const onActiveViewChange = (jmv: JimuMapView) => {
     if (jmv) {
-      setJimuMapView(jmv)
+      setJimuMapView(jmv);
     }
   }
 
@@ -189,6 +192,7 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
   const isConfigured = useMapWidgetIds && useMapWidgetIds.length === 1
 
   const toggleSmoke = () => {
+    console.log(smokeLayer);
     smokeLayer.visible = !smokeLayer.visible
     setSmokeVisible(smokeLayer.visible)
   }
@@ -197,9 +201,14 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
     windLayers.forEach((lyr) => {
       lyr.visible ? lyr.visible = false : lyr.visible = lyr.title === lyrName;
     });
+    if (!isUsingController && timeSlider) {
+      const newTimeSlider = timeSlider;
+      newTimeSlider.visible = true;
+      setTimeSlider(newTimeSlider);
+    }
   }
 
-  return <div className="widget-use-map-view" style={{width: '100%', height: '100%', overflow: 'hidden'}}>
+  return <div className="widget-use-map-view" style={{width: '100%', height: '100%', overflow: 'scroll', backgroundColor: 'white'}}>
     <JimuMapViewComponent
       useMapWidgetId={useMapWidgetIds?.[0]}
       onActiveViewChange={onActiveViewChange}
@@ -212,6 +221,8 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
       useDataSource={smokeDataSource?.[0]}
       onDataSourceCreated={captureSmokeLayer}
     />
+    {!isUsingController
+      && <h3 style={{padding: '10px'}}>Wind/Smoke Widget</h3>}
     {windLayers
         ? <div>
           {windLayers.map(lyr =>
@@ -233,5 +244,41 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
           <p>Smoke</p>
         </div>
       : null}
+    <div style={{padding: '10px'}}>
+      <h4 style={{fontSize: '1em'}}>NOAA Wind Data</h4>
+      <p>
+        The data visualized are freely available and provided by NOAA's <a href='https://nomads.ncep.noaa.gov/' target='_blank'>NOMADS</a> initiative.
+        The widget animates the wind forecast data as moving particles according to the wind vector and the
+        speed and color of the particle correspond to the wind speed. Data for each of the models below are retrieved on
+        an hourly basis and the forecast DateTime is displayed in the legend, and model menu. The temporal and spatial
+        resolution of the models varies and is described below. All of the forecasts are for 10 meters above ground.
+      </p>
+      <ul>
+        <li>
+          <a href={'https://nomads.ncep.noaa.gov/txt_descriptions/HRRR_doc.shtml'} target='_blank'>HRRR</a> - High Resolution Rapid Refresh
+          <ul>
+            <li>CONUS</li>
+            <li>3km horizontal resolution</li>
+            <li>Run every hour</li>
+          </ul>
+        </li>
+        <li>
+          <a href={'https://nomads.ncep.noaa.gov/txt_descriptions/WRF_NMM_doc.shtml'} target='_blank'>NAM</a> - North American Mesoscale Model - (Non-Hydrostatic Mesoscale Model)
+          <ul>
+            <li>CONUS</li>
+            <li>12km horizontal resolution</li>
+            <li>Run every 3 hours</li>
+          </ul>
+        </li>
+        <li>
+          <a href={'https://nomads.ncep.noaa.gov/txt_descriptions/GFS_doc.shtml'} target='_blank'>GFS</a> - Global Forecast System
+          <ul>
+            <li>Global</li>
+            <li>13km horizontal resolution</li>
+            <li>Run every hour</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
   </div>
 }
