@@ -2,7 +2,7 @@
 import './assets/style.css';
 import {AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState, DataSourceManager} from "jimu-core";
 import {IMConfig} from "../config";
-import {Progress, Switch, Button, Icon, Loading} from 'jimu-ui';
+import {Progress, Switch, Button, Icon, Loading, TextInput} from 'jimu-ui';
 import React, {Component} from 'react';
 import {JimuMapView, JimuMapViewComponent} from 'jimu-arcgis';
 import FeatureLayer from 'esri/layers/FeatureLayer';
@@ -18,6 +18,7 @@ interface State {
   acresArray: any[]
   checked: boolean
   visible: boolean
+  firesInitial: any[]
 }
 
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, State> {
@@ -75,7 +76,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   updateVisibility = (visible) => this.setState({visible});
 
   componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView; fires: any[]; acresArray: any[] }>, snapshot?: any) {
-    if (this.state?.jimuMapView) {
+    if (this.state?.jimuMapView && !this.search) {
       let widgetState: WidgetState;
       widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
       if (widgetState == WidgetState.Closed || this.state?.visible === false) {
@@ -158,19 +159,22 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     return this.toggleFires(this.checked);
   }
 
-  loadFires() {
+  loadFires(whereText?: string, firesList?: any[]) {
     var currentDate = this._getCurrentDate();
+
+    const activeFires = firesList ? firesList.map(f => f.attributes.GlobalID) : null;
+
     //Identify default fire layers and visiblity
     //get perimeter buffer feature layer
     //Query for fires
     let query1 = this.perimeterbufferFC.createQuery();
-    query1.where = "display = 1";
+    query1.where = whereText ? `Name LIKE '%${whereText}%'` : "display = 1";
     query1.outSpatialReference = new SpatialReference({wkid: 102100});
     query1.returnGeometry = true;
     query1.orderByFields = ["NAME ASC"];
     query1.outFields = ["*"];
     return query.executeQueryJSON(`${this.perimeterbufferFC.url}/${this.perimeterbufferFC.layerId}`, query1).then(results => {
-      this._QueryFiresResults(results);
+      firesList ? this._QueryFiresResults(results, activeFires) : this._QueryFiresResults(results);
     });
   }
 
@@ -183,9 +187,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     return yyyy + '-' + mm + '-' + dd;
   }
 
-  _QueryFiresResults(results) {
+  _QueryFiresResults(results, firesList?: any[]) {
     this.setState({fires: []});
-    this.all_fires = results.features;
+    this.all_fires = firesList ? results.features.filter(f => firesList.includes(f.attributes.GlobalID)) : results.features;
     // this.setState({all_fires: results.features });
     //get min and max acres
     this.acresArray = this.all_fires.map(function (a) {
@@ -202,6 +206,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         }
       }
     });
+    !this.state.firesInitial && this.setState({firesInitial: this.all_fires});
     this.setState({fires: this.all_fires});
   }
 
@@ -373,6 +378,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.boundaries = new FeatureLayer({url: boundariesFLInfo.url});
   }
 
+  searchFires(searchText: string) {
+    this.loadFires(searchText, this.state.firesInitial);
+    // const filteredFires = this.all_fires.filter(fire => fire.attributes.Name.includes(searchText.toUpperCase()));
+    // this.setState({fires: filteredFires});
+  }
+
   render() {
     if (!this.state?.jimuMapView) {
       return <div className="jimu-widget" style={{backgroundColor: "white"}}>
@@ -418,6 +429,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
                   onChange={this.fireSwitchActive}
           />
         </div>
+
+        <TextInput type='search' placeholder='Search' onChange={(e) => this.searchFires(e.target.value)} />
 
         {this.state && this.state.fires && this.jmv ? this.state.fires.map(x => <Fire ref={this.child}
                                                                                       fire={x}
