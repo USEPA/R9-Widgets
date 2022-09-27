@@ -267,11 +267,11 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                     } else if (chemical.attributes.MaxAmountCode && maxAmountCodeDomain) {
                       maxAmount = maxAmountCodeDomain.getName(chemical.attributes.MaxAmountCode)
                     }
-                    let AveAmountCode = 'Not Reported'
-                    if (chemical.attributes.AveAmountCode && avgAmountCodeDomain === undefined) {
-                      maxAmount = chemical.attributes.AveAmountCode;
-                    } else if (chemical.attributes.AveAmountCode && avgAmountCodeDomain) {
-                      maxAmount = avgAmountCodeDomain.getName(chemical.attributes.AveAmountCode);
+                    let AvgAmountCode = 'Not Reported'
+                    if (chemical.attributes.AvgAmountCode && avgAmountCodeDomain === undefined) {
+                      AvgAmountCode = chemical.attributes.AvgAmountCode;
+                    } else if (chemical.attributes.AvgAmountCode && avgAmountCodeDomain) {
+                      AvgAmountCode = avgAmountCodeDomain.getName(chemical.attributes.AvgAmountCode);
                     }
 
 
@@ -279,8 +279,8 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                       '<tr><td>Max Amount: ' + (chemical.attributes.MaxAmount ? chemical.attributes.MaxAmount + ' lbs' : "Not Reported") + '</td></tr>' +
                       '<tr><td>Max Amount Range: ' + maxAmount + '</td></tr>' +
                       '<tr><td>Max Amount Container: ' + (chemical.attributes.MaxAmountContainer ? chemical.attributes.MaxAmountContainer : "Not Reported") + '</td></tr>' +
-                      '<tr><td>Average Amount: ' + (chemical.attributes.AveAmount ? chemical.attributes.AveAmount + ' lbs' : "Not Reported") + '</td></tr>' +
-                      '<tr><td>Average Amount Range: ' + AveAmountCode + '</td></tr>'
+                      '<tr><td>Average Amount: ' + (chemical.attributes.AvgAmount ? chemical.attributes.AvgAmount + ' lbs' : "Not Reported") + '</td></tr>' +
+                      '<tr><td>Average Amount Range: ' + AvgAmountCode + '</td></tr>'
                     );
 
                     domConstruct.place(row, "tierii_chemicals");
