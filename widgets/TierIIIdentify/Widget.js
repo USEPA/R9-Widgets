@@ -278,7 +278,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                     var row = domConstruct.toDom(
                       '<tr><td>Max Amount: ' + (chemical.attributes.MaxAmount ? chemical.attributes.MaxAmount + ' lbs' : "Not Reported") + '</td></tr>' +
                       '<tr><td>Max Amount Range: ' + maxAmount + '</td></tr>' +
-                      '<tr><td>Max Amount Container: ' + (chemical.attributes.MaxAmountContainer ? chemical.attributes.MaxAmountContainer : "Not Reported") + '</td></tr>' +
+                      '<tr><td>Max Amount in Largest Container: ' + (chemical.attributes.MaxAmtContainer ? chemical.attributes.MaxAmtContainer : "Not Reported") + '</td></tr>' +
                       '<tr><td>Average Amount: ' + (chemical.attributes.AvgAmount ? chemical.attributes.AvgAmount + ' lbs' : "Not Reported") + '</td></tr>' +
                       '<tr><td>Average Amount Range: ' + AvgAmountCode + '</td></tr>'
                     );
