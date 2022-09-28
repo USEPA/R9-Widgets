@@ -286,13 +286,13 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                     domConstruct.place(row, "tierii_chemicals");
 
                     var states = null;
-                    if (chemical.attributes.Gas === 'T') {
+                    if (chemical.attributes.Gas === 'Y') {
                       states = 'Gas';
                     }
-                    if (chemical.attributes.Solid === 'T') {
+                    if (chemical.attributes.Solid === 'Y') {
                       states ? states += ', Solid' : states = 'Solid';
                     }
-                    if (chemical.attributes.Liquid === 'T') {
+                    if (chemical.attributes.Liquid === 'Y') {
                       states ? states += ', Liquid' : states = 'Liquid';
                     }
                     if (states === null) {
@@ -302,19 +302,19 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                     domConstruct.place(row, 'tierii_chemicals');
 
                     var hazards = null;
-                    if (chemical.attributes.Fire === 'T') {
+                    if (chemical.attributes.Fire === 'Y') {
                       hazards = 'Fire';
                     }
-                    if (chemical.attributes.Pressure === 'T') {
+                    if (chemical.attributes.Pressure === 'Y') {
                       hazards = (hazards ? hazards += ', Sudden Release of Pressure' : 'Sudden Release of Pressure');
                     }
-                    if (chemical.attributes.Reactive === 'T') {
+                    if (chemical.attributes.Reactive === 'Y') {
                       hazards = (hazards ? hazards += ', Reactive' : 'Reactive');
                     }
-                    if (chemical.attributes.Acute === 'T') {
+                    if (chemical.attributes.Acute === 'Y') {
                       hazards = (hazards ? hazards += ', Acute' : 'Acute');
                     }
-                    if (chemical.attributes.Chronic === 'T') {
+                    if (chemical.attributes.Chronic === 'Y') {
                       hazards = (hazards ? hazards += ', Chronic' : 'Chronic');
                     }
                     if (hazards === null) {
