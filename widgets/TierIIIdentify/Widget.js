@@ -227,9 +227,9 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                     '<tr><td style="padding-top: 10px;"><b>' + chemical.attributes.Chemical
                     + (chemical.attributes.CASCode ? ' (' + chemical.attributes.CASCode + ')' : '') + '</b></td></tr>' +
                     '<tr><td>Location: ' + (chemical.attributes.StorageLocation ? chemical.attributes.StorageLocation : 'Not Reported') + '</td></tr>' +
-                    '<tr><td>Max Dailly Amount: ' + (chemical.attributes.MaxDailyAmount ? chemical.attributes.MaxDailyAmount : 'Not Reported') + '</td></tr>' +
+                    '<tr><td>Max Amount: ' + (chemical.attributes.MaxDailyAmount ? chemical.attributes.MaxDailyAmount : 'Not Reported') + '</td></tr>' +
                     '<tr><td>Avg Dailly Amount: ' + (chemical.attributes.AvgDailyAmount ? chemical.attributes.AvgDailyAmount : 'Not Reported') + '</td></tr>' +
-                    '<tr><td>Container: ' + (chemical.attributes.ContainerType ? chemical.attributes.ContainerType : 'Not Reported') + '</td></tr>'
+                    '<tr><td>Max Amount in Largest Container: ' + (chemical.attributes.MaxAmtContainer ? chemical.attributes.MaxAmtContainer : 'Not Reported') + '</td></tr>'
                   );
                   domConstruct.place(row, "tierii_chemicals");
                   that.loadingShelter.hide();
