@@ -158,7 +158,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                     var row = domConstruct.toDom('<tr><td style="padding-top: 10px;"><b>' + (contact.attributes.Title ? contact.attributes.Title + ': ' : '') +
                       (contact.attributes.FirstName ? contact.attributes.FirstName : '') +
                       ' ' + (contact.attributes.LastName ? contact.attributes.LastName : '') +
-                      (contact.attributes.FirstName && contact.attributes.LastName ? '' : 'Not Reported') + '</b></td></tr>');
+                      (contact.attributes.FirstName === "" && contact.attributes.LastName === "" ? 'Not Reported' : '' ) + '</b></td></tr>');
                     domConstruct.place(row, "tierii_contacts");
 
                     var row = domConstruct.toDom('<tr><td>Email: ' + (contact.attributes.Email ? contact.attributes.Email : 'Not Reported') + '</td></tr>');
