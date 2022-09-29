@@ -40,8 +40,8 @@ function initTimeSlider(view, fullTimeExtent) {
     fullTimeExtent,
     // setting timeExtent here prevents the bug where the slider has no time extent on first being opened
     timeExtent: {
-      start: fullTimeExtent.start,
-      end: moment(fullTimeExtent.start).add(1, 'h')
+      start: start,
+      end: end
     },
     timeVisible: true,
     stops: {
@@ -89,10 +89,10 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
       } else {
         timeSlider.fullTimeExtent = fullTimeExtent;
         setTimeSlider(timeSlider);
-        timeLayers.forEach((lyr) => {
-          lyr.layer.useViewTime = false;
-          lyr.layer.timeExtent = timeExtent;
-        })
+        // timeLayers.forEach((lyr) => {
+        //   lyr.layer.useViewTime = false;
+        //   lyr.layer.timeExtent = timeExtent;
+        // })
       }
     }
   }, [jimuMapView, timeExtent])
@@ -106,15 +106,6 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
       })
     }
   }, [timeSlider])
-
-  // useEffect(() => {
-  //   const widgets = getAppStore().getState().appConfig.widgets;
-  //   Object.keys(widgets).filter(w => widgets[w].label === 'Widget Controller').length > 0 && setIsUsingController(true);
-  //   const widgetState: WidgetState = getAppStore().getState().widgetsRuntimeInfo[id].state;
-  //   if (timeSlider && isUsingController) {
-  //     timeSlider.visible = widgetState === 'OPENED'
-  //   }
-  // })
 
   useEffect(() => {
     if (timeLayers.length > 0) {
