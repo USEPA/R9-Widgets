@@ -345,7 +345,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                       var location_number = j + 1;
                       var row = domConstruct.toDom(
                         '<tr><td>-------------------</td></tr>' +
-                        '<tr><td>Location #' + location_number + ' Description: ' + chemical_location.attributes.Location ? chemical_location.attributes.Location : 'Not Reported') + '</td></tr>' +
+                        '<tr><td>Location #' + location_number + ' Description: ' + (chemical_location.attributes.Location ? chemical_location.attributes.Location : 'Not Reported') + '</td></tr>' +
                         '<tr><td>Location #' + location_number + ' Type: ' + (chemical_location.attributes.LocationType ? chemical_location.attributes.LocationType : 'Not Reported') + '</td></tr>' +
                         '<tr><td>Location #' + location_number + ' Pressure: ' + (chemical_location.attributes.LocationPressure ? chemical_location.attributes.LocationPressure : 'Not Reported') + '</td></tr>' +
                         '<tr><td>Location #' + location_number + ' Temp: ' + (chemical_location.attributes.LocationTemperature ? chemical_location.attributes.LocationTemperature : 'Not Reported') + '</td></tr>' +
