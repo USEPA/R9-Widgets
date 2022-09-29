@@ -286,13 +286,13 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                     domConstruct.place(row, "tierii_chemicals");
 
                     var states = null;
-                    if (chemical.attributes.Gas === 'Y') {
+                    if (chemical.attributes.Gas === 'Y' || chemical.attributes.Gas === 'true') {
                       states = 'Gas';
                     }
-                    if (chemical.attributes.Solid === 'Y') {
+                    if (chemical.attributes.Solid === 'Y' || chemical.attributes.Solid === 'true') {
                       states ? states += ', Solid' : states = 'Solid';
                     }
-                    if (chemical.attributes.Liquid === 'Y') {
+                    if (chemical.attributes.Liquid === 'Y' || chemical.attributes.Liquid === 'true') {
                       states ? states += ', Liquid' : states = 'Liquid';
                     }
                     if (states === null) {
