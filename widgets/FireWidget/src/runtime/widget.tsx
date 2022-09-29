@@ -189,8 +189,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
   _QueryFiresResults(results, firesList?: any[]) {
     this.setState({fires: []});
+
     this.all_fires = firesList ? results.features.filter(f => firesList.includes(f.attributes.GlobalID)) : results.features;
     // this.setState({all_fires: results.features });
+
     //get min and max acres
     this.acresArray = this.all_fires.map(function (a) {
       let fireData = JSON.parse(a.attributes.Data);
@@ -246,12 +248,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     return lyrs;
   }
 
-  resetFireFilter = (loadAllFires, onClose = false) => {
+  resetFireFilter = (loadAllFires, onClose = false, whereText?: string) => {
     this.fireLayerFilterReset.forEach((x) => {
       x.definitionExpression = '';
       if (x.title === this.irwinLabel && loadAllFires) {
         var q = new Query();
-        q.where = 'DailyAcres > 5';
+        q.where = whereText ? `DailyAcres > 5 AND IncidentName LIKE '%${whereText}%'` : 'DailyAcres > 5';
         q.geometry = this.r9Geom;
         q.orderByFields = ['IncidentName ASC'];
         q.spatialRelationship = "intersects";
@@ -379,9 +381,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   }
 
   searchFires(searchText: string) {
-    this.loadFires(searchText, this.state.firesInitial);
-    // const filteredFires = this.all_fires.filter(fire => fire.attributes.Name.includes(searchText.toUpperCase()));
-    // this.setState({fires: filteredFires});
+    this.state.checked
+        ? this.resetFireFilter(true, false, searchText)
+        : this.loadFires(searchText, this.state.firesInitial);
   }
 
   render() {
