@@ -2,12 +2,12 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
     'esri/tasks/query', 'esri/symbols/SimpleMarkerSymbol', 'esri/symbols/SimpleLineSymbol',
     'esri/Color', 'esri/dijit/util/busyIndicator', 'esri/geometry/Extent', 'dojox/grid/DataGrid',
     'dojo/data/ItemFileWriteStore', 'dijit/tree/ForestStoreModel', 'dijit/Tree', 'dojo/on', 'jimu/dijit/LoadingShelter',
-    'dojo/_base/declare', 'dojo/_base/array', 'jimu/LayerInfos/LayerInfos', 'jimu/BaseWidget'],
+    'dojo/_base/declare', 'dojo/_base/array', 'jimu/LayerInfos/LayerInfos', 'jimu/BaseWidget', 'jimu/LayerStructure'],
   function (Graphic, FeatureLayer, GraphicsLayer, RelationshipQuery, domConstruct,
             Query, SimpleMarkerSymbol, SimpleLineSymbol,
             Color, busyIndicator, Extent, DataGrid,
             ItemFileWriteStore, ForestStoreModel, Tree, on, LoadingShelter,
-            declare, array, LayerInfos, BaseWidget) {
+            declare, array, LayerInfos, BaseWidget, LayerStructure) {
 
 
     //To create a widget, you need to derive from BaseWidget.
@@ -22,9 +22,10 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
 
       //methods to communication with app container:
       postCreate: function postCreate() {
-
-
         this.inherited(postCreate, arguments);
+        var layerStructure = LayerStructure.getInstance();
+        this.tierIILayer = layerStructure.getWebmapLayerNodes()
+          .find(x => this.config.baseurl.startsWith(x._layerInfo.layerObject.url));
         console.log('TierIIIdentify::postCreate');
       },
       featureLayers: [],
@@ -158,7 +159,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                     var row = domConstruct.toDom('<tr><td style="padding-top: 10px;"><b>' + (contact.attributes.Title ? contact.attributes.Title + ': ' : '') +
                       (contact.attributes.FirstName ? contact.attributes.FirstName : '') +
                       ' ' + (contact.attributes.LastName ? contact.attributes.LastName : '') +
-                      (contact.attributes.FirstName === "" && contact.attributes.LastName === "" ? 'Not Reported' : '' ) + '</b></td></tr>');
+                      (contact.attributes.FirstName === "" && contact.attributes.LastName === "" ? 'Not Reported' : '') + '</b></td></tr>');
                     domConstruct.place(row, "tierii_contacts");
 
                     var row = domConstruct.toDom('<tr><td>Email: ' + (contact.attributes.Email ? contact.attributes.Email : 'Not Reported') + '</td></tr>');
@@ -491,6 +492,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
 
       onOpen: function () {
         this.loadingShelter.show();
+        this.tierIILayer.show();
         console.log('HITierIIIdentify::onOpen');
         this.map.setInfoWindowOnClick(false);
         var that = this;
@@ -541,6 +543,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         this.clickHandler.pause();
         this.graphicLayer.clear();
         this.map.setInfoWindowOnClick(true);
+        this.tierIILayer.hide();
       }
 
     });
