@@ -2,12 +2,12 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
     'esri/tasks/query', 'esri/symbols/SimpleMarkerSymbol', 'esri/symbols/SimpleLineSymbol',
     'esri/Color', 'esri/dijit/util/busyIndicator', 'esri/geometry/Extent', 'dojox/grid/DataGrid',
     'dojo/data/ItemFileWriteStore', 'dijit/tree/ForestStoreModel', 'dijit/Tree', 'dojo/on', 'jimu/dijit/LoadingShelter',
-    'dojo/_base/declare', 'dojo/_base/array', 'jimu/LayerInfos/LayerInfos', 'jimu/BaseWidget'],
+    'dojo/_base/declare', 'dojo/_base/array', 'jimu/LayerInfos/LayerInfos', 'jimu/BaseWidget', 'jimu/LayerStructure'],
   function (Graphic, FeatureLayer, GraphicsLayer, RelationshipQuery, domConstruct,
             Query, SimpleMarkerSymbol, SimpleLineSymbol,
             Color, busyIndicator, Extent, DataGrid,
             ItemFileWriteStore, ForestStoreModel, Tree, on, LoadingShelter,
-            declare, array, LayerInfos, BaseWidget) {
+            declare, array, LayerInfos, BaseWidget, LayerStructure) {
 
 
     //To create a widget, you need to derive from BaseWidget.
@@ -22,9 +22,10 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
 
       //methods to communication with app container:
       postCreate: function postCreate() {
-
-
         this.inherited(postCreate, arguments);
+        var layerStructure = LayerStructure.getInstance();
+        this.tierIILayer = layerStructure.getWebmapLayerNodes()
+          .find(x => this.config.baseurl.startsWith(x._layerInfo.layerObject.url));
         console.log('TierIIIdentify::postCreate');
       },
       featureLayers: [],
@@ -158,7 +159,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                     var row = domConstruct.toDom('<tr><td style="padding-top: 10px;"><b>' + (contact.attributes.Title ? contact.attributes.Title + ': ' : '') +
                       (contact.attributes.FirstName ? contact.attributes.FirstName : '') +
                       ' ' + (contact.attributes.LastName ? contact.attributes.LastName : '') +
-                      (contact.attributes.FirstName && contact.attributes.LastName ? '' : 'Not Reported') + '</b></td></tr>');
+                      (contact.attributes.FirstName === "" && contact.attributes.LastName === "" ? 'Not Reported' : '') + '</b></td></tr>');
                     domConstruct.place(row, "tierii_contacts");
 
                     var row = domConstruct.toDom('<tr><td>Email: ' + (contact.attributes.Email ? contact.attributes.Email : 'Not Reported') + '</td></tr>');
@@ -227,9 +228,9 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                     '<tr><td style="padding-top: 10px;"><b>' + chemical.attributes.Chemical
                     + (chemical.attributes.CASCode ? ' (' + chemical.attributes.CASCode + ')' : '') + '</b></td></tr>' +
                     '<tr><td>Location: ' + (chemical.attributes.StorageLocation ? chemical.attributes.StorageLocation : 'Not Reported') + '</td></tr>' +
-                    '<tr><td>Max Dailly Amount: ' + (chemical.attributes.MaxDailyAmount ? chemical.attributes.MaxDailyAmount : 'Not Reported') + '</td></tr>' +
+                    '<tr><td>Max Amount: ' + (chemical.attributes.MaxDailyAmount ? chemical.attributes.MaxDailyAmount : 'Not Reported') + '</td></tr>' +
                     '<tr><td>Avg Dailly Amount: ' + (chemical.attributes.AvgDailyAmount ? chemical.attributes.AvgDailyAmount : 'Not Reported') + '</td></tr>' +
-                    '<tr><td>Container: ' + (chemical.attributes.ContainerType ? chemical.attributes.ContainerType : 'Not Reported') + '</td></tr>'
+                    '<tr><td>Max Amount in Largest Container: ' + (chemical.attributes.MaxAmtContainer ? chemical.attributes.MaxAmtContainer : 'Not Reported') + '</td></tr>'
                   );
                   domConstruct.place(row, "tierii_chemicals");
                   that.loadingShelter.hide();
@@ -267,32 +268,32 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                     } else if (chemical.attributes.MaxAmountCode && maxAmountCodeDomain) {
                       maxAmount = maxAmountCodeDomain.getName(chemical.attributes.MaxAmountCode)
                     }
-                    let AveAmountCode = 'Not Reported'
-                    if (chemical.attributes.AveAmountCode && avgAmountCodeDomain === undefined) {
-                      maxAmount = chemical.attributes.AveAmountCode;
-                    } else if (chemical.attributes.AveAmountCode && avgAmountCodeDomain) {
-                      maxAmount = avgAmountCodeDomain.getName(chemical.attributes.AveAmountCode);
+                    let AvgAmountCode = 'Not Reported'
+                    if (chemical.attributes.AvgAmountCode && avgAmountCodeDomain === undefined) {
+                      AvgAmountCode = chemical.attributes.AvgAmountCode;
+                    } else if (chemical.attributes.AvgAmountCode && avgAmountCodeDomain) {
+                      AvgAmountCode = avgAmountCodeDomain.getName(chemical.attributes.AvgAmountCode);
                     }
 
 
                     var row = domConstruct.toDom(
                       '<tr><td>Max Amount: ' + (chemical.attributes.MaxAmount ? chemical.attributes.MaxAmount + ' lbs' : "Not Reported") + '</td></tr>' +
                       '<tr><td>Max Amount Range: ' + maxAmount + '</td></tr>' +
-                      '<tr><td>Max Amount Container: ' + (chemical.attributes.MaxAmountContainer ? chemical.attributes.MaxAmountContainer : "Not Reported") + '</td></tr>' +
-                      '<tr><td>Average Amount: ' + (chemical.attributes.AveAmount ? chemical.attributes.AveAmount + ' lbs' : "Not Reported") + '</td></tr>' +
-                      '<tr><td>Average Amount Range: ' + AveAmountCode + '</td></tr>'
+                      '<tr><td>Max Amount in Largest Container: ' + (chemical.attributes.MaxAmtContainer ? chemical.attributes.MaxAmtContainer : "Not Reported") + '</td></tr>' +
+                      '<tr><td>Average Amount: ' + (chemical.attributes.AvgAmount ? chemical.attributes.AvgAmount + ' lbs' : "Not Reported") + '</td></tr>' +
+                      '<tr><td>Average Amount Range: ' + AvgAmountCode + '</td></tr>'
                     );
 
                     domConstruct.place(row, "tierii_chemicals");
 
                     var states = null;
-                    if (chemical.attributes.Gas === 'T') {
+                    if (chemical.attributes.Gas === 'Y' || chemical.attributes.Gas === 'true') {
                       states = 'Gas';
                     }
-                    if (chemical.attributes.Solid === 'T') {
+                    if (chemical.attributes.Solid === 'Y' || chemical.attributes.Solid === 'true') {
                       states ? states += ', Solid' : states = 'Solid';
                     }
-                    if (chemical.attributes.Liquid === 'T') {
+                    if (chemical.attributes.Liquid === 'Y' || chemical.attributes.Liquid === 'true') {
                       states ? states += ', Liquid' : states = 'Liquid';
                     }
                     if (states === null) {
@@ -302,19 +303,19 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                     domConstruct.place(row, 'tierii_chemicals');
 
                     var hazards = null;
-                    if (chemical.attributes.Fire === 'T') {
+                    if (chemical.attributes.Fire === 'Y') {
                       hazards = 'Fire';
                     }
-                    if (chemical.attributes.Pressure === 'T') {
+                    if (chemical.attributes.Pressure === 'Y') {
                       hazards = (hazards ? hazards += ', Sudden Release of Pressure' : 'Sudden Release of Pressure');
                     }
-                    if (chemical.attributes.Reactive === 'T') {
+                    if (chemical.attributes.Reactive === 'Y') {
                       hazards = (hazards ? hazards += ', Reactive' : 'Reactive');
                     }
-                    if (chemical.attributes.Acute === 'T') {
+                    if (chemical.attributes.Acute === 'Y') {
                       hazards = (hazards ? hazards += ', Acute' : 'Acute');
                     }
-                    if (chemical.attributes.Chronic === 'T') {
+                    if (chemical.attributes.Chronic === 'Y') {
                       hazards = (hazards ? hazards += ', Chronic' : 'Chronic');
                     }
                     if (hazards === null) {
@@ -345,11 +346,11 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
                       var location_number = j + 1;
                       var row = domConstruct.toDom(
                         '<tr><td>-------------------</td></tr>' +
-                        '<tr><td>Location #' + location_number + ': ' + (chemical_location.attributes.Location ? chemical_location.attributes.Location : 'Not Reported') + '</td></tr>' +
+                        '<tr><td>Location #' + location_number + ' Description: ' + (chemical_location.attributes.Location ? chemical_location.attributes.Location : 'Not Reported') + '</td></tr>' +
                         '<tr><td>Location #' + location_number + ' Type: ' + (chemical_location.attributes.LocationType ? chemical_location.attributes.LocationType : 'Not Reported') + '</td></tr>' +
                         '<tr><td>Location #' + location_number + ' Pressure: ' + (chemical_location.attributes.LocationPressure ? chemical_location.attributes.LocationPressure : 'Not Reported') + '</td></tr>' +
-                        '<tr><td>Location #' + location_number + ' Temp: ' + (chemical_location.attributes.LocationTemperature ? chemical_location.attributes.LocationTemperature : 'Not Reported') + '</td></tr>'
-                        // '<tr><td>Location #' + location_number + ' Amount: ' + (chemical_location.attributes.Amount ? chemical_location.attributes.Amount + ' ' + chemical_location.attributes.AmountUnit : 'Not Reported') + '</td></tr>'
+                        '<tr><td>Location #' + location_number + ' Temp: ' + (chemical_location.attributes.LocationTemperature ? chemical_location.attributes.LocationTemperature : 'Not Reported') + '</td></tr>' +
+                        '<tr><td>Location #' + location_number + ' Amount: ' + (chemical_location.attributes.Amount ? chemical_location.attributes.Amount + ' ' + chemical_location.attributes.AmountUnit : 'Not Reported') + '</td></tr>'
                       );
                       domConstruct.place(row, "tierii_chemicals");
 
@@ -491,6 +492,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
 
       onOpen: function () {
         this.loadingShelter.show();
+        this.tierIILayer.show();
         console.log('HITierIIIdentify::onOpen');
         this.map.setInfoWindowOnClick(false);
         var that = this;
@@ -541,6 +543,7 @@ define(['esri/graphic', 'esri/layers/FeatureLayer', 'esri/layers/GraphicsLayer',
         this.clickHandler.pause();
         this.graphicLayer.clear();
         this.map.setInfoWindowOnClick(true);
+        this.tierIILayer.hide();
       }
 
     });
