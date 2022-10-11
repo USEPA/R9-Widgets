@@ -78,9 +78,6 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
   }
 
   nrcLayerCreated = (e) => {
-    const webEocLayer = this.jmv.view.map.layers.filter(lyr => lyr.type === 'group' && lyr.title === 'Emergency Response')
-        .items[0].layers.filter(l => l.title === 'WebEOC Hotline Log').items[0];
-    webEocLayer.visible = true;
     this.nrcLayer = e.layer
     this.initNrcLayer();
   }
@@ -94,10 +91,10 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
     view.popup = this.currentPopup;
   }
 
-  updateVisibility = (visible) => this.setState({visible})
+  updateVisibility = (visible) => this.setState({visible: visible})
 
   componentDidMount() {
-    listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
+    listenForViewVisibilityChanges(this.props.id, this.updateVisibility);
   }
 
   componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView }>, snapshot?: any) {
@@ -105,20 +102,24 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
       this.captureToken();
     }
 
-    if (this.state.jimuMapView && this.nrcLayer) {
+    if (this.state.jimuMapView) {
       const widgetState: WidgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
+      // const hasNrcWidget = Object.keys(getAppStore().getState().appConfig.widgets).includes(this.props.id);
+
       // do anything on open/close of widget here
       if ((widgetState === WidgetState.Opened || this.state?.visible === true)) {
+      // if ((hasNrcWidget || this.state?.visible === true)) {
         if (this.first) {
-          this.setLayerVis(true)
+          this.setLayerVis(true);
           this.mapClickHandler = this.state.jimuMapView.view.on('click', event => {
-            this.mapClick(event)
+            this.mapClick(event);
           })
-          this.disablePopup(this.jmv.view)
+          this.disablePopup(this.jmv.view);
         }
         this.first = false;
       }
       if (widgetState === WidgetState.Closed || this.state?.visible === false) {
+      // if (!hasNrcWidget || this.state?.visible === false) {
         this.first = true;
         this.nrcLayer.visible = this.openVisState;
         this.mainText = true
@@ -145,7 +146,7 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
       }
     );
     if (this.jmv) {
-      this.setState({loading: false})
+      this.setState({loading: false});
     }
   }
 
@@ -159,7 +160,9 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
   }
 
   setLayerVis(visible) {
-    const mapLayer = this.jmv.view.map.allLayers.find(lyr => lyr.url === this.nrcLayer.url);
+    const mapLayer = this.jmv.view.map.layers.filter(lyr => lyr.type === 'group' && lyr.title === 'Emergency Response')
+        .items[0].layers.filter(l => l.title === 'WebEOC Hotline Log').items[0];
+    // const mapLayer = this.jmv.view.map.allLayers.find(lyr => lyr.url === this.nrcLayer.url);
     if (mapLayer) {
       if (this.openVisState === undefined) {
         this.openVisState = mapLayer.visible

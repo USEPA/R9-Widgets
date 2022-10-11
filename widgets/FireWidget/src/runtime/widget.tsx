@@ -40,7 +40,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   openVisState: any[] = [];
   child;
   first: boolean = true;
-  perimeterBufferFC: FeatureLayer;
+  // perimeterBufferFC: FeatureLayer;
   // datasource: DataSourceManager;
 
   constructor(props) {
@@ -52,7 +52,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   }
 
   componentDidMount() {
-    this.setUpFeatureLayers({
+    this.setUpFeatureLayers(
+        {
         // Hard coded url
         // url: "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9Notifiable/FeatureServer/0",
 
@@ -159,7 +160,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     return this.toggleFires(this.checked);
   }
 
-  loadFires(whereText?: string, firesList?: any[]) {
+   loadFires(whereText?: string, firesList?: any[]) {
     var currentDate = this._getCurrentDate();
 
     const activeFires = firesList ? firesList.map(f => f.attributes.GlobalID) : null;
@@ -560,7 +561,7 @@ class Fire extends Component<any, any, any> {
 
       if (this.props.fire.geometry.type === 'point') {
         this.props.jmv.view.goTo(this.props.fire.geometry);
-        this.props.jmv.view.zoom = 10;
+        this.props.jmv.view.scale = 240000;
       }
     } else {
       this.props.jmv.view.goTo({center: [-119.5, 36.7]}); // else just center map over CA
