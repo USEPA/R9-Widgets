@@ -94,6 +94,7 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
   updateVisibility = (visible) => this.setState({visible: visible})
 
   componentDidMount() {
+    this.setState({visible: true});
     listenForViewVisibilityChanges(this.props.id, this.updateVisibility);
   }
 
@@ -103,12 +104,11 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
     }
 
     if (this.state.jimuMapView) {
+      // this is always undefined, nrc point visibility is being controlled by state.visible
       const widgetState: WidgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
-      // const hasNrcWidget = Object.keys(getAppStore().getState().appConfig.widgets).includes(this.props.id);
 
       // do anything on open/close of widget here
       if ((widgetState === WidgetState.Opened || this.state?.visible === true)) {
-      // if ((hasNrcWidget || this.state?.visible === true)) {
         if (this.first) {
           this.setLayerVis(true);
           this.mapClickHandler = this.state.jimuMapView.view.on('click', event => {
@@ -119,7 +119,6 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
         this.first = false;
       }
       if (widgetState === WidgetState.Closed || this.state?.visible === false) {
-      // if (!hasNrcWidget || this.state?.visible === false) {
         this.first = true;
         this.nrcLayer.visible = this.openVisState;
         this.mainText = true
