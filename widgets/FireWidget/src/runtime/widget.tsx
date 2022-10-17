@@ -2,10 +2,13 @@
 import './assets/style.css';
 import {AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState, DataSourceManager} from "jimu-core";
 import {IMConfig} from "../config";
-import {Progress, Switch, Button, Icon, Loading, TextInput} from 'jimu-ui';
+import {Progress, Switch, Button, Icon, Loading, TextInput, Tabs, Tab} from 'jimu-ui';
 import React, {Component} from 'react';
 import {JimuMapView, JimuMapViewComponent} from 'jimu-arcgis';
 import FeatureLayer from 'esri/layers/FeatureLayer';
+import GraphicsLayer from 'esri/layers/GraphicsLayer';
+import Graphic from 'esri/Graphic';
+import Polygon from 'esri/geometry/Polygon';
 import query from "esri/rest/query";
 import SpatialReference from "esri/geometry/SpatialReference";
 import Query from "esri/rest/support/Query";
@@ -42,6 +45,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   first: boolean = true;
   // perimeterBufferFC: FeatureLayer;
   // datasource: DataSourceManager;
+  customPoiURL = "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9NotificationCustomPoints/FeatureServer/0";
+  customPoiFC: FeatureLayer;
+  customPoiBuffers: GraphicsLayer;
+  customPOIs: any[] = [];
+  currentUsername: string;
+  firesWithinBuffer: any[] = [];
 
   constructor(props) {
     super(props);
@@ -52,6 +61,40 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   }
 
   componentDidMount() {
+    this.currentUsername = getAppStore().getState().user.username;
+    this.customPoiBuffers = new GraphicsLayer;
+    this.customPoiFC = new FeatureLayer({
+      url: this.customPoiURL,
+      title: 'Custom Point of Interest',
+      definitionExpression: `Creator LIKE '%${this.currentUsername}%'`,
+      popupTemplate: {
+        title: 'Custom Point of Interest',
+        content: [{
+          type: "fields",
+          fieldInfos: [{
+            fieldName: "Name"
+          }, {
+            fieldName: "Creator"
+          }, {
+            fieldName: "CreationDate"
+          }]
+        }],
+        lastEditInfoEnabled: false
+      },
+      renderer: {
+        type: "simple",
+        symbol: {
+          type: "simple-marker",
+          size: 10,
+          color: "black",
+          outline: {
+            width: 0.5,
+            color: "white"
+          }
+        }
+      }
+    });
+    this.getCustomPointsOfInterest(this.customPoiFC);
     this.setUpFeatureLayers(
         {
         // Hard coded url
@@ -96,6 +139,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         this.fireLayerVisReset = [];
         this.fireLayerFilterReset = [];
         this.jmv.view.map.layers.remove(this.perimeterbufferFC);
+        this.jmv.view.map.layers.remove(this.customPoiFC);
         this.resetFireFilter(true, true);
         this.first = true;
 
@@ -103,6 +147,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         // // do stuff here on widget open if needed
         if (this.first) { // first time after reopening so we dont end up in an infinite loop
           this.openVisState = this.getFireLayerVis();
+          this.jmv.view.map.add(this.customPoiFC);
           this.loadFires().then(() => {
             this.filterFires();
             //Check to see if perimeter buffer layer has been added
@@ -130,6 +175,36 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         jimuMapView: jmv
       });
     }
+  }
+
+  getCustomPointsOfInterest(PoiFC: FeatureLayer) {
+    const customPoiQuery = PoiFC.createQuery();
+    customPoiQuery.where = `Creator LIKE '%${this.currentUsername}%'`;
+    customPoiQuery.outSpatialReference = new SpatialReference({wkid: 102100});
+    customPoiQuery.returnGeometry = true;
+    customPoiQuery.outFields = ["*"];
+    return query.executeQueryJSON(this.customPoiURL, customPoiQuery).then(results => {
+      if (results.features.length > 0) {
+        this.customPOIs = results.features;
+        results.features.forEach((r) => {
+          const buffer = geometryEngine.buffer(r.geometry, 20, 'miles');
+          const bufferGraphic = new Graphic({
+            geometry: buffer,
+            symbol: { // buffer isn't added to map but left this here in case it is needed for future testing
+              type: "simple-fill",
+              color: [215, 138, 243, 0.4],
+              style: "solid",
+              outline: {
+                color: "black",
+                width: 1
+              }
+            }
+          });
+          bufferGraphic.geometry.spatialReference = new SpatialReference({wkid: 102100});
+          this.customPoiBuffers.graphics.push(bufferGraphic);
+        })
+      }
+    });
   }
 
   getGeometryUnion(layerUrl, queryWhere?, queryOutFields?, queryOurSR?) {
@@ -194,6 +269,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.all_fires = firesList ? results.features.filter(f => firesList.includes(f.attributes.GlobalID)) : results.features;
     // this.setState({all_fires: results.features });
 
+    if (this.customPoiBuffers.graphics.length > 0 && this.all_fires) {
+      this.populateMyFires();
+    }
+
     //get min and max acres
     this.acresArray = this.all_fires.map(function (a) {
       let fireData = JSON.parse(a.attributes.Data);
@@ -216,6 +295,19 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   _QueryfireResultsError(err) {
     //Need to write a better error report
     console.error(`Error: ${err}`);
+  }
+
+  populateMyFires() {
+    this.firesWithinBuffer = [];
+    this.customPoiBuffers.graphics.forEach((buffer) => {
+      this.all_fires.forEach((feature) => {
+        if (feature.geometry.type === 'point' && new Polygon(buffer.geometry).contains(feature.geometry)) {
+          this.firesWithinBuffer.push(feature);
+        } else if (feature.geometry.type === 'polygon' && geometryEngine.intersects(buffer.geometry, feature.geometry)) {
+          this.firesWithinBuffer.push(feature);
+        }
+      })
+    })
   }
 
   toggleFires = (e: boolean) => {
@@ -433,14 +525,32 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           />
         </div>
 
-        <TextInput type='search' placeholder='Search' onChange={(e) => this.searchFires(e.target.value)} />
+        <TextInput type='search' placeholder='Search' onChange={(e) => this.searchFires(e.target.value)} style={{marginBottom: 10}} />
 
-        {this.state && this.state.fires && this.jmv ? this.state.fires.map(x => <Fire ref={this.child}
+        <Tabs defaultValue="tab-all-fires" onChange={function noRefCheck(){}} onClose={function noRefCheck(){}} type="underline">
+          <Tab id="tab-all-fires" title="All Fires">
+            {this.state && this.state.fires && this.jmv ? this.state.fires.map(x => <Fire ref={this.child}
                                                                                       fire={x}
                                                                                       jmv={this.jmv}
                                                                                       acresArray={this.acresArray}
                                                                                       perim={this.perimeterbufferFC}
                                                                                       context={this.props.context}/>) : ''}
+          </Tab>
+          <Tab id="tab-my-fires" title="My Fires">
+            {this.state.fires && this.jmv && this.firesWithinBuffer.length > 0
+                ? this.firesWithinBuffer.map(x => <Fire ref={this.child} fire={x} jmv={this.jmv}
+                                                        acresArray={this.acresArray} perim={this.perimeterbufferFC}
+                                                        context={this.props.context}/>)
+                : this.customPOIs.length === 0
+                    ? <p style={{marginTop: 10}}>You have no custom points of interest. <a href='https://r9data.response.epa.gov/apps/notifications/'
+                                                                   target='_blank'>Click here</a> to create one</p>
+                    : <div>
+                      <p style={{marginTop: 10}}>There are no active fires near your custom points of interest</p>
+                      <p>Your custom POIs:</p>
+                      {this.customPOIs.map(p => <CustomPOI poi={p} jmv={this.jmv} />)}
+                    </div>}
+          </Tab>
+        </Tabs>
       </div>
     );
   }
@@ -611,4 +721,19 @@ class Fire extends Component<any, any, any> {
       {/*}}>{}</div>*/}
     </div>;
   }
+}
+
+function CustomPOI(props) {
+  const { poi, jmv } = props;
+  const createdDate = new Date(poi.attributes.CreationDate);
+
+  const zoomToPoi = () => {
+    jmv.view.goTo(poi.geometry);
+    jmv.view.scale = 240000;
+  }
+
+  return <div className='layerDiv' onClick={zoomToPoi}>
+    <div className='fireNameTxt'><b>{poi.attributes.Name}</b></div>
+    <p>Created on: {createdDate.toLocaleDateString()}</p>
+  </div>
 }
