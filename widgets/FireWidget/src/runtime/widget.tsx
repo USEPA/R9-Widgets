@@ -61,40 +61,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   }
 
   componentDidMount() {
-    this.currentUsername = getAppStore().getState().user.username;
     this.customPoiBuffers = new GraphicsLayer;
-    this.customPoiFC = new FeatureLayer({
-      url: this.customPoiURL,
-      title: 'Custom Point of Interest',
-      definitionExpression: `Creator LIKE '%${this.currentUsername}%'`,
-      popupTemplate: {
-        title: 'Custom Point of Interest',
-        content: [{
-          type: "fields",
-          fieldInfos: [{
-            fieldName: "Name"
-          }, {
-            fieldName: "Creator"
-          }, {
-            fieldName: "CreationDate"
-          }]
-        }],
-        lastEditInfoEnabled: false
-      },
-      renderer: {
-        type: "simple",
-        symbol: {
-          type: "simple-marker",
-          size: 10,
-          color: "black",
-          outline: {
-            width: 0.5,
-            color: "white"
-          }
-        }
-      }
-    });
-    this.getCustomPointsOfInterest(this.customPoiFC);
     this.setUpFeatureLayers(
         {
         // Hard coded url
@@ -121,6 +88,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
   componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView; fires: any[]; acresArray: any[] }>, snapshot?: any) {
     if (this.state?.jimuMapView && !this.search) {
+      if (getAppStore().getState().user.username && !this.currentUsername) {
+        this.initCustomPoiFC();
+      }
       let widgetState: WidgetState;
       widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
       if (widgetState == WidgetState.Closed || this.state?.visible === false) {
@@ -175,6 +145,42 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         jimuMapView: jmv
       });
     }
+  }
+
+  initCustomPoiFC() {
+    this.currentUsername = getAppStore().getState().user.username;
+    this.customPoiFC = new FeatureLayer({
+      url: this.customPoiURL,
+      title: 'Custom Point of Interest',
+      definitionExpression: `Creator LIKE '%${this.currentUsername}%'`,
+      popupTemplate: {
+        title: 'Custom Point of Interest',
+        content: [{
+          type: "fields",
+          fieldInfos: [{
+            fieldName: "Name"
+          }, {
+            fieldName: "Creator"
+          }, {
+            fieldName: "CreationDate"
+          }]
+        }],
+        lastEditInfoEnabled: false
+      },
+      renderer: {
+        type: "simple",
+        symbol: {
+          type: "simple-marker",
+          size: 10,
+          color: "black",
+          outline: {
+            width: 0.5,
+            color: "white"
+          }
+        }
+      }
+    });
+    this.getCustomPointsOfInterest(this.customPoiFC);
   }
 
   getCustomPointsOfInterest(PoiFC: FeatureLayer) {
