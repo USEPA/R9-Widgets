@@ -501,7 +501,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       </div>
     }
     return (
-      <div className="jimu-widget p-2" style={{overflow: "auto", backgroundColor: "white"}}>
+      <div className="jimu-widget p-2" style={{overflow: "hidden", backgroundColor: "white"}}>
         <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
                               onActiveViewChange={this.onActiveViewChange}/>
         <div style={{marginBottom: 10}}>These wildfires are greater than 10 acres and within 10 miles of
@@ -535,6 +535,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           <Switch data-testid="fire-switch" id='switch'
                   checked={this.checked}
                   onChange={this.fireSwitchActive}
+                  disabled={this.state.myFiresTabActive}
           />
         </div>
 
@@ -551,23 +552,14 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           </Tab>
           <Tab id="tab-my-fires" title="My Fires">
             {this.state.fires && this.jmv && this.state.myFires.length > 0
-                ? <div>
-                  {this.state.myFires.map(x => <Fire ref={this.child} fire={x} jmv={this.jmv}
+                ? this.state.myFires.map(x => <Fire ref={this.child} fire={x} jmv={this.jmv}
                                                      acresArray={this.acresArray} perim={this.perimeterbufferFC}
-                                                     context={this.props.context}/>)}
-                  <a href='https://r9data.response.epa.gov/apps/notifications/' target='_blank'>
-                    Click here to edit your custom points of interest</a>
-                </div>
+                                                     context={this.props.context}/>)
                 : this.customPOIs.length === 0
-                    ? <div>
-                      <p style={{marginTop: 10}}>You have no custom points of interest.</p>
-                      <a href='https://r9data.response.epa.gov/apps/notifications/' target='_blank'>Click here to create one</a>
-                    </div>
-                    : <div>
-                      <p style={{marginTop: 10}}>There are no active fires near your custom points of interest</p>
-                      <a href='https://r9data.response.epa.gov/apps/notifications/' target='_blank'>
-                        Click here to edit your custom points of interest</a>
-                    </div>}
+                    ? <p style={{marginTop: 10}}>You have no custom points of interest.</p>
+                    : <p style={{marginTop: 10}}>There are no active fires near your custom points of interest</p>}
+            <a href='https://r9data.response.epa.gov/apps/notifications/' target='_blank'>
+              Click here to edit your custom points of interest</a>
           </Tab>
         </Tabs>
       </div>
@@ -731,7 +723,7 @@ class Fire extends Component<any, any, any> {
       <Progress
         tooltip='Percent Contained'
         // showProgress={true}
-        className='fireProgress' style={{width: this.BarWidth}}
+        className='fireProgress' style={{maxWidth: '100%'}}
         color={'primary'} value={Math.round(this.PercentContained)}>
       </Progress>
       {this.props.fire.POI_Name && <div><b>Associated Point of Interest: {this.props.fire.POI_Name}</b></div>}
