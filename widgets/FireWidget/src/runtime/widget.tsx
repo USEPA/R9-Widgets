@@ -206,7 +206,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     })
     const whereQuery = whereItems.join(' OR ');
     const notifiableQuery = this.perimeterbufferFC.createQuery();
-    notifiableQuery.where = whereQuery;
+    notifiableQuery.where = `${whereQuery} AND Display = 1`;
     notifiableQuery.outSpatialReference = new SpatialReference({wkid: 102100});
     notifiableQuery.returnGeometry = true;
     notifiableQuery.outFields = ["*"];
@@ -501,7 +501,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       </div>
     }
     return (
-      <div className="jimu-widget p-2" style={{overflow: "hidden", backgroundColor: "white"}}>
+      <div className="jimu-widget p-2" style={{overflowY: "scroll", backgroundColor: "white"}}>
         <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
                               onActiveViewChange={this.onActiveViewChange}/>
         <div style={{marginBottom: 10}}>These wildfires are greater than 10 acres and within 10 miles of
@@ -539,7 +539,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           />
         </div>
 
-        <TextInput type='search' placeholder='Search' onChange={(e) => this.searchFires(e.target.value)} style={{marginBottom: 10}} />
+        <TextInput type='search' placeholder='Search' disabled={this.state.myFiresTabActive}
+                   onChange={(e) => this.searchFires(e.target.value)} style={{marginBottom: 10}} />
 
         <Tabs defaultValue="tab-all-fires" onChange={(e) => this.setPoiLayerVisibility(e)} type="underline">
           <Tab id="tab-all-fires" title="All Fires">
