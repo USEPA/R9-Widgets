@@ -91,7 +91,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView; fires: any[]; acresArray: any[] }>, snapshot?: any) {
     if (this.state?.jimuMapView && !this.search) {
       if (getAppStore().getState().user.username && !this.currentUsername) {
-        this.getSubscriptions().then(() => this.initCustomPoiFC());
+        this.initCustomPoiFC();
       }
       let widgetState: WidgetState;
       widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
@@ -183,7 +183,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         }
       }
     });
-    this.getCustomPointsOfInterest(this.customPoiFC);
+    this.getSubscriptions().then(() => this.getCustomPointsOfInterest(this.customPoiFC));
   }
 
   getCustomPointsOfInterest(PoiFC: FeatureLayer) {
@@ -206,7 +206,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       title: 'Subscriptions'
     });
     const subscriptionsQuery = subscriptionsFC.createQuery();
-    subscriptionsQuery.where = '1=1';
+    subscriptionsQuery.where = `Subscriber LIKE '%${this.currentUsername}%'`;
     subscriptionsQuery.outFields = ["*"];
     return query.executeQueryJSON(this.subscriptionsURL, subscriptionsQuery).then(results => {
       this.subscriptionIDs = results.features.map(s => s.attributes.GlobalID);
