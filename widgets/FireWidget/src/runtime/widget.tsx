@@ -44,6 +44,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   first: boolean = true;
   // perimeterBufferFC: FeatureLayer;
   // datasource: DataSourceManager;
+  subscriptionsURL = "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9NotificationSubscriptions/FeatureServer/0";
+  subscriptionIDs: any[];
   customPoiURL = "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9NotificationCustomPoints/FeatureServer/0";
   customPoiFC: FeatureLayer;
   customPOIs: any[] = [];
@@ -89,7 +91,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView; fires: any[]; acresArray: any[] }>, snapshot?: any) {
     if (this.state?.jimuMapView && !this.search) {
       if (getAppStore().getState().user.username && !this.currentUsername) {
-        this.initCustomPoiFC();
+        this.getSubscriptions().then(() => this.initCustomPoiFC());
       }
       let widgetState: WidgetState;
       widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
@@ -192,10 +194,23 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     customPoiQuery.outFields = ["*"];
     return query.executeQueryJSON(this.customPoiURL, customPoiQuery).then(results => {
       if (results.features.length > 0) {
-        this.customPOIs = results.features;
+        this.customPOIs = results.features.filter(f => this.subscriptionIDs.includes(f.attributes.SubscriptionID));
         this.populateMyFires();
       }
     });
+  }
+
+  getSubscriptions() {
+    const subscriptionsFC = new FeatureLayer({
+      url: this.subscriptionsURL,
+      title: 'Subscriptions'
+    });
+    const subscriptionsQuery = subscriptionsFC.createQuery();
+    subscriptionsQuery.where = '1=1';
+    subscriptionsQuery.outFields = ["*"];
+    return query.executeQueryJSON(this.subscriptionsURL, subscriptionsQuery).then(results => {
+      this.subscriptionIDs = results.features.map(s => s.attributes.GlobalID);
+    })
   }
 
   populateMyFires() {
@@ -206,17 +221,25 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     })
     const whereQuery = whereItems.join(' OR ');
     const notifiableQuery = this.perimeterbufferFC.createQuery();
-    notifiableQuery.where = `${whereQuery} AND Display = 1`;
+    notifiableQuery.where = `Archived IS NULL AND (${whereQuery})`;
     notifiableQuery.outSpatialReference = new SpatialReference({wkid: 102100});
     notifiableQuery.returnGeometry = true;
     notifiableQuery.outFields = ["*"];
     return query.executeQueryJSON(`${this.perimeterbufferFC.url}/${this.perimeterbufferFC.layerId}`, notifiableQuery).then(results => {
       if (results.features.length > 0) {
+        const myFiresArray = [];
         results.features.forEach((fire) => {
-          const poiMatch = this.customPOIs.find(p => p.attributes.GlobalID === fire.attributes.NotificationConfigurationID);
-          fire['POI_Name'] = poiMatch.attributes.Name;
+          if (!myFiresArray.find(x => x.attributes.Name === fire.attributes.Name)) {
+            const poiMatch = this.customPOIs.find(p => p.attributes.GlobalID === fire.attributes.NotificationConfigurationID);
+            fire['POI_Name'] = poiMatch.attributes.Name;
+            myFiresArray.push(fire);
+          } else {
+            const poiFire = myFiresArray.find(x => x.attributes.Name === fire.attributes.Name);
+            const poiMatch = this.customPOIs.find(p => p.attributes.GlobalID === fire.attributes.NotificationConfigurationID);
+            poiFire['POI_Name'] = poiFire['POI_Name'] + ', ' + poiMatch.attributes.Name;
+          }
         })
-        this.setState({myFires: results.features});
+        this.setState({myFires: myFiresArray});
       }
     });
   }
@@ -281,7 +304,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.setState({fires: []});
 
     this.all_fires = firesList ? results.features.filter(f => firesList.includes(f.attributes.GlobalID)) : results.features;
-    // this.setState({all_fires: results.features });
 
     //get min and max acres
     this.acresArray = this.all_fires.map(function (a) {
@@ -312,14 +334,18 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       this.jmv.view.map.layers.remove(this.perimeterbufferFC);
       this.resetFireFilter(true);
     } else {
-      this.loadFires().then(() => {
-        this.filterFires();
-        //Check to see if perimeter buffer layer has been added
-        var bufferLayerStatus = this.jmv.view.map.layers.get(this.perimeterbufferFC.id);
-        if (!bufferLayerStatus) {
-          this.jmv.view.map.layers.add(this.perimeterbufferFC);
-        }
-      });
+      if (this.state.myFiresTabActive) {
+        this.resetFireFilter(true);
+      } else {
+        this.loadFires().then(() => {
+          this.filterFires();
+          //Check to see if perimeter buffer layer has been added
+          var bufferLayerStatus = this.jmv.view.map.layers.get(this.perimeterbufferFC.id);
+          if (!bufferLayerStatus) {
+            this.jmv.view.map.layers.add(this.perimeterbufferFC);
+          }
+        });
+      }
     }
   }
 
@@ -339,11 +365,16 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   }
 
   resetFireFilter = (loadAllFires, onClose = false, whereText?: string) => {
+    const myFiresItems = [];
+    (this.state.myFires.length > 0 && this.state.myFiresTabActive && !this.checked) && this.state.myFires.forEach(f => {
+      myFiresItems.push(`IncidentName LIKE '%${f.attributes.Name}%'`);
+    })
     this.fireLayerFilterReset.forEach((x) => {
       x.definitionExpression = '';
       if (x.title === this.irwinLabel && loadAllFires) {
         var q = new Query();
-        q.where = whereText ? `DailyAcres > 5 AND IncidentName LIKE '%${whereText}%'` : 'DailyAcres > 5';
+        q.where = whereText ? `DailyAcres > 5 AND IncidentName LIKE '%${whereText}%'` :
+            myFiresItems.length > 0 ? `DailyAcres > 5 AND (${myFiresItems.join(' OR ')})` : 'DailyAcres > 5';
         q.geometry = this.r9Geom;
         q.orderByFields = ['IncidentName ASC'];
         q.spatialRelationship = "intersects";
@@ -368,8 +399,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     if (!onClose) {
       this.jmv.view.map.allLayers.forEach(lyr => {
         if (lyr.type == 'feature') {
-
-
           var fireLayer = Array(this.irwinLabel, this.perimeterLabel).find(function (x) {
             return x === lyr.title;
           });
@@ -392,7 +421,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
                 filter += ' AND ' + idStr;
               }
               //@ts-ignore we check that this is a featureLayer earlier on
-              lyr.definitionExpression = filter;
+              lyr.definitionExpression = myFiresItems.length > 0 ? myFiresItems.join(' OR ') : filter;
             }).catch(e => {
               console.log(e)
             });
@@ -479,11 +508,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   setPoiLayerVisibility(e?: string) {
     if (e) {
       if (e === 'tab-my-fires') {
-        this.setState({myFiresTabActive: true});
+        this.setState({myFiresTabActive: true}, () => this.resetFireFilter(true));
         this.jmv.view.map.add(this.customPoiFC)
       } else {
         this.setState({myFiresTabActive: false});
         this.jmv.view.map.remove(this.customPoiFC);
+        this.state.checked ? this.resetFireFilter(true) : this.loadFires().then(() => this.filterFires());
       }
     } else {
       if (this.state.myFiresTabActive) {
@@ -535,7 +565,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           <Switch data-testid="fire-switch" id='switch'
                   checked={this.checked}
                   onChange={this.fireSwitchActive}
-                  disabled={this.state.myFiresTabActive}
           />
         </div>
 
@@ -551,7 +580,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
                                                                                       perim={this.perimeterbufferFC}
                                                                                       context={this.props.context}/>) : ''}
           </Tab>
-          <Tab id="tab-my-fires" title="My Fires">
+          <Tab id="tab-my-fires" title="My Notifications">
             {this.state.fires && this.jmv && this.state.myFires.length > 0
                 ? this.state.myFires.map(x => <Fire ref={this.child} fire={x} jmv={this.jmv}
                                                      acresArray={this.acresArray} perim={this.perimeterbufferFC}
@@ -718,6 +747,7 @@ class Fire extends Component<any, any, any> {
                 icon={`${this.props.context.folderUrl}dist/runtime/assets/images/operation_normal.svg`} size='m'/>
         </Button>
       }
+      {this.props.fire.POI_Name && <div><b>Associated Points of Interest: {this.props.fire.POI_Name}</b></div>}
       <div className='fireNameTxt'><b>{this.IncidentName}</b></div>
       <div className='acresTxt' title={`${this.Counties}`}>{this.Counties}</div>
       <div>({this.AcresFacilitySubText})</div>
@@ -727,7 +757,6 @@ class Fire extends Component<any, any, any> {
         className='fireProgress' style={{maxWidth: '100%'}}
         color={'primary'} value={Math.round(this.PercentContained)}>
       </Progress>
-      {this.props.fire.POI_Name && <div><b>Associated Point of Interest: {this.props.fire.POI_Name}</b></div>}
       {/*<div id='acresSubtext' style={{*/}
       {/*  width: this.BarWidth,*/}
       {/*  marginTop: '-24px',*/}

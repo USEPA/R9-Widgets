@@ -89,10 +89,6 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
       } else {
         timeSlider.fullTimeExtent = fullTimeExtent;
         setTimeSlider(timeSlider);
-        // timeLayers.forEach((lyr) => {
-        //   lyr.layer.useViewTime = false;
-        //   lyr.layer.timeExtent = timeExtent;
-        // })
       }
     }
   }, [jimuMapView, timeExtent])
@@ -113,7 +109,8 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
         start: moment(),
         end: moment()
       }
-      timeLayers.filter(tl => tl.layer.visible).forEach(tl => {
+      const activeTimeLayers = timeLayers.filter(tl => tl.layer.visible);
+      activeTimeLayers.forEach(tl => {
         if (newTimeExtent.start > tl.layer.timeInfo.fullTimeExtent.start) {
           newTimeExtent.start = tl.layer.timeInfo.fullTimeExtent.start
         }
@@ -182,8 +179,8 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
   const isConfigured = useMapWidgetIds && useMapWidgetIds.length === 1
 
   const toggleSmoke = () => {
-    smokeLayer.visible = !smokeLayer.visible
-    setSmokeVisible(smokeLayer.visible)
+    smokeLayer.visible = !smokeLayer.visible;
+    setSmokeVisible(smokeLayer.visible);
   }
 
   const toggleWindModels = (lyrName) => {
