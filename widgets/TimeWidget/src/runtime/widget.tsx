@@ -140,9 +140,9 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
 
   useEffect(() => {
     if (jimuMapView && windGroupLayer) {
-      setWindLayers(jimuMapView.view.map.allLayers
-        .find(l => l.id === windGroupLayer.id)?.allLayers
-        .filter(l => l.portalItem && l.portalItem.tags.includes('wind')))
+      const windLayersArray = jimuMapView.view.map.allLayers.find(l => l.id === windGroupLayer.id)?.allLayers
+          .filter(l => l.portalItem && l.portalItem.tags.includes('wind'));
+      setWindLayers(sortWindLayers(windLayersArray.items));
     }
   }, [jimuMapView, windGroupLayer])
 
@@ -157,6 +157,15 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
     }
   }, [jimuMapView, smokeGroupLayer])
 
+  const sortWindLayers = (lyrs) => {
+    const newArray = [];
+    lyrs.forEach(lyr => {
+      if (lyr.title.includes('HRRR')) { newArray[0] = lyr }
+      if (lyr.title.includes('GFS')) { newArray[1] = lyr }
+      if (lyr.title.includes('NAM')) { newArray[2] = lyr }
+    })
+    return newArray;
+  }
 
   const onActiveViewChange = (jmv: JimuMapView) => {
     if (jmv) {
@@ -237,9 +246,9 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
       : null}
     <div style={{padding: '10px'}}>
       <p>
-        The widget animates the wind forecast data as moving particles according to the wind vector and the
+        This widget animates the wind forecast data as moving particles according to the wind vector and the
         speed and color of the particle correspond to the wind speed. Data for each of the models below are retrieved on
-        an hourly basis and the forecast DateTime is displayed in the legend, and model menu. The temporal and spatial
+        an hourly basis and the forecasted Date and Time is displayed in the legend. The temporal and spatial
         resolution of the models varies and is described below. All of the forecasts are for 10 meters above ground.
       </p>
       <ul>
@@ -252,19 +261,19 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
           </ul>
         </li>
         <li>
-          <a href={'https://nomads.ncep.noaa.gov/txt_descriptions/WRF_NMM_doc.shtml'} target='_blank'>NAM</a> - North American Mesoscale Model - (Non-Hydrostatic Mesoscale Model)
-          <ul>
-            <li>CONUS</li>
-            <li>12km horizontal resolution</li>
-            <li>Run every 3 hours</li>
-          </ul>
-        </li>
-        <li>
           <a href={'https://nomads.ncep.noaa.gov/txt_descriptions/GFS_doc.shtml'} target='_blank'>GFS</a> - Global Forecast System
           <ul>
             <li>Global</li>
             <li>13km horizontal resolution</li>
             <li>Run every hour</li>
+          </ul>
+        </li>
+        <li>
+          <a href={'https://nomads.ncep.noaa.gov/txt_descriptions/WRF_NMM_doc.shtml'} target='_blank'>NAM</a> - North American Mesoscale Model - (Non-Hydrostatic Mesoscale Model)
+          <ul>
+            <li>CONUS</li>
+            <li>12km horizontal resolution</li>
+            <li>Run every 3 hours</li>
           </ul>
         </li>
       </ul>
