@@ -35,9 +35,14 @@ function initTimeSlider(view, fullTimeExtent) {
   container.setAttribute('style', 'bottom: 30px; width: 80%; margin: 0 10% 0 10%;')
   const newTimeSlider = new TimeSlider({
     container,
-    // view,
+    view,
     mode: 'time-window',
     fullTimeExtent,
+    // setting timeExtent here prevents the bug where the slider has no time extent on first being opened
+    timeExtent: {
+      start: start,
+      end: end
+    },
     timeVisible: true,
     stops: {
       interval: {
@@ -66,6 +71,10 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
     start: null,
     end: null
   })
+  const [fullTimeExtent, setFullTimeExtent] = useState({
+    start: null,
+    end: null
+  });
   const [windLayers, setWindLayers] = useState([])
   const [smokeLayer, setSmokeLayer] = useState([])
   const [smokeVisible, setSmokeVisible] = useState(false)
@@ -78,19 +87,21 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
         const newTimeSlider = initTimeSlider(jimuMapView.view, timeExtent);
         setTimeSlider(newTimeSlider)
       } else {
-        timeSlider.fullTimeExtent = new TimeExtent(timeExtent);
+        timeSlider.fullTimeExtent = fullTimeExtent;
         setTimeSlider(timeSlider);
       }
-
     }
   }, [jimuMapView, timeExtent])
 
   useEffect(() => {
-    const widgetState: WidgetState = getAppStore().getState().widgetsRuntimeInfo[id].state;
     if (timeSlider) {
-      timeSlider.visible = widgetState === 'OPENED'
+      timeSlider.watch('timeExtent', (value) => {
+        if (value !== null) {
+          setTimeExtent({start: value.start, end: value.end});
+        }
+      })
     }
-  })
+  }, [timeSlider])
 
   useEffect(() => {
     if (timeLayers.length > 0) {
@@ -98,7 +109,8 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
         start: moment(),
         end: moment()
       }
-      timeLayers.filter(tl => tl.layer.visible).forEach(tl => {
+      const activeTimeLayers = timeLayers.filter(tl => tl.layer.visible);
+      activeTimeLayers.forEach(tl => {
         if (newTimeExtent.start > tl.layer.timeInfo.fullTimeExtent.start) {
           newTimeExtent.start = tl.layer.timeInfo.fullTimeExtent.start
         }
@@ -106,10 +118,11 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
           newTimeExtent.end = tl.layer.timeInfo.fullTimeExtent.end
         }
       })
-      setTimeExtent(newTimeExtent)
+      setFullTimeExtent(newTimeExtent);
+      setTimeExtent(newTimeExtent);
     } else if (timeSlider) {
       timeSlider.destroy();
-      setTimeSlider(null)
+      setTimeSlider(null);
     }
   }, [timeLayers])
 
@@ -122,15 +135,14 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
       setTimeLayers(t.filter(l => l.layer.visible))
       // captureCurrentTimeExtent();
       TimeSlider.getPropertiesFromWebMap(jimuMapView.view.map).then(tss => console.log(tss))
-
     }
   }, [jimuMapView])
 
   useEffect(() => {
     if (jimuMapView && windGroupLayer) {
-      setWindLayers(jimuMapView.view.map.allLayers
-        .find(l => l.id === windGroupLayer.id)?.allLayers
-        .filter(l => l.portalItem && l.portalItem.tags.includes('wind')))
+      const windLayersArray = jimuMapView.view.map.allLayers.find(l => l.id === windGroupLayer.id)?.allLayers
+          .filter(l => l.portalItem && l.portalItem.tags.includes('wind'));
+      setWindLayers(sortWindLayers(windLayersArray.items));
     }
   }, [jimuMapView, windGroupLayer])
 
@@ -145,9 +157,19 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
     }
   }, [jimuMapView, smokeGroupLayer])
 
+  const sortWindLayers = (lyrs) => {
+    const newArray = [];
+    lyrs.forEach(lyr => {
+      if (lyr.title.includes('HRRR')) { newArray[0] = lyr }
+      if (lyr.title.includes('GFS')) { newArray[1] = lyr }
+      if (lyr.title.includes('NAM')) { newArray[2] = lyr }
+    })
+    return newArray;
+  }
+
   const onActiveViewChange = (jmv: JimuMapView) => {
     if (jmv) {
-      setJimuMapView(jmv)
+      setJimuMapView(jmv);
     }
   }
 
@@ -166,10 +188,22 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
   const isConfigured = useMapWidgetIds && useMapWidgetIds.length === 1
 
   const toggleSmoke = () => {
-    smokeLayer.visible = !smokeLayer.visible
-    setSmokeVisible(smokeLayer.visible)
+    smokeLayer.visible = !smokeLayer.visible;
+    setSmokeVisible(smokeLayer.visible);
   }
-  return <div className="widget-use-map-view" style={{width: '100%', height: '100%', overflow: 'hidden'}}>
+
+  const toggleWindModels = (lyrName) => {
+    windLayers.forEach((lyr) => {
+      lyr.visible ? lyr.visible = false : lyr.visible = lyr.title === lyrName;
+    });
+    if (timeSlider) {
+      const newTimeSlider = timeSlider;
+      newTimeSlider.visible = true;
+      setTimeSlider(newTimeSlider);
+    }
+  }
+
+  return <div className="widget-use-map-view" style={{width: '100%', height: '100%', overflow: 'scroll', backgroundColor: 'white'}}>
     <JimuMapViewComponent
       useMapWidgetId={useMapWidgetIds?.[0]}
       onActiveViewChange={onActiveViewChange}
@@ -182,17 +216,67 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
       useDataSource={smokeDataSource?.[0]}
       onDataSourceCreated={captureSmokeLayer}
     />
+    <h3 style={{padding: '10px'}}>Wind/Smoke Widget</h3>
+    <div style={{padding: '10px'}}>
+      <h4 style={{fontSize: '1em'}}>NOAA Wind Data</h4>
+      <p>
+        The data visualized are freely available and provided by NOAA's <a href='https://nomads.ncep.noaa.gov/' target='_blank'>NOMADS</a> initiative.
+      </p>
+    </div>
     {windLayers
-      ? <Select onChange={updateSelectedWindModel} placeholder="Select Wind Forecast Model">
-        {windLayers.map(l => <Option value={l}>{l.title}</Option>)}
-      </Select>
-      : null}
+        ? <div>
+          {windLayers.map(lyr =>
+          <div style={{display: 'flex', justifyContent: 'flex-start', gap: '10px', margin: "10px"}}>
+            <Switch style={{marginRight: "10px"}} checked={lyr.visible} onChange={() => toggleWindModels(lyr.title)} />
+            <p>{lyr.title}</p>
+          </div>)}
+        </div>
+        : null}
+    {/*{windLayers*/}
+    {/*  ? <Select onChange={updateSelectedWindModel} placeholder="Select Wind Forecast Model">*/}
+    {/*    {windLayers.map(l => <Option value={l}>{l.title}</Option>)}*/}
+    {/*  </Select>*/}
+    {/*  : null}*/}
     {smokeLayer
-      ? <div style={{"margin": "10px"}}>
-        <Switch checked={smokeVisible} style={{"margin-right": "10px"}}
-                onChange={toggleSmoke}/>
-        Toggle Smoke
-        .</div>
+      ? <div style={{display: 'flex', justifyContent: 'flex-start', gap: '10px', margin: "10px"}}>
+          <Switch checked={smokeVisible} style={{marginRight: "10px"}}
+                  onChange={toggleSmoke}/>
+          <p>Smoke</p>
+        </div>
       : null}
+    <div style={{padding: '10px'}}>
+      <p>
+        This widget animates the wind forecast data as moving particles according to the wind vector and the
+        speed and color of the particle correspond to the wind speed. Data for each of the models below are retrieved on
+        an hourly basis and the forecasted Date and Time is displayed in the legend. The temporal and spatial
+        resolution of the models varies and is described below. All of the forecasts are for 10 meters above ground.
+      </p>
+      <ul>
+        <li>
+          <a href={'https://nomads.ncep.noaa.gov/txt_descriptions/HRRR_doc.shtml'} target='_blank'>HRRR</a> - High Resolution Rapid Refresh
+          <ul>
+            <li>CONUS</li>
+            <li>3km horizontal resolution</li>
+            <li>Run every hour</li>
+          </ul>
+        </li>
+        <li>
+          <a href={'https://nomads.ncep.noaa.gov/txt_descriptions/GFS_doc.shtml'} target='_blank'>GFS</a> - Global Forecast System
+          <ul>
+            <li>Global</li>
+            <li>13km horizontal resolution</li>
+            <li>Run every hour</li>
+          </ul>
+        </li>
+        <li>
+          <a href={'https://nomads.ncep.noaa.gov/txt_descriptions/WRF_NMM_doc.shtml'} target='_blank'>NAM</a> - North American Mesoscale Model - (Non-Hydrostatic Mesoscale Model)
+          <ul>
+            <li>CONUS</li>
+            <li>12km horizontal resolution</li>
+            <li>Run every 3 hours</li>
+          </ul>
+        </li>
+      </ul>
+    </div>
   </div>
 }

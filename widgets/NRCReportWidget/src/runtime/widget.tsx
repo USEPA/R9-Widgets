@@ -91,10 +91,11 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
     view.popup = this.currentPopup;
   }
 
-  updateVisibility = (visible) => this.setState({visible})
+  updateVisibility = (visible) => this.setState({visible: visible})
 
   componentDidMount() {
-    listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
+    this.setState({visible: true});
+    listenForViewVisibilityChanges(this.props.id, this.updateVisibility);
   }
 
   componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView }>, snapshot?: any) {
@@ -102,16 +103,18 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
       this.captureToken();
     }
 
-    if (this.state.jimuMapView && this.nrcLayer) {
+    if (this.state.jimuMapView) {
+      // this is always undefined, nrc point visibility is being controlled by state.visible
       const widgetState: WidgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
+
       // do anything on open/close of widget here
       if ((widgetState === WidgetState.Opened || this.state?.visible === true)) {
         if (this.first) {
-          this.setLayerVis(true)
+          this.setLayerVis(true);
           this.mapClickHandler = this.state.jimuMapView.view.on('click', event => {
-            this.mapClick(event)
+            this.mapClick(event);
           })
-          this.disablePopup(this.jmv.view)
+          this.disablePopup(this.jmv.view);
         }
         this.first = false;
       }
@@ -142,7 +145,7 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
       }
     );
     if (this.jmv) {
-      this.setState({loading: false})
+      this.setState({loading: false});
     }
   }
 
@@ -156,7 +159,9 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
   }
 
   setLayerVis(visible) {
-    const mapLayer = this.jmv.view.map.allLayers.find(lyr => lyr.url === this.nrcLayer.url);
+    const mapLayer = this.jmv.view.map.layers.filter(lyr => lyr.type === 'group' && lyr.title === 'Emergency Response')
+        .items[0].layers.filter(l => l.title === 'WebEOC Hotline Log').items[0];
+    // const mapLayer = this.jmv.view.map.allLayers.find(lyr => lyr.url === this.nrcLayer.url);
     if (mapLayer) {
       if (this.openVisState === undefined) {
         this.openVisState = mapLayer.visible

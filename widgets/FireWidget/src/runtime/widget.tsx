@@ -1,8 +1,8 @@
 /** @jsx jsx */
 import './assets/style.css';
-import {AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState} from "jimu-core";
+import {AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState, DataSourceManager} from "jimu-core";
 import {IMConfig} from "../config";
-import {Progress, Switch, Button, Icon, Loading} from 'jimu-ui';
+import {Progress, Switch, Button, Icon, Loading, TextInput, Tabs, Tab} from 'jimu-ui';
 import React, {Component} from 'react';
 import {JimuMapView, JimuMapViewComponent} from 'jimu-arcgis';
 import FeatureLayer from 'esri/layers/FeatureLayer';
@@ -18,6 +18,9 @@ interface State {
   acresArray: any[]
   checked: boolean
   visible: boolean
+  firesInitial: any[]
+  myFires: any[]
+  myFiresTabActive: boolean
 }
 
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, State> {
@@ -39,18 +42,32 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   openVisState: any[] = [];
   child;
   first: boolean = true;
-  perimeterBufferFC: FeatureLayer;
-
+  // perimeterBufferFC: FeatureLayer;
+  // datasource: DataSourceManager;
+  subscriptionsURL = "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9NotificationSubscriptions/FeatureServer/0";
+  subscriptionIDs: any[];
+  customPoiURL = "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9NotificationCustomPoints/FeatureServer/0";
+  customPoiFC: FeatureLayer;
+  customPOIs: any[] = [];
+  currentUsername: string;
 
   constructor(props) {
     super(props);
     this.checked = false;
     this.child = React.createRef();
+    // Add this to use layer selection as configurable data source
+    // this.datasource = DataSourceManager.getInstance().getDataSource(this.props.useDataSources[0].mainDataSourceId);
   }
 
   componentDidMount() {
-    this.setUpFeatureLayers({
-        url: "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9Notifiable/FeatureServer/0",
+    this.setUpFeatureLayers(
+        {
+        // Hard coded url
+        // url: "https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/R9Notifiable/FeatureServer/0",
+
+        // Use this one if going back to the layer select
+        // url: this.datasource._url,
+        url: this.props.dataSourceUrl,
         definitionExpression: "display = 1"
       },
       {
@@ -61,13 +78,21 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     });
 
     this.checked = false;
-    listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
+    this.setState({
+      myFiresTabActive: false,
+      myFires: []
+    });
+    listenForViewVisibilityChanges(this.props.id, this.updateVisibility);
+    this.loadFires();
   }
 
-  updateVisibility = (visible) => this.setState({visible})
+  updateVisibility = (visible) => this.setState({visible});
 
   componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView; fires: any[]; acresArray: any[] }>, snapshot?: any) {
-    if (this.state?.jimuMapView) {
+    if (this.state?.jimuMapView && !this.search) {
+      if (getAppStore().getState().user.username && !this.currentUsername) {
+        this.initCustomPoiFC();
+      }
       let widgetState: WidgetState;
       widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
       if (widgetState == WidgetState.Closed || this.state?.visible === false) {
@@ -83,6 +108,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         });
 
         this.jmv.view.map.layers.remove(this.perimeterbufferFC);
+        this.jmv.view.map.layers.remove(this.customPoiFC);
         this.fireLayerVisReset = [];
         this.fireLayerFilterReset = [];
         this.jmv.view.map.layers.remove(this.perimeterbufferFC);
@@ -107,6 +133,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           this.checked = false;
           this.first = false
         }
+        this.setPoiLayerVisibility();
       }
     }
   }
@@ -120,6 +147,101 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         jimuMapView: jmv
       });
     }
+  }
+
+  initCustomPoiFC() {
+    this.currentUsername = getAppStore().getState().user.username;
+    this.customPoiFC = new FeatureLayer({
+      url: this.customPoiURL,
+      title: 'Custom Point of Interest',
+      definitionExpression: `Creator LIKE '%${this.currentUsername}%'`,
+      popupTemplate: {
+        title: 'Custom Point of Interest',
+        content: [{
+          type: "fields",
+          fieldInfos: [{
+            fieldName: "Name"
+          }, {
+            fieldName: "Creator"
+          }, {
+            fieldName: "CreationDate"
+          }]
+        }],
+        lastEditInfoEnabled: false
+      },
+      renderer: {
+        type: "simple",
+        symbol: {
+          type: "simple-marker",
+          style: "diamond",
+          size: 14,
+          color: [21, 217, 24, 1],
+          outline: {
+            width: 0.5,
+            color: "black"
+          }
+        }
+      }
+    });
+    this.getSubscriptions().then(() => this.getCustomPointsOfInterest(this.customPoiFC));
+  }
+
+  getCustomPointsOfInterest(PoiFC: FeatureLayer) {
+    const customPoiQuery = PoiFC.createQuery();
+    customPoiQuery.where = `Creator LIKE '%${this.currentUsername}%'`;
+    customPoiQuery.outSpatialReference = new SpatialReference({wkid: 102100});
+    customPoiQuery.returnGeometry = true;
+    customPoiQuery.outFields = ["*"];
+    return query.executeQueryJSON(this.customPoiURL, customPoiQuery).then(results => {
+      if (results.features.length > 0) {
+        this.customPOIs = results.features.filter(f => this.subscriptionIDs.includes(f.attributes.SubscriptionID));
+        this.populateMyFires();
+      }
+    });
+  }
+
+  getSubscriptions() {
+    const subscriptionsFC = new FeatureLayer({
+      url: this.subscriptionsURL,
+      title: 'Subscriptions'
+    });
+    const subscriptionsQuery = subscriptionsFC.createQuery();
+    subscriptionsQuery.where = `Subscriber LIKE '%${this.currentUsername}%'`;
+    subscriptionsQuery.outFields = ["*"];
+    return query.executeQueryJSON(this.subscriptionsURL, subscriptionsQuery).then(results => {
+      this.subscriptionIDs = results.features.map(s => s.attributes.GlobalID);
+    })
+  }
+
+  populateMyFires() {
+    this.setState({myFires: []});
+    const whereItems = [];
+    this.customPOIs.forEach((poi) => {
+      whereItems.push(`NotificationConfigurationID LIKE '%${poi.attributes.GlobalID}%'`);
+    })
+    const whereQuery = whereItems.join(' OR ');
+    const notifiableQuery = this.perimeterbufferFC.createQuery();
+    notifiableQuery.where = `Archived IS NULL AND (${whereQuery})`;
+    notifiableQuery.outSpatialReference = new SpatialReference({wkid: 102100});
+    notifiableQuery.returnGeometry = true;
+    notifiableQuery.outFields = ["*"];
+    return query.executeQueryJSON(`${this.perimeterbufferFC.url}/${this.perimeterbufferFC.layerId}`, notifiableQuery).then(results => {
+      if (results.features.length > 0) {
+        const myFiresArray = [];
+        results.features.forEach((fire) => {
+          if (!myFiresArray.find(x => x.attributes.Name === fire.attributes.Name)) {
+            const poiMatch = this.customPOIs.find(p => p.attributes.GlobalID === fire.attributes.NotificationConfigurationID);
+            fire['POI_Name'] = poiMatch.attributes.Name;
+            myFiresArray.push(fire);
+          } else {
+            const poiFire = myFiresArray.find(x => x.attributes.Name === fire.attributes.Name);
+            const poiMatch = this.customPOIs.find(p => p.attributes.GlobalID === fire.attributes.NotificationConfigurationID);
+            poiFire['POI_Name'] = poiFire['POI_Name'] + ', ' + poiMatch.attributes.Name;
+          }
+        })
+        this.setState({myFires: myFiresArray});
+      }
+    });
   }
 
   getGeometryUnion(layerUrl, queryWhere?, queryOutFields?, queryOurSR?) {
@@ -150,19 +272,22 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     return this.toggleFires(this.checked);
   }
 
-  loadFires() {
+   loadFires(whereText?: string, firesList?: any[]) {
     var currentDate = this._getCurrentDate();
+
+    const activeFires = firesList ? firesList.map(f => f.attributes.GlobalID) : null;
+
     //Identify default fire layers and visiblity
     //get perimeter buffer feature layer
     //Query for fires
     let query1 = this.perimeterbufferFC.createQuery();
-    query1.where = "display = 1";
+    query1.where = whereText ? `Name LIKE '%${whereText}%'` : "display = 1";
     query1.outSpatialReference = new SpatialReference({wkid: 102100});
     query1.returnGeometry = true;
     query1.orderByFields = ["NAME ASC"];
     query1.outFields = ["*"];
     return query.executeQueryJSON(`${this.perimeterbufferFC.url}/${this.perimeterbufferFC.layerId}`, query1).then(results => {
-      this._QueryFiresResults(results);
+      firesList ? this._QueryFiresResults(results, activeFires) : this._QueryFiresResults(results);
     });
   }
 
@@ -175,10 +300,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     return yyyy + '-' + mm + '-' + dd;
   }
 
-  _QueryFiresResults(results) {
+  _QueryFiresResults(results, firesList?: any[]) {
     this.setState({fires: []});
-    this.all_fires = results.features;
-    // this.setState({all_fires: results.features });
+
+    this.all_fires = firesList ? results.features.filter(f => firesList.includes(f.attributes.GlobalID)) : results.features;
+
     //get min and max acres
     this.acresArray = this.all_fires.map(function (a) {
       let fireData = JSON.parse(a.attributes.Data);
@@ -194,6 +320,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         }
       }
     });
+    !this.state.firesInitial && this.setState({firesInitial: this.all_fires});
     this.setState({fires: this.all_fires});
   }
 
@@ -207,14 +334,18 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       this.jmv.view.map.layers.remove(this.perimeterbufferFC);
       this.resetFireFilter(true);
     } else {
-      this.loadFires().then(() => {
-        this.filterFires();
-        //Check to see if perimeter buffer layer has been added
-        var bufferLayerStatus = this.jmv.view.map.layers.get(this.perimeterbufferFC.id);
-        if (!bufferLayerStatus) {
-          this.jmv.view.map.layers.add(this.perimeterbufferFC);
-        }
-      });
+      if (this.state.myFiresTabActive) {
+        this.resetFireFilter(true);
+      } else {
+        this.loadFires().then(() => {
+          this.filterFires();
+          //Check to see if perimeter buffer layer has been added
+          var bufferLayerStatus = this.jmv.view.map.layers.get(this.perimeterbufferFC.id);
+          if (!bufferLayerStatus) {
+            this.jmv.view.map.layers.add(this.perimeterbufferFC);
+          }
+        });
+      }
     }
   }
 
@@ -233,12 +364,17 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     return lyrs;
   }
 
-  resetFireFilter = (loadAllFires, onClose = false) => {
+  resetFireFilter = (loadAllFires, onClose = false, whereText?: string) => {
+    const myFiresItems = [];
+    (this.state.myFires.length > 0 && this.state.myFiresTabActive && !this.checked) && this.state.myFires.forEach(f => {
+      myFiresItems.push(`IncidentName LIKE '%${f.attributes.Name}%'`);
+    })
     this.fireLayerFilterReset.forEach((x) => {
       x.definitionExpression = '';
       if (x.title === this.irwinLabel && loadAllFires) {
         var q = new Query();
-        q.where = 'DailyAcres > 5';
+        q.where = whereText ? `DailyAcres > 5 AND IncidentName LIKE '%${whereText}%'` :
+            myFiresItems.length > 0 ? `DailyAcres > 5 AND (${myFiresItems.join(' OR ')})` : 'DailyAcres > 5';
         q.geometry = this.r9Geom;
         q.orderByFields = ['IncidentName ASC'];
         q.spatialRelationship = "intersects";
@@ -263,8 +399,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     if (!onClose) {
       this.jmv.view.map.allLayers.forEach(lyr => {
         if (lyr.type == 'feature') {
-
-
           var fireLayer = Array(this.irwinLabel, this.perimeterLabel).find(function (x) {
             return x === lyr.title;
           });
@@ -287,7 +421,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
                 filter += ' AND ' + idStr;
               }
               //@ts-ignore we check that this is a featureLayer earlier on
-              lyr.definitionExpression = filter;
+              lyr.definitionExpression = myFiresItems.length > 0 ? myFiresItems.join(' OR ') : filter;
             }).catch(e => {
               console.log(e)
             });
@@ -365,6 +499,29 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.boundaries = new FeatureLayer({url: boundariesFLInfo.url});
   }
 
+  searchFires(searchText: string) {
+    this.state.checked
+        ? this.resetFireFilter(true, false, searchText)
+        : this.loadFires(searchText, this.state.firesInitial);
+  }
+
+  setPoiLayerVisibility(e?: string) {
+    if (e) {
+      if (e === 'tab-my-fires') {
+        this.setState({myFiresTabActive: true}, () => this.resetFireFilter(true));
+        this.jmv.view.map.add(this.customPoiFC)
+      } else {
+        this.setState({myFiresTabActive: false});
+        this.jmv.view.map.remove(this.customPoiFC);
+        this.state.checked ? this.resetFireFilter(true) : this.loadFires().then(() => this.filterFires());
+      }
+    } else {
+      if (this.state.myFiresTabActive) {
+        this.jmv.view.map.add(this.customPoiFC);
+      }
+    }
+  }
+
   render() {
     if (!this.state?.jimuMapView) {
       return <div className="jimu-widget" style={{backgroundColor: "white"}}>
@@ -374,7 +531,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       </div>
     }
     return (
-      <div className="jimu-widget p-2" style={{overflow: "auto", backgroundColor: "white"}}>
+      <div className="jimu-widget p-2" style={{overflowY: "scroll", backgroundColor: "white"}}>
         <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
                               onActiveViewChange={this.onActiveViewChange}/>
         <div style={{marginBottom: 10}}>These wildfires are greater than 10 acres and within 10 miles of
@@ -411,12 +568,30 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           />
         </div>
 
-        {this.state && this.state.fires && this.jmv ? this.state.fires.map(x => <Fire ref={this.child}
+        <TextInput type='search' placeholder='Search' disabled={this.state.myFiresTabActive}
+                   onChange={(e) => this.searchFires(e.target.value)} style={{marginBottom: 10}} />
+
+        <Tabs defaultValue="tab-all-fires" onChange={(e) => this.setPoiLayerVisibility(e)} type="underline">
+          <Tab id="tab-all-fires" title="All Fires">
+            {this.state && this.state.fires && this.jmv ? this.state.fires.map(x => <Fire ref={this.child}
                                                                                       fire={x}
                                                                                       jmv={this.jmv}
                                                                                       acresArray={this.acresArray}
                                                                                       perim={this.perimeterbufferFC}
                                                                                       context={this.props.context}/>) : ''}
+          </Tab>
+          <Tab id="tab-my-fires" title="My Notifications">
+            {this.state.fires && this.jmv && this.state.myFires.length > 0
+                ? this.state.myFires.map(x => <Fire ref={this.child} fire={x} jmv={this.jmv}
+                                                     acresArray={this.acresArray} perim={this.perimeterbufferFC}
+                                                     context={this.props.context}/>)
+                : this.customPOIs.length === 0
+                    ? <p style={{marginTop: 10}}>You have no custom points of interest.</p>
+                    : <p style={{marginTop: 10}}>There are no active fires near your custom points of interest</p>}
+            <a href='https://r9data.response.epa.gov/apps/notifications/' target='_blank'>
+              Click here to edit your custom points of interest</a>
+          </Tab>
+        </Tabs>
       </div>
     );
   }
@@ -457,7 +632,10 @@ class Fire extends Component<any, any, any> {
     this.PercentContained = fireData.percent_contained ? fireData.percent_contained : this.props.fire.attributes.PercentContained ? this.props.fire.attributes.PercentContained : 0;
     this.DailyAcres = fireData.acres ? fireData.acres : this.props.fire.attributes.DailyAcres ? this.props.fire.attributes.DailyAcres : 0;
     this.GISAcres = fireData.acres ? fireData.acres : this.props.fire.attributes.GISAcres ? this.props.fire.attributes.GISAcres : 0;
-    this.IncidentName = fireData.IncidentName ? fireData.IncidentName.toUpperCase() : this.props.fire.attributes.IncidentName ? this.props.fire.attributes.IncidentName.toUpperCase() : "";
+    this.IncidentName = fireData.IncidentName ? fireData.IncidentName.toUpperCase()
+        : this.props.fire.attributes.IncidentName ? this.props.fire.attributes.IncidentName.toUpperCase()
+            : this.props.fire.attributes.Name ? this.props.fire.attributes.Name.toUpperCase()
+                : "";
     this.Counties = fireData.hasOwnProperty('counties') ? fireData.counties.split(",") : JSON.parse(this.props.fire.attributes.counties);
 
 
@@ -537,7 +715,7 @@ class Fire extends Component<any, any, any> {
 
       if (this.props.fire.geometry.type === 'point') {
         this.props.jmv.view.goTo(this.props.fire.geometry);
-        this.props.jmv.view.zoom = 10;
+        this.props.jmv.view.scale = 240000;
       }
     } else {
       this.props.jmv.view.goTo({center: [-119.5, 36.7]}); // else just center map over CA
@@ -569,13 +747,14 @@ class Fire extends Component<any, any, any> {
                 icon={`${this.props.context.folderUrl}dist/runtime/assets/images/operation_normal.svg`} size='m'/>
         </Button>
       }
+      {this.props.fire.POI_Name && <div><b>Associated Points of Interest: {this.props.fire.POI_Name}</b></div>}
       <div className='fireNameTxt'><b>{this.IncidentName}</b></div>
       <div className='acresTxt' title={`${this.Counties}`}>{this.Counties}</div>
       <div>({this.AcresFacilitySubText})</div>
       <Progress
         tooltip='Percent Contained'
         // showProgress={true}
-        className='fireProgress' style={{width: this.BarWidth}}
+        className='fireProgress' style={{maxWidth: '100%'}}
         color={'primary'} value={Math.round(this.PercentContained)}>
       </Progress>
       {/*<div id='acresSubtext' style={{*/}
