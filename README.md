@@ -1,3 +1,6 @@
+Clone the repository into EB >=1.9 client directory.
+
+Run `npm install` from inside the cloned repository directory.
 
 Update the widget-webpack-override.js to include the two react jsx lines bellow and look like the following per 
 https://developers.arcgis.com/experience-builder/guide/override-webpack-config/.  This is required for the react-data-grid library.
