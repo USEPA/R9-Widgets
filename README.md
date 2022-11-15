@@ -1,4 +1,4 @@
-Clone the repository into EB >=1.9 client directory.
+Clone the repository into client directory for Experience Builder >=1.9
 
 Run `npm install` from inside the cloned repository directory.
 
