@@ -12,8 +12,7 @@ To configure the widget, first add the RMP map service to the map. Then, downloa
 6) This widget works with a button configuration configured to a view.  The options in the image are the items to select for proper configuration. _The available views should line up with the Pane Section in the Outline (Table of Contents in the left panel of the EB Developer).  _
 
 The numbers mentioned in the description line up with the numbers in the image below.  See the example configuration process below:
-
-![RMPIdentifyWidget_Image](https://user-images.githubusercontent.com/54416878/202266357-c355bc9b-71d2-4d01-9eac-d6353b794472.png)
+![RMPIdentifyWidget_Image](https://user-images.githubusercontent.com/54416878/202275073-e9825ca6-00dd-476c-9f63-79c01022bd5f.png)
 
 
 ### Contact Information
