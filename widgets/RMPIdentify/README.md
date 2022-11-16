@@ -1,10 +1,14 @@
 # RMP Widget
 
-The RMP Identify widget is designed to display a subset the of the RMP data available for a selected site.  It does not display all available information in the RMP dataset.  Please use RMP*Review to obtain all available information about a given facility's RMP.
+The RMP Identify Widget is designed to display a subset the of the RMP data available for a selected site.  It does not display all available information in the RMP dataset.  Please use RMP*Review to obtain all available information about a given facility's RMP.
 
-To configure the widget, first add the RMP map service to the map. Then, download a copy of this widget from <a href="https://github.com/USEPA/R9-Widgets/releases/tag/RMP_v1">releases</a>. Place the widget in the `\client\stemapp\widgets` folder of the Developer Edition of the Esri WAB. Navigate to the Widget tab of the Web AppBuilder configuration tool for the WebApp you would like to deploy it to. Add the widget and configure it. Set the Facility Layer to the All Facilities layer of the RMP service and set the Status Layer to the Admin Refresh Info layer of the RMP service. See the example configuration page below:
+To configure the widget, first add the RMP map service to the map. Then, download a copy of this widget from <a href="https://github.com/USEPA/R9-Widgets/releases/tag/RMP_EB_v1">releases</a>. Place the widget in the `\client\R9-Widgets\widgets` folder of the Developer Edition of the ESRI Experience Builder. 
 
-![image](https://user-images.githubusercontent.com/4040295/44279060-f17efb80-a204-11e8-9c25-947122daaf69.png)
+Navigate to the Insert Widget section (1) of the Experience Builder Developer Edition.  Place the widget box (2) in the location of the screen that you prefer.  The one in the image below is nested to the left in a Fixed Panel.  Next, link the pane to the RMP Data by selecting the Map (3) and the RMP Map Service (Layer) (4).  This widget works with a button configuration configured to a view (5 & 6).  The available views should line up with the Pane Section in the Outline (Table of Contents in the left panel of the EB Developer).  The numbers mentioned in the description line up with the numbers in the image below.
+
+See the example configuration process below:
+
+![RMPIdentifyWidget_Image](https://user-images.githubusercontent.com/54416878/202266357-c355bc9b-71d2-4d01-9eac-d6353b794472.png)
 
 
 ### Contact Information
