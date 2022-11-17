@@ -9,10 +9,11 @@ To configure the widget, first add the RMP map service to the map. Then, downloa
 3) Next, link the pane to the RMP Data by selecting the Map.  
 4) Then, select the RMP Map Service (Layer).  
 5) Select (and/or create) the button and click the "Set Link" button for the next step.
-6) This widget works with a button configuration configured to a view.  The options in the image are the items to select for proper configuration. _The available views should line up with the Pane Section in the Outline (Table of Contents in the left panel of the EB Developer).  _
+6) This widget works with a button configuration configured to a view.  The options in the image are the items to select for proper configuration. The available views should line up with the Pane Section in the Outline (Table of Contents in the left panel of the EB Developer).
 
 The numbers mentioned in the description line up with the numbers in the image below.  See the example configuration process below:
-![RMPIdentifyWidget_Image](https://user-images.githubusercontent.com/54416878/202275073-e9825ca6-00dd-476c-9f63-79c01022bd5f.png)
+![RMPIdentifyWidget_Image_v2](https://user-images.githubusercontent.com/54416878/202480879-60c1d2e7-36af-471d-a9fd-0c0947410d8e.png)
+
 
 
 ### Contact Information
