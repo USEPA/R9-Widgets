@@ -17,14 +17,11 @@ node {
     // always go to staging
     stage('deploy staging') {
         def info = readJSON file: "D:\\R9Web\\ArcGISExperienceBuilder\\server\\public\\apps\\12\\info.json"
-        def currentDateTime = new Date()
-        use(groovy.time.TimeCategory) {
-            def tenMinutesAgo = currentDateTime - 10.minutes
-            if (info['modified'] >= tenMinutesAgo && info['typeKeywords'].contains("status: Published")) {
-                continueDeployment = true
-            } else {
-                println "No updates published in the last 10 minutes"
-            }
+        def currentDateTime = new Date().getTime()
+        if (currentTime - info['modified'] > 600000 && info['typeKeywords'].contains("status: Published")) {
+            continueDeployment = true
+        } else {
+            println "No updates published in the last 10 minutes"
         }
     }
 
