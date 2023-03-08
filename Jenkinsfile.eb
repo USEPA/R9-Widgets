@@ -1,0 +1,55 @@
+def buildNumber = env.BUILD_NUMBER as int
+if (buildNumber > 1) milestone(buildNumber - 1)
+milestone(buildNumber)
+
+def continueDeployment = false
+
+node {
+  try {
+    configFileProvider([configFile(fileId: "852a6d6e-e4a6-4904-bc69-c8297398ed9d", variable: 'configFile')]) {
+        props = readProperties file: "$configFile"
+        env.JENKINS_HOST = props['JENKINS_HOST']
+        env.HOST_ADDRESS = props['HOST_ADDRESS']
+        env.PUBLIC_DOMAIN = props['PUBLIC_DOMAIN']
+        env.APPROVERS = props['APPROVERS']
+    }
+    checkout scm
+    // always go to staging
+    stage('deploy staging') {
+        def info = readJSON file: "D:\\R9Web\\ArcGISExperienceBuilder\\server\\public\\apps\\12\\info.json"
+        def currentDateTime = new Date()
+        use(groovy.time.TimeCategory) {
+            def tenMinutesAgo = currentDateTime - 10.minutes
+            if (info['modified'] >= tenMinutesAgo && info['typeKeywords'].contains("status: Published")) {
+                continueDeployment = true
+            } else {
+                println "No updates published in the last 10 minutes"
+            }
+        }
+    }
+
+    stage('deploy production') {
+        if (continueDeployment) {
+            slackSend(channel:"#r9-service-alerts", message: "R9COP EB PRODUCTION deployment is PENDING:\nReview: https://${env.PUBLIC_DOMAIN}/apps/staging/cop/\nApprove: http://${env.JENKINS_HOST}/job/R9COP/job/master/ (VPN Required)")
+            input(message: "Deploy to production?", submitter: env.APPROVERS)
+
+            // remove backup and latest folders if exists
+            powershell "Remove-Item -Recurse -Force \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP\\R9COP_EB_backup"
+            powershell "Remove-Item -Recurse -Force \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP\\R9COP_EB_latest"
+
+            // export app to zip and unpack into latest folder
+            bat "node D:\\R9Web\\ArcGISExperienceBuilder\\server\\src\\runZipApp.js "${env.WORKSPACE}\\exp_builder_widgets_export.zip""
+            powershell "Expand-Archive -LiteralPath '${env.WORKSPACE}\\exp_builder_widgets_export.zip' -DestinationPath '\\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP\\R9COP_EB_latest'"
+
+            powershell "Rename-Item \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP\\R9COP_EB \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP\\R9COP_EB_backup"
+            powershell "Rename-Item \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP\\R9COP_EB_latest \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP\\R9COP_EB"
+            slackSend(channel:"#r9-service-alerts", message: "R9COP EB PRODUCTION deployment is COMPLETE")
+        }
+    }
+
+  } catch(Exception e) {
+    slackSend(channel:"#r9-service-alerts", message: "R9COP EB deployment FAILED, REJECTED or SUPERSEDED")
+  } finally {
+    cleanWs()
+  }
+}
