@@ -28,14 +28,27 @@ node {
     if (continueDeployment) {
         stage('deploy staging') {
             // remove backup and latest folders if exists
-            powershell "Remove-Item -Recurse -Force \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_backup"
-            powershell "Remove-Item -Recurse -Force \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_latest"
+            def backupExists = powershell(returnStdout: true, script: "Test-Item \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_backup")
+            def latestExists = powershell(returnStdout: true, script: "Test-Item \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_latest")
+
+            if (backupExists) {
+                powershell "Remove-Item -Recurse -Force \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_backup"
+            }
+
+            if (latestExists) {
+                powershell "Remove-Item -Recurse -Force \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_latest"
+            }
 
             // export app to zip and unpack into latest folder
             bat "node D:\\R9Web\\ArcGISExperienceBuilder\\server\\src\\runZipApp.js 12 '${env.WORKSPACE}\\exp_builder_widgets_export.zip'"
             powershell "Expand-Archive -LiteralPath '${env.WORKSPACE}\\exp_builder_widgets_export.zip' -DestinationPath '\\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_latest'"
 
-            powershell "Rename-Item \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_backup"
+            def copExists = powershell(returnStdout: true, script: "Test-Item \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP")
+
+            if (copExists) {
+                powershell "Rename-Item \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_backup"
+            }
+
             powershell "Rename-Item \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_latest \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP"
 
             slackSend(channel:"#r9-service-alerts", message: "R9COP EB PRODUCTION deployment is PENDING:\nReview: https://${env.PUBLIC_DOMAIN}/apps/staging/cop/\nApprove: http://${env.JENKINS_HOST}/job/COP_EB_Folder/job/COP_EB_Pipeline/ (VPN Required)")
