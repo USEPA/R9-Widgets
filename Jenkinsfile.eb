@@ -27,7 +27,7 @@ node {
 
     stage('deploy production') {
         if (continueDeployment) {
-            slackSend(channel:"#r9-service-alerts", message: "R9COP EB PRODUCTION deployment is PENDING:\nReview: https://${env.PUBLIC_DOMAIN}/apps/staging/cop/\nApprove: http://${env.JENKINS_HOST}/job/COP_EB_Folder/job/master/ (VPN Required)")
+            slackSend(channel:"#r9-service-alerts", message: "R9COP EB PRODUCTION deployment is PENDING:\nReview: https://${env.PUBLIC_DOMAIN}/apps/staging/cop/\nApprove: http://${env.JENKINS_HOST}/job/COP_EB_Folder/job/COP_EB_Pipeline/ (VPN Required)")
             input(message: "Deploy to production?", submitter: env.APPROVERS)
 
             // remove backup and latest folders if exists
