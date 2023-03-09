@@ -18,7 +18,7 @@ node {
     stage('deploy staging') {
         def info = readJSON file: "D:\\R9Web\\ArcGISExperienceBuilder\\server\\public\\apps\\12\\info.json"
         def currentDateTime = new Date().getTime()
-        if (currentDateTime - info['modified'] > 600000 && info['typeKeywords'].contains("status: Published")) {
+        if (currentDateTime - info['modified'] < 600000 && info['typeKeywords'].contains("status: Published")) {
             continueDeployment = true
         } else {
             println "No updates published in the last 10 minutes"
@@ -27,7 +27,7 @@ node {
 
     stage('deploy production') {
         if (continueDeployment) {
-            slackSend(channel:"#r9-service-alerts", message: "R9COP EB PRODUCTION deployment is PENDING:\nReview: https://${env.PUBLIC_DOMAIN}/apps/staging/cop/\nApprove: http://${env.JENKINS_HOST}/job/R9COP/job/master/ (VPN Required)")
+            slackSend(channel:"#r9-service-alerts", message: "R9COP EB PRODUCTION deployment is PENDING:\nReview: https://${env.PUBLIC_DOMAIN}/apps/staging/cop/\nApprove: http://${env.JENKINS_HOST}/job/COP_EB_Folder/job/master/ (VPN Required)")
             input(message: "Deploy to production?", submitter: env.APPROVERS)
 
             // remove backup and latest folders if exists
