@@ -15,7 +15,7 @@ node {
     }
     checkout scm
     // always go to staging
-    stage('deploy staging') {
+    stage('check for changes') {
         def info = readJSON file: "D:\\R9Web\\ArcGISExperienceBuilder\\server\\public\\apps\\12\\info.json"
         def currentDateTime = new Date().getTime()
         if (currentDateTime - info['modified'] < 600000 && info['typeKeywords'].contains("status: Published")) {
@@ -25,21 +25,24 @@ node {
         }
     }
 
-    stage('deploy production') {
-        if (continueDeployment) {
-            slackSend(channel:"#r9-service-alerts", message: "R9COP EB PRODUCTION deployment is PENDING:\nReview: https://${env.PUBLIC_DOMAIN}/apps/staging/cop/\nApprove: http://${env.JENKINS_HOST}/job/COP_EB_Folder/job/COP_EB_Pipeline/ (VPN Required)")
-            input(message: "Deploy to production?", submitter: env.APPROVERS)
-
+    if (continueDeployment) {
+        stage('deploy staging') {
             // remove backup and latest folders if exists
-            powershell "Remove-Item -Recurse -Force \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP\\R9COP_EB_backup"
-            powershell "Remove-Item -Recurse -Force \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP\\R9COP_EB_latest"
+            powershell "Remove-Item -Recurse -Force \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_backup"
+            powershell "Remove-Item -Recurse -Force \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_latest"
 
             // export app to zip and unpack into latest folder
             bat "node D:\\R9Web\\ArcGISExperienceBuilder\\server\\src\\runZipApp.js 12 '${env.WORKSPACE}\\exp_builder_widgets_export.zip'"
-            powershell "Expand-Archive -LiteralPath '${env.WORKSPACE}\\exp_builder_widgets_export.zip' -DestinationPath '\\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP\\R9COP_EB_latest'"
+            powershell "Expand-Archive -LiteralPath '${env.WORKSPACE}\\exp_builder_widgets_export.zip' -DestinationPath '\\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_latest'"
 
-            powershell "Rename-Item \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP\\R9COP_EB \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP\\R9COP_EB_backup"
-            powershell "Rename-Item \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP\\R9COP_EB_latest \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP\\R9COP_EB"
+            powershell "Rename-Item \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_backup"
+            powershell "Rename-Item \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_latest \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP"
+
+            slackSend(channel:"#r9-service-alerts", message: "R9COP EB PRODUCTION deployment is PENDING:\nReview: https://${env.PUBLIC_DOMAIN}/apps/staging/cop/\nApprove: http://${env.JENKINS_HOST}/job/COP_EB_Folder/job/COP_EB_Pipeline/ (VPN Required)")
+            input(message: "Deploy to production?", submitter: env.APPROVERS)
+        }
+
+        stage('deploy production') {
             slackSend(channel:"#r9-service-alerts", message: "R9COP EB PRODUCTION deployment is COMPLETE")
         }
     }
