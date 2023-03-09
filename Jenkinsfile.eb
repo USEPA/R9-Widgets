@@ -32,8 +32,8 @@ node {
             powershell "Remove-Item -Recurse -Force \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_latest"
 
             // export app to zip and unpack into latest folder
-            bat "node D:\\R9Web\\ArcGISExperienceBuilder\\server\\src\\runZipApp.js 12 '${env.WORKSPACE}\\exp_builder_widgets_export.zip'"
-            powershell "Expand-Archive -LiteralPath '${env.WORKSPACE}\\exp_builder_widgets_export.zip' -DestinationPath '\\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_latest'"
+            bat "node D:\\R9Web\\ArcGISExperienceBuilder\\server\\src\\runZipApp.js 12 ${env.WORKSPACE}\\exp_builder_widgets_export.zip"
+            powershell "Expand-Archive -LiteralPath ${env.WORKSPACE}\\exp_builder_widgets_export.zip -DestinationPath \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_latest"
 
             powershell "Rename-Item \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_backup"
             powershell "Rename-Item \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP_latest \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\staging\\COP"
