@@ -40,7 +40,7 @@ node {
 
             // update client id
             def cdnSubFolder = powershell(returnStdout: true, script: "Get-ChildItem -Path \\\\${env.HOST_ADDRESS}\\R9Apps\\staging\\COP\\cdn -Name")
-            powershell "Copy-Item -Path \\\\${env.HOST_ADDRESS}\\R9Apps\\staging\\COP\\cdn\\${cdnSubFolder}\\config.json -Destination ${env.WORKSPACE}"
+            powershell "Copy-Item -Path \\\\${env.HOST_ADDRESS}\\R9Apps\\staging\\COP\\cdn\\*\\config.json -Destination ${env.WORKSPACE}"
             def config = readJSON file: "${env.WORKSPACE}\\config.json", returnPojo: true
             config['attributes']['clientId'] = props['CLIENT_ID']
             writeJSON file: "${env.WORKSPACE}\\config.json", json: config
