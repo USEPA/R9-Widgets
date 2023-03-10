@@ -8,7 +8,7 @@ node {
         }
         dir("D:/R9Web/ArcGISExperienceBuilder/client") {
             bat "npm i"
-            bat "npm run build:dev"
+            bat "npm run build:prod"
         }
 //         dir("D:/R9Web/ArcGISExperienceBuilder") {
 //             def info = readJSON file: '/server/public/apps/12/info.json'
