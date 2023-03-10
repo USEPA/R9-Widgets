@@ -50,8 +50,14 @@ node {
         }
 
         stage('deploy production') {
-            powershell "Remove-Item -Recurse -Force \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\COP"
-            powershell "Copy-Item -Path \\\\${env.HOST_ADDRESS}\\R9Apps\\staging\\COP -Destination \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\COP -Recurse -Force"
+            powershell "Remove-Item -Recurse -Force \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\COP_backup"
+            powershell "Remove-Item -Recurse -Force \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\COP_latest"
+
+            powershell "Copy-Item -Path \\\\${env.HOST_ADDRESS}\\R9Apps\\staging\\COP -Destination \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\COP_latest -Recurse -Force"
+
+            powershell "Rename-Item \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\COP \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\COP_backup"
+            powershell "Rename-Item \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\COP_latest \\\\${env.HOST_ADDRESS}\\R9Apps\\apps\\COP"
+
             slackSend(channel:"#r9-service-alerts", message: "R9COP EB PRODUCTION deployment is COMPLETE")
         }
     }
