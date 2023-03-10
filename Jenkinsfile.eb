@@ -39,9 +39,12 @@ node {
             powershell "Rename-Item \\\\${env.HOST_ADDRESS}\\R9Apps\\staging\\COP_latest \\\\${env.HOST_ADDRESS}\\R9Apps\\staging\\COP"
 
             // update client id
-            def config = readJSON file: "\\\\${env.HOST_ADDRESS}\\R9Apps\\staging\\COP\\cdn\\*\\config.json", returnPojo: true
+            def cdnSubFolder = powershell(returnStdout: true, script: "Get-ChildItem -Path \\\\${env.HOST_ADDRESS}\\R9Apps\\staging\\COP\\cdn -Name")
+            powershell "Copy-Item -Path \\\\${env.HOST_ADDRESS}\\R9Apps\\staging\\COP\\cdn\\${cdnSubFolder}\\config.json -Destination ${env.WORKSPACE}"
+            def config = readJSON file: "${env.WORKSPACE}\\config.json", returnPojo: true
             config['attributes']['clientId'] = props['CLIENT_ID']
-            writeJSON file: "\\\\${env.HOST_ADDRESS}\\R9Apps\\staging\\COP\\cdn\\*\\config.json", json: config
+            writeJSON file: "${env.WORKSPACE}\\config.json", json: config
+            powershell "Copy-Item -Path ${env.WORKSPACE}\\config.json -Destination \\\\${env.HOST_ADDRESS}\\R9Apps\\staging\\COP\\cdn\\${cdnSubFolder}"
 
             slackSend(channel:"#r9-service-alerts", message: "R9COP EB PRODUCTION deployment is PENDING:\nReview: https://${env.PUBLIC_DOMAIN}/apps/staging/cop/\nApprove: http://${env.JENKINS_HOST}/job/COP_EB_Folder/job/COP_EB_Pipeline/ (VPN Required)")
             input(message: "Deploy to production?", submitter: env.APPROVERS)
