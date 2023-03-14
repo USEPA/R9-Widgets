@@ -128,6 +128,10 @@ export default function ({useMapWidgetIds, windDataSource, smokeDataSource, id}:
 
   useEffect(() => {
     if (jimuMapView) {
+      const viirs = jimuMapView.view.map.allLayers.items.find(i => i.title.includes('VIIRS'));
+      viirs.visible = true;
+      viirs.useViewTime = false;
+      viirs.timeInfo.useViewTime = false;
       const t = jimuMapView.view.allLayerViews.filter(l => l.layer.timeInfo && l.layer.timeInfo.useTime)
       t.forEach(l => l.watch('visible', () => {
         setTimeLayers(t.filter(l => l.layer.visible))
