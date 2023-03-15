@@ -14,18 +14,16 @@ node {
     stage('check for changes') {
         def info = readJSON file: "D:\\R9Web\\ArcGISExperienceBuilder\\server\\public\\apps\\12\\info.json"
         def currentDateTime = new Date().getTime()
-        if (currentDateTime - info['modified'] < 600000 && info['typeKeywords'].contains("status: Published")) {
-            continueDeployment = true
-            def buildNumber = env.BUILD_NUMBER as int
-            if (buildNumber > 1) milestone(buildNumber - 1)
-            milestone(buildNumber)
-        } else {
-            println "No updates published in the last 10 minutes"
-        }
+        continueDeployment = (currentDateTime - info['modified'] < 600000 && info['typeKeywords'].contains("status: Published"))
     }
 
     if (continueDeployment) {
         stage('deploy staging') {
+            // first cancel any existing build process
+            def buildNumber = env.BUILD_NUMBER as int
+            if (buildNumber > 1) milestone(buildNumber - 1)
+            milestone(buildNumber)
+            
             // remove backup and latest folders if exists
             powershell "Remove-Item -Recurse -Force \\\\${env.HOST_ADDRESS}\\R9Apps\\staging\\COP_backup"
             powershell "Remove-Item -Recurse -Force \\\\${env.HOST_ADDRESS}\\R9Apps\\staging\\COP_latest"
@@ -60,6 +58,8 @@ node {
 
             slackSend(channel:"#r9-service-alerts", message: "R9COP EB PRODUCTION deployment is COMPLETE")
         }
+    } else {
+        println "No updates published in the last 10 minutes"
     }
 
   } catch(Exception e) {
