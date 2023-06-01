@@ -16,7 +16,7 @@ module.exports = function (webpackConfig) {
 }
 ```
 
-Upgrading Experience Builder versions:
+Upgrading hosted Experience Builder versions:
 1. Download and unzip latest experience builder developer edition
 2. Pull github repo into client folder
 3. Run npm install in both the client and server folders
