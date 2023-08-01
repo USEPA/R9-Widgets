@@ -607,6 +607,7 @@ class Fire extends Component<any, any, any> {
   ReportingAcres: any;
   PCLabel: string;
   AcresFacilitySubText: string;
+  reportUrl: string;
 
   constructor(private jimuMapView: JimuMapView) {
     super(jimuMapView);
@@ -705,6 +706,8 @@ class Fire extends Component<any, any, any> {
       PCLabel: this.PCLabel,
       AcresFacilitySubText: this.AcresFacilitySubText,
     });
+
+    this._queryFireAttachment();
   }
 
   zoomToFire() {
@@ -731,8 +734,12 @@ class Fire extends Component<any, any, any> {
     }
 
     this.props.perim.queryAttachments(attachQuery).then((res) => {
-      var latestReportIndex = res[oid].length - 1;
-      window.open(res[oid][latestReportIndex].url, "_top");
+      if(res[oid]) {
+        const latestReportIndex = res[oid].length - 1;
+        // window.open(res[oid][latestReportIndex].url, "_top");
+        this.reportUrl = res[oid][latestReportIndex].url;
+        this.setState({reportUrl: this.reportUrl});
+      }
     });
   }
 
@@ -740,9 +747,9 @@ class Fire extends Component<any, any, any> {
     return <div className='layerDiv' id={this.props.fire.attributes.OBJECTID}
                 title="Click to zoom"
                 onClick={this.zoomToFire}>
-      {JSON.parse(this.props.fire.attributes.Data).hasOwnProperty('IncidentName') &&
+      {(JSON.parse(this.props.fire.attributes.Data).hasOwnProperty('IncidentName') && this.reportUrl) &&
         <Button title='Get Report' aria-label="Button" htmlType="button" icon className='report-button'
-                size="default" onClick={this._queryFireAttachment}>
+                size="default" onClick={() => window.open(this.reportUrl, '_top')}>
           <Icon className='report-button'
                 icon={`${this.props.context.folderUrl}dist/runtime/assets/images/operation_normal.svg`} size='m'/>
         </Button>
