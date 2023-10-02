@@ -79,7 +79,7 @@ interface State {
   visible: boolean
 }
 
-export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, State> {
+export default class RMPWidget extends BaseWidget<AllWidgetProps<IMConfig>, State> {
   symbol: any = new SimpleMarkerSymbol({color: 'yellow', style: 'diamond'});
   mainText: boolean = true;
   first: boolean = true;
@@ -147,7 +147,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.setState({
       loading: true
     })
-    // const i = DataSourceManager.getInstance().getDataSource(this.props.useDataSources[0].dataSourceId)
 
     // let addedToMap: boolean
 
@@ -166,24 +165,16 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   }
 
   initRMP() {
-    // this.state.().then((res) => {
-    this.state.rmpParentLayer.sublayers.forEach(lyr => {
-      if (lyr.id === parseInt(this.state.rmpFacilityLayer.id, 10)) {
-        lyr.createFeatureLayer().then((res) => {
-          res.load()
-          res.when(() => {
-            this.loadRelated(res)
+    this.state.rmpParentLayer.layer.sublayers.items.forEach(lyr => {
+      lyr.createFeatureLayer().then((res) => {
+        res.load()
+        res.when(() => {
+          this.loadRelated(res)
+          if (lyr.id === parseInt(this.state.rmpFacilityLayer.layer.id, 10)) {
             this.facilities = res
-          })
+          }
         })
-      } else {
-        lyr.createFeatureLayer().then((res) => {
-          res.load()
-          res.when(() => {
-            this.loadRelated(res)
-          })
-        })
-      }
+      })
     })
 
     const statusLayer = new FeatureLayer({url: this.state.rmpParentLayer.url + '/14', outFields: ['*']})
@@ -202,7 +193,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         loading: false
       })
     })
-    // })
   }
 
   onActiveViewChange = (jmv: JimuMapView) => {
@@ -231,6 +221,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
   setLayerVisibility(layer, visible) {
     const l = this.state.jimuMapView.view.map.allLayers.find(ml => ml.url === layer.url);
+//    const l = this.state.jimuMapView.view.map.allLayers.items.find(ml => layer.jimuLayerId.includes(ml.id))
     l.visible = visible;
   }
 
@@ -238,23 +229,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     let widgetState: WidgetState
     widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state
 
-
     // do anything on open/close of widget here
     if ((widgetState === WidgetState.Opened || this.state?.visible === true)
       && this.state.jimuMapView && this.state.rmpFacilityLayer) {
       if (this.first) {
-        // this.rmpLayer = this.state.jimuMapView.view.map.layers.find(lyr => {
-        //   return lyr.id === this.state.rmpFacilityLayer.id
-        // })
-        // this.graphicsLayer = new GraphicsLayer({
-        //   listMode: 'hide'
-        // })
-        // this.state.jimuMapView.view.map.add(this.graphicsLayer)
         // get/set visibility of map layers
-        this.rmpVisibleOnOpen = this.state.rmpParentLayer.visible
+        this.rmpVisibleOnOpen = this.state.rmpParentLayer.layer.visible
         this.setLayerVisibility(this.state.rmpParentLayer, true)
-        this.setLayerVisibility(this.state.rmpFacilityLayer, true)
-
 
         this.mainText = true
         this.nothingThere = []
@@ -276,7 +257,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     }
 
     if (widgetState === WidgetState.Closed || this.state.visible === false && !this.state.loading) {
-
       this.setLayerVisibility(this.state.rmpParentLayer, this.rmpVisibleOnOpen)
       this.first = true
       // this.state.jimuMapView.view.map.layers.remove(this.graphicsLayer)
@@ -1072,8 +1052,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
   rmpLayerCreated = (e) => {
     this.setState({
-      rmpFacilityLayer: e.layer,
-      rmpParentLayer: e.parentDataSource.layer
+      rmpFacilityLayer: e.dataSourceManager.getDataSource(e.id),
+      rmpParentLayer: e.parentDataSource
     })
   }
 
