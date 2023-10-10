@@ -148,39 +148,38 @@ export default class RMPWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
       loading: true
     })
 
-    // let addedToMap: boolean
-
-    // if it isn't there add it
-    // if (this.rmpLayer == undefined) {
-    //   addedToMap = false
-    //   this.rmpLayer = new MapImageLayer({
-    //     url: 'https://utility.arcgis.com/usrsvcs/servers/a9dda0a4ba0a433992ce3bdffd89d35a/rest/services/SharedServices/RMPFacilities/MapServer'
-    //   })
-    // } else {
-    //   addedToMap = true
-    // }
     listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
 
     this.openModal = false
   }
 
   initRMP() {
-    this.state.rmpParentLayer.layer.sublayers.items.forEach(lyr => {
+    let rmpLayers = this.state.rmpParentLayer.layer.sublayers?.items
+    if(typeof rmpLayers === 'undefined') rmpLayers = this.state.rmpParentLayer.layer.layers.items
+
+    rmpLayers.forEach(lyr => {
+//      this.loadRelated(lyr.sourceJSON)
+////      if (lyr.id === parseInt(this.state.rmpFacilityLayer.layer.id, 10)) {
+//      if (lyr.title === this.state.rmpFacilityLayer.layer.title) {
+//        this.facilities = lyr
+//      }
       lyr.createFeatureLayer().then((res) => {
         res.load()
         res.when(() => {
           this.loadRelated(res)
-          if (lyr.id === parseInt(this.state.rmpFacilityLayer.layer.id, 10)) {
+          if (lyr.title === this.state.rmpFacilityLayer.layer.title) {
+//          if (lyr.id === parseInt(this.state.rmpFacilityLayer.layer.id, 10)) {
             this.facilities = res
           }
         })
       })
     })
 
-    const statusLayer = new FeatureLayer({url: this.state.rmpParentLayer.url + '/14', outFields: ['*']})
+    // get data refresh date
+    const statusLayer = new FeatureLayer({url: this.state.baseUrl + '/14', outFields: ['*']})
     const statusQuery = new Query()
     statusQuery.outFields = ['*']
-    statusQuery.where = "OBJECTID Like'%'"
+    statusQuery.where = "1=1"
     statusLayer.queryFeatures(statusQuery).then(featureSet => {
       const refreshDate = moment(featureSet.features[0].attributes.DateRefreshed).utc().toISOString().split('T')[0]
 
@@ -192,6 +191,9 @@ export default class RMPWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
         refreshDate: this.refreshDate,
         loading: false
       })
+    })
+    this.setState({
+      loading: false
     })
   }
 
@@ -205,8 +207,8 @@ export default class RMPWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
 
   loadRelated(obj) {
     obj.relationships.forEach((relationship) => {
-      if (relationship.role === 'origin') {
-        this[relationship.name] = new FeatureLayer({url: this.state.rmpParentLayer.url + '/' + relationship.relatedTableId})
+      if (relationship.role.toLowerCase().includes('origin')) {
+        this[relationship.name] = new FeatureLayer({url: this.state.baseUrl + '/' + relationship.relatedTableId})
         this[relationship.name].relationshipId = relationship.id
         this[relationship.name].load().then((e) => {
           this[relationship.name] = e
@@ -235,7 +237,7 @@ export default class RMPWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
       if (this.first) {
         // get/set visibility of map layers
         this.rmpVisibleOnOpen = this.state.rmpParentLayer.layer.visible
-        this.setLayerVisibility(this.state.rmpParentLayer, true)
+        this.setLayerVisibility(this.state.rmpParentLayer.layer, true)
 
         this.mainText = true
         this.nothingThere = []
@@ -1055,6 +1057,16 @@ export default class RMPWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
       rmpFacilityLayer: e.dataSourceManager.getDataSource(e.id),
       rmpParentLayer: e.parentDataSource
     })
+    // get data refresh date
+    if(typeof e.itemInfo?.url !== 'undefined') {
+      this.setState({
+        baseUrl: e.itemInfo.url
+      })
+    } else if(typeof e.parentDataSource.url !== 'undefined') {
+      this.setState({
+        baseUrl: e.parentDataSource.url
+      })
+    }
   }
 
   render() {
