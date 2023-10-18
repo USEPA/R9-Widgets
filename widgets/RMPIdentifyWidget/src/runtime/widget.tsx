@@ -158,17 +158,11 @@ export default class RMPWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
     if(typeof rmpLayers === 'undefined') rmpLayers = this.state.rmpParentLayer.layer.layers.items
 
     rmpLayers.forEach(lyr => {
-//      this.loadRelated(lyr.sourceJSON)
-////      if (lyr.id === parseInt(this.state.rmpFacilityLayer.layer.id, 10)) {
-//      if (lyr.title === this.state.rmpFacilityLayer.layer.title) {
-//        this.facilities = lyr
-//      }
       lyr.createFeatureLayer().then((res) => {
         res.load()
         res.when(() => {
           this.loadRelated(res)
           if (lyr.title === this.state.rmpFacilityLayer.layer.title) {
-//          if (lyr.id === parseInt(this.state.rmpFacilityLayer.layer.id, 10)) {
             this.facilities = res
           }
         })
@@ -223,7 +217,6 @@ export default class RMPWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
 
   setLayerVisibility(layer, visible) {
     const l = this.state.jimuMapView.view.map.allLayers.find(ml => ml.url === layer.url);
-//    const l = this.state.jimuMapView.view.map.allLayers.items.find(ml => layer.jimuLayerId.includes(ml.id))
     l.visible = visible;
   }
 
