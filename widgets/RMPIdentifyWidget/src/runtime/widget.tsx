@@ -79,7 +79,7 @@ interface State {
   visible: boolean
 }
 
-export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, State> {
+export default class RMPWidget extends BaseWidget<AllWidgetProps<IMConfig>, State> {
   symbol: any = new SimpleMarkerSymbol({color: 'yellow', style: 'diamond'});
   mainText: boolean = true;
   first: boolean = true;
@@ -147,49 +147,33 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.setState({
       loading: true
     })
-    // const i = DataSourceManager.getInstance().getDataSource(this.props.useDataSources[0].dataSourceId)
 
-    // let addedToMap: boolean
-
-    // if it isn't there add it
-    // if (this.rmpLayer == undefined) {
-    //   addedToMap = false
-    //   this.rmpLayer = new MapImageLayer({
-    //     url: 'https://utility.arcgis.com/usrsvcs/servers/a9dda0a4ba0a433992ce3bdffd89d35a/rest/services/SharedServices/RMPFacilities/MapServer'
-    //   })
-    // } else {
-    //   addedToMap = true
-    // }
     listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
 
     this.openModal = false
   }
 
   initRMP() {
-    // this.state.().then((res) => {
-    this.state.rmpParentLayer.sublayers.forEach(lyr => {
-      if (lyr.id === parseInt(this.state.rmpFacilityLayer.id, 10)) {
-        lyr.createFeatureLayer().then((res) => {
-          res.load()
-          res.when(() => {
-            this.loadRelated(res)
+    let rmpLayers = this.state.rmpParentLayer.layer.sublayers?.items
+    if(typeof rmpLayers === 'undefined') rmpLayers = this.state.rmpParentLayer.layer.layers.items
+
+    rmpLayers.forEach(lyr => {
+      lyr.createFeatureLayer().then((res) => {
+        res.load()
+        res.when(() => {
+          this.loadRelated(res)
+          if (lyr.title === this.state.rmpFacilityLayer.layer.title) {
             this.facilities = res
-          })
+          }
         })
-      } else {
-        lyr.createFeatureLayer().then((res) => {
-          res.load()
-          res.when(() => {
-            this.loadRelated(res)
-          })
-        })
-      }
+      })
     })
 
-    const statusLayer = new FeatureLayer({url: this.state.rmpParentLayer.url + '/14', outFields: ['*']})
+    // get data refresh date
+    const statusLayer = new FeatureLayer({url: this.state.baseUrl + '/14', outFields: ['*']})
     const statusQuery = new Query()
     statusQuery.outFields = ['*']
-    statusQuery.where = "OBJECTID Like'%'"
+    statusQuery.where = "1=1"
     statusLayer.queryFeatures(statusQuery).then(featureSet => {
       const refreshDate = moment(featureSet.features[0].attributes.DateRefreshed).utc().toISOString().split('T')[0]
 
@@ -202,7 +186,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         loading: false
       })
     })
-    // })
+    this.setState({
+      loading: false
+    })
   }
 
   onActiveViewChange = (jmv: JimuMapView) => {
@@ -215,8 +201,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
   loadRelated(obj) {
     obj.relationships.forEach((relationship) => {
-      if (relationship.role === 'origin') {
-        this[relationship.name] = new FeatureLayer({url: this.state.rmpParentLayer.url + '/' + relationship.relatedTableId})
+      if (relationship.role.toLowerCase().includes('origin')) {
+        this[relationship.name] = new FeatureLayer({url: this.state.baseUrl + '/' + relationship.relatedTableId})
         this[relationship.name].relationshipId = relationship.id
         this[relationship.name].load().then((e) => {
           this[relationship.name] = e
@@ -238,23 +224,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     let widgetState: WidgetState
     widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state
 
-
     // do anything on open/close of widget here
     if ((widgetState === WidgetState.Opened || this.state?.visible === true)
       && this.state.jimuMapView && this.state.rmpFacilityLayer) {
       if (this.first) {
-        // this.rmpLayer = this.state.jimuMapView.view.map.layers.find(lyr => {
-        //   return lyr.id === this.state.rmpFacilityLayer.id
-        // })
-        // this.graphicsLayer = new GraphicsLayer({
-        //   listMode: 'hide'
-        // })
-        // this.state.jimuMapView.view.map.add(this.graphicsLayer)
         // get/set visibility of map layers
-        this.rmpVisibleOnOpen = this.state.rmpParentLayer.visible
-        this.setLayerVisibility(this.state.rmpParentLayer, true)
-        this.setLayerVisibility(this.state.rmpFacilityLayer, true)
-
+        this.rmpVisibleOnOpen = this.state.rmpParentLayer.layer.visible
+        this.setLayerVisibility(this.state.rmpParentLayer.layer, true)
 
         this.mainText = true
         this.nothingThere = []
@@ -276,7 +252,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     }
 
     if (widgetState === WidgetState.Closed || this.state.visible === false && !this.state.loading) {
-
       this.setLayerVisibility(this.state.rmpParentLayer, this.rmpVisibleOnOpen)
       this.first = true
       // this.state.jimuMapView.view.map.layers.remove(this.graphicsLayer)
@@ -1072,9 +1047,19 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
   rmpLayerCreated = (e) => {
     this.setState({
-      rmpFacilityLayer: e.layer,
-      rmpParentLayer: e.parentDataSource.layer
+      rmpFacilityLayer: e.dataSourceManager.getDataSource(e.id),
+      rmpParentLayer: e.parentDataSource
     })
+    // get data refresh date
+    if(typeof e.itemInfo?.url !== 'undefined') {
+      this.setState({
+        baseUrl: e.itemInfo.url
+      })
+    } else if(typeof e.parentDataSource.url !== 'undefined') {
+      this.setState({
+        baseUrl: e.parentDataSource.url
+      })
+    }
   }
 
   render() {
