@@ -15,7 +15,11 @@ export default function RegulatorText(props) {
     query.outFields = ['*']
     query.where = "PACode='" + props.PAcode + "'"
     props.featureLayerTable.queryFeatures(query).then(featureSet => {
-      setRegulatoryText(featureSet.features[0].attributes)
+      if (featureSet.features[0]) {
+        setRegulatoryText(featureSet.features[0].attributes);
+      } else {
+        setRegulatoryText('');
+      }
     })
   }, [])
 
@@ -41,12 +45,11 @@ export default function RegulatorText(props) {
               Contact: </b>{RegulatoryText.primarycontactname ? RegulatoryText.primarycontactname : 'Not Reported'}<br/>
               <b>Phone: </b>{RegulatoryText.phone_number ? RegulatoryText.phone_number : 'Not Reported'}<br/>
               <b>Email: </b>{RegulatoryText.email
-                ? <a href={'mailto:' + RegulatoryText.email}
-                     target="_blank"/>
+                ? <a href={'mailto:' + RegulatoryText.email} target="_blank"/>
                 : 'Not Reported'} <br/>
-              <b>Website: </b><a href={RegulatoryText.website} target="_blank">Click
-                Here for
-                Website</a><br/>
+              <b>Website: </b>{RegulatorText.website 
+                ? <a href={RegulatoryText.website} target="_blank">Click Here for Website</a>
+                : 'Not Reported'}<br/>
               <b>Address: </b>{RegulatoryText.mailing_address ? RegulatoryText.mailing_address : 'Not Reported'}
             </p>
           </div>

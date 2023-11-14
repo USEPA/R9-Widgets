@@ -1,6 +1,9 @@
 /** @jsx jsx */
 import './assets/style.css'
-import {React, AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState, SessionManager} from 'jimu-core'
+import {
+  React, AllWidgetProps, BaseWidget, css, getAppStore, jsx,
+  WidgetState, SessionManager, DataSourceComponent
+} from 'jimu-core'
 import {IMConfig} from '../config'
 import {JimuMapView, JimuMapViewComponent} from 'jimu-arcgis'
 import DataGrid, {SelectColumn} from 'react-data-grid'
@@ -8,6 +11,7 @@ import GraphicsLayer from 'esri/layers/GraphicsLayer'
 import Extent from 'esri/geometry/Extent'
 import Query from 'esri/rest/support/Query'
 import FeatureLayer from 'esri/layers/FeatureLayer'
+import FeatureLayerView from 'esri/views/layers/FeatureLayerView';
 import SimpleMarkerSymbol from 'esri/symbols/SimpleMarkerSymbol'
 import geometry from 'esri/geometry'
 import Graphic from 'esri/Graphic'
@@ -43,8 +47,9 @@ interface State {
   facility: any
   pwsText: any[],
   regulatoryText: any[],
-  adminContactText: any[]
-  visible: boolean
+  adminContactText: any[],
+  visible: boolean,
+  configured: boolean
 }
 
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, State> {
@@ -57,7 +62,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   columns: any[] = [];
   sortColumns: any[] = [];
   multipleLocations: boolean = false;
-  featureLayer: FeatureLayer;
+  featureLayers: FeatureLayer[] = [];
+  featureLayersViews: FeatureLayerView[] = [];
   featureLayerPWS: FeatureLayer;
   featureLayerTable: FeatureLayer;
   featureLayerAdmin: FeatureLayer;
@@ -70,6 +76,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   adminContactText: any[] = [];
   token: string = '';
   mapClickHandler;
+  configured: boolean = false;
+  // proxy_url = 'https://gis.r09.epa.gov/api/portal_proxy/';
+  // sdwis_service_base_url = 'https://geosecure.epa.gov/arcgis/rest/services/Hosted/SDWIS_new_structure';
+  highlight: any;
 
   constructor(props) {
     super(props)
@@ -88,65 +98,76 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     }
 
     // todo: check if this is needed, adjust URLs
-    esriConfig.request.trustedServers.push('https://gis.r09.epa.gov/api/portal_proxy/')
+    // ---- commented proxy config after moving over to geosecure service
+    // esriConfig.request.trustedServers.push(this.proxy_url)
 
-    esriConfig.request.interceptors.unshift({
-      urls: ['https://gis.r09.epa.gov/api/portal_proxy/', 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS'],
-      before: (params) => {
-        // console.log(params)
-        //     params.requestOptions.headers = {'Authorization': this.token};
-      },
-      headers: {Authorization: `Token ${this.token}`}
-    })
+    // esriConfig.request.interceptors.unshift({
+    //   // urls: ['https://gis.r09.epa.gov/api/portal_proxy/', 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS'],
+    //   urls: [this.proxy_url, this.sdwis_service_base_url],
+    //   before: (params) => {
+    //     // console.log(params)
+    //     //     params.requestOptions.headers = {'Authorization': this.token};
+    //   },
+    //   headers: {Authorization: `Token ${this.token}`}
+    // })
 
-    // setup proxy rules for internal
-    urlUtils.addProxyRule({
-      proxyUrl: 'https://gis.r09.epa.gov/api/portal_proxy/',
-      urlPrefix: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS'
-    })
+    // // setup proxy rules for internal
+    // urlUtils.addProxyRule({
+    //   proxyUrl: this.proxy_url,
+    //   urlPrefix: this.sdwis_service_base_url
+    // })
 
+    // ---- layers controlled by settings now
     // facilities
-    this.featureLayer = new FeatureLayer({
-      url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS/FeatureServer/0',
-      outFields: ['*']
-    })
+    // this.featureLayer = new FeatureLayer({
+    //   url: `${this.sdwis_service_base_url}/FeatureServer/5`,
+    //   outFields: ['*']
+    // })
     // public water systems
-    this.featureLayerPWS = new FeatureLayer({
-      url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS/FeatureServer/1',
-      outFields: ['*']
-    })
+    // this.featureLayerPWS = new FeatureLayer({
+    //   url: `${this.sdwis_service_base_url}/FeatureServer/3`,
+    //   outFields: ['*']
+    // })
 
-    // pws primary agencies - TABLE
-    this.featureLayerTable = new FeatureLayer({
-      url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS/FeatureServer/3',
-      outFields: ['*']
-    })
-    // Admin contacts - TABLE
-    this.featureLayerAdmin = new FeatureLayer({
-      url: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS/FeatureServer/5',
-      outFields: ['*']
-    })
+    // // pws primary agencies - TABLE
+    // this.featureLayerTable = new FeatureLayer({
+    //   url: `${this.sdwis_service_base_url}/FeatureServer/9`,
+    //   outFields: ['*']
+    // })
+    // // Admin contacts - TABLE
+    // this.featureLayerAdmin = new FeatureLayer({
+    //   url: `${this.sdwis_service_base_url}/FeatureServer/7`,
+    //   outFields: ['*']
+    // })
 
-    this.featureLayer.on('layerview-create-error', (e) => {
-      this.loading = false
-      this.onOpenText = []
-      this.onOpenText.push(
-        <div>
-          The R9 SDWIS service resides on the EPA Intranet. Connect to the Pulse Secure client to access the
-          data.
-        </div>
-      )
-      this.setState({
-        loading: this.loading,
-        onOpenText: this.onOpenText
-      })
-    })
+
 
     this.symbol = new SimpleMarkerSymbol()
 
     listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
   }
 
+  setConfigured() {
+    if ([...this.featureLayers, this.featureLayerPWS, this.featureLayerAdmin, this.featureLayerTable].every(l => l)) {
+      this.configured = true;
+      this.loading = true;
+
+      // this.featureLayer.on('layerview-create-error', (e) => {
+      //   this.loading = false
+      //   this.onOpenText = []
+      //   this.onOpenText.push(
+      //     <div>
+      //       The R9 SDWIS service resides on the EPA Intranet. Connect to the Pulse Secure client to access the
+      //       data.
+      //     </div>
+      //   )
+      //   this.setState({
+      //     loading: this.loading,
+      //     onOpenText: this.onOpenText
+      //   })
+      // })
+    }
+  }
   updateVisibility = (visible) => this.setState({visible})
 
   onActiveViewChange = (jmv: JimuMapView) => {
@@ -158,20 +179,27 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     }
   }
 
+  countFeatures() {
+    const query = new Query();
+    query.where = '1=1';
+    const queryAll = this.featureLayers.map(l => l.queryFeatureCount(query))
+    return Promise.all(queryAll).then(results => {
+      return results.reduce((count, acc) => acc += count, 0);
+    })
+  }
   componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView }>, snapshot?: any) {
     let widgetState: WidgetState
     widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state
     // do anything on open/close of widget here
-    if (this.jmv) {
-      if (widgetState == WidgetState.Opened || this.state?.visible === true) {
+    if (this.jmv && this.configured) {
+      if (widgetState == WidgetState.Opened || this.state?.visible === true || this.state?.visible === undefined) {
         if (this.first) {
+          this.captureLayerViews();
           this.loading = true
-          this.featureLayer.visible = true
-          this.featureLayerPWS.visible = true
+          // this.featureLayer.visible = true
+          // this.featureLayerPWS.visible = true
           // if (this.featureLayer.loaded) {
-          const query = new Query()
-          query.where = '1=1'
-          this.featureLayer.queryFeatureCount(query).then(count => {
+          this.countFeatures().then(count => {
             this.onOpenText.push(
               <div>
                 There are currently <b>{count}</b> facilities in the SDWIS feature service.<br/>
@@ -249,35 +277,26 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           this.mapClickHandler = this.jmv.view.on('click', event => {
             this.mapClick(event)
           })
-          this.jmv.view.map.layers.add(this.featureLayer)
-          this.jmv.view.map.layers.add(this.featureLayerPWS)
+          // this.jmv.view.map.layers.add(this.featureLayer)
+          // this.jmv.view.map.layers.add(this.featureLayerPWS)
           // }
         }
         this.first = false
       } else {
-        this
-          .first = true
-        this
-          .featureLayer
-          .visible = false
-        this
-          .featureLayerPWS
-          .visible = false
-        this
-          .mainText = true
-        this
-          .loading = false
-        this
-          .rows = []
-        this
-          .sortedRows = []
+        this.first = true
+        // this.featureLayer.visible = false
+        // this.featureLayerPWS.visible = false
+        this.mainText = true
+        this.loading = false
+        this.rows = []
+        this.sortedRows = []
         if (this.mapClickHandler) {
           this.mapClickHandler.remove()
         }
         // remove graphics on close
-        this.jmv.view.graphics.removeAll()
-        this.jmv.view.map.layers.remove(this.featureLayer)
-        this.jmv.view.map.layers.remove(this.featureLayerPWS)
+        this.highlight?.remove();
+        // this.jmv.view.map.layers.remove(this.featureLayer)
+        // this.jmv.view.map.layers.remove(this.featureLayerPWS)
       }
     }
   }
@@ -294,6 +313,16 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     }
   }
 
+  queryFeatures(geometry) {
+    const featureQuery = new Query()
+    featureQuery.outFields = ['*']
+    featureQuery.geometry = geometry;
+    featureQuery.returnGeometry = true;
+    const queryAll = this.featureLayers.map(l => l.queryFeatures(featureQuery));
+    return Promise.all(queryAll).then(results => {
+      return results.flatMap(r => r.features);
+    })
+  }
 
   mapClick = (e) => {
     this.mainText = false
@@ -309,7 +338,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       nothingThere: false
     })
 
-    this.jmv.view.graphics.removeAll()
+    this.highlight?.remove();
     const pixelWidth = this.jmv.view.extent.width / this.jmv.view.width
     const toleraceInMapCoords = 10 * pixelWidth
     const clickExtent = new Extent({
@@ -320,12 +349,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       spatialReference: this.jmv.view.spatialReference
     })
 
-    const featureQuery = new Query()
-    featureQuery.outFields = ['*']
-    featureQuery.geometry = clickExtent
-    featureQuery.returnGeometry = true
-    this.featureLayer.queryFeatures(featureQuery).then(featureSet => {
-      this.featureSet = featureSet.features
+    this.queryFeatures(clickExtent).then(featureSet => {
+      this.featureSet = featureSet;
       if (this.featureSet.length === 1) {
         this.loadFacility(this.featureSet[0])
       } else if (this.featureSet.length > 1) {
@@ -430,13 +455,35 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   }
 
   loadFacility = (facility) => {
-    const selectedGraphic = new Graphic({geometry: facility.geometry, symbol: this.symbol})
-    this.jmv.view.graphics.add(selectedGraphic)
+    // const selectedGraphic = new Graphic({geometry: facility.geometry, symbol: this.symbol})
+    this.highlightFacility(facility)
     this.loading = false
     this.setState({
       facility,
       loading: false
     })
+  }
+
+  captureLayer = (layerName) => (capturedLayer) => {
+    if (layerName === 'featureLayers') {
+      this[layerName].push(capturedLayer.layer)
+    } else {
+      this[layerName] = capturedLayer.layer;
+    }
+    this.setConfigured();
+  };
+
+  captureLayerViews() {
+    const mapLayers = this.featureLayers.map(l => this.jmv.view.map.allLayers.find(ml => ml.id === l.id));
+    mapLayers.forEach(l => {
+      this.jmv.view.whenLayerView(l).then(layerView => this.featureLayersViews.push(layerView));
+    })
+  }
+
+  highlightFacility(facility) {
+    this.highlight?.remove();
+    const layerView = this.featureLayersViews.find(l => l.layer.id === facility.sourceLayer.id)
+    this.highlight = layerView.highlight(facility);
   }
 
 
@@ -445,7 +492,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       <div className="widget-addLayers jimu-widget p-2"
            style={{overflow: 'auto', height: '97%'}}>
         {
-          (!this.props.useMapWidgetIds?.length)
+          (!this.props.useMapWidgetIds?.length || !this.configured)
             ? <h2>Please complete widget configuration.</h2>
             : null
         }
@@ -454,7 +501,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
         {this.state?.facility
           ? <Facility facility={this.state.facility}
-                      featureLayer={this.featureLayer}
+                      featureLayer={this.featureLayers[0]}
                       featureLayerPWS={this.featureLayerPWS}
                       featureLayerAdmin={this.featureLayerAdmin}
                       featureLayerTable={this.featureLayerTable}></Facility>
@@ -471,12 +518,23 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           : null
         }
 
-        {this.multipleLocations ? <this.Grid/> : null}
+        {this.multipleLocations ? <this.Grid /> : null}
 
         {this.mainText ? this.LandingText() : null}
 
         <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
-                              onActiveViewChange={this.onActiveViewChange}/>
+                              onActiveViewChange={this.onActiveViewChange} />
+        {this.props.facilitiesDataSource.map(ds => <DataSourceComponent useDataSource={ds}
+                             onDataSourceCreated={this.captureLayer('featureLayers')} />)}
+
+        <DataSourceComponent useDataSource={this.props.pwsDataSource?.[0]}
+                             onDataSourceCreated={this.captureLayer('featureLayerPWS')} />
+
+        <DataSourceComponent useDataSource={this.props.agenciesDataSource?.[0]}
+                             onDataSourceCreated={this.captureLayer('featureLayerTable')} />
+
+        <DataSourceComponent useDataSource={this.props.contactsDataSource?.[0]}
+                             onDataSourceCreated={this.captureLayer('featureLayerAdmin')} />
       </div>
     )
   }

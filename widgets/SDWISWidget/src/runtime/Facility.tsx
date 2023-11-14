@@ -21,15 +21,15 @@ export default function Facility(props) {
           {props.facility.attributes.fac_pwsid ? props.facility.attributes.fac_pwsid : 'Not Reported'}</p>
         <br/><b><p style={{textAlign: 'center'}}>Water System Facility Details</p></b>
         <hr/>
-        <b>Facility Name:</b>
+        <b>Facility Name: </b>
         {props.facility.attributes.facilityname ? props.facility.attributes.facilityname : 'Not Reported'}<br/><b>Facility
         ID: </b>
         {props.facility.attributes.facilityid ? props.facility.attributes.facilityid : 'Not Reported'}<br/><b>Facility
         Type: </b>
         {facilitytype || 'Not Reported'}<br/><b>Source
-        Type:</b>{sourcetype || 'Not Reported'}<br/>
+        Type: </b>{sourcetype || 'Not Reported'}<br/>
         <b>Source Treated: </b>{trtstatus || 'Not Reported'}<br/>
-        <b>Facility Availability:</b>{availability || 'Not Reported'}<br/>
+        <b>Facility Availability: </b>{availability || 'Not Reported'}<br/>
         <b>Last
           Updated: </b>{props.facility.attributes.last_reported ? props.facility.attributes.last_reported : 'Not Reported'}<br/>
         <b>PWS Purchased
