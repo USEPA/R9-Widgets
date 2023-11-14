@@ -29,6 +29,7 @@ export default class Setting extends BaseWidgetSetting<AllWidgetSettingProps<IMC
                 <MapWidgetSelector onSelect={this.onMapSelected} useMapWidgetIds={this.props.useMapWidgetIds}/>
                 <DataSourceSelector types={this.supportedTypes}
                                     mustUseDataSource
+                                    isMultiple={true}
                                     useDataSources={this.props.facilitiesDataSource}
                                     onChange={v => this.updateConfigProperty('facilitiesDataSource', v)}
                                     widgetId={this.props.id}

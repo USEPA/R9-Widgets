@@ -11,6 +11,7 @@ import GraphicsLayer from 'esri/layers/GraphicsLayer'
 import Extent from 'esri/geometry/Extent'
 import Query from 'esri/rest/support/Query'
 import FeatureLayer from 'esri/layers/FeatureLayer'
+import FeatureLayerView from 'esri/views/layers/FeatureLayerView';
 import SimpleMarkerSymbol from 'esri/symbols/SimpleMarkerSymbol'
 import geometry from 'esri/geometry'
 import Graphic from 'esri/Graphic'
@@ -54,14 +55,15 @@ interface State {
 export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, State> {
   jmv: JimuMapView;
   first: boolean = true;
-  loading: boolean = false;
+  loading: boolean = true;
   mainText: boolean = true;
   rows: any[] = [];
   sortedRows: any[] = [];
   columns: any[] = [];
   sortColumns: any[] = [];
   multipleLocations: boolean = false;
-  featureLayer: FeatureLayer;
+  featureLayers: FeatureLayer[] = [];
+  featureLayersViews: FeatureLayerView[] = [];
   featureLayerPWS: FeatureLayer;
   featureLayerTable: FeatureLayer;
   featureLayerAdmin: FeatureLayer;
@@ -77,6 +79,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   configured: boolean = false;
   // proxy_url = 'https://gis.r09.epa.gov/api/portal_proxy/';
   // sdwis_service_base_url = 'https://geosecure.epa.gov/arcgis/rest/services/Hosted/SDWIS_new_structure';
+  highlight: any;
 
   constructor(props) {
     super(props)
@@ -137,31 +140,34 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     //   outFields: ['*']
     // })
 
-    if ([this.featureLayer, this.featureLayerPWS, this.featureLayerAdmin, this.featureLayerTable].every(l => l)) {
-      this.configured = true;
-      this.loading = true;
 
-      this.featureLayer.on('layerview-create-error', (e) => {
-        this.loading = false
-        this.onOpenText = []
-        this.onOpenText.push(
-          <div>
-            The R9 SDWIS service resides on the EPA Intranet. Connect to the Pulse Secure client to access the
-            data.
-          </div>
-        )
-        this.setState({
-          loading: this.loading,
-          onOpenText: this.onOpenText
-        })
-      })
-    }
 
     this.symbol = new SimpleMarkerSymbol()
 
     listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
   }
 
+  setConfigured() {
+    if ([...this.featureLayers, this.featureLayerPWS, this.featureLayerAdmin, this.featureLayerTable].every(l => l)) {
+      this.configured = true;
+      this.loading = true;
+
+      // this.featureLayer.on('layerview-create-error', (e) => {
+      //   this.loading = false
+      //   this.onOpenText = []
+      //   this.onOpenText.push(
+      //     <div>
+      //       The R9 SDWIS service resides on the EPA Intranet. Connect to the Pulse Secure client to access the
+      //       data.
+      //     </div>
+      //   )
+      //   this.setState({
+      //     loading: this.loading,
+      //     onOpenText: this.onOpenText
+      //   })
+      // })
+    }
+  }
   updateVisibility = (visible) => this.setState({visible})
 
   onActiveViewChange = (jmv: JimuMapView) => {
@@ -173,20 +179,27 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     }
   }
 
+  countFeatures() {
+    const query = new Query();
+    query.where = '1=1';
+    const queryAll = this.featureLayers.map(l => l.queryFeatureCount(query))
+    return Promise.all(queryAll).then(results => {
+      return results.reduce((count, acc) => acc += count, 0);
+    })
+  }
   componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView }>, snapshot?: any) {
     let widgetState: WidgetState
     widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state
     // do anything on open/close of widget here
     if (this.jmv && this.configured) {
-      if (widgetState == WidgetState.Opened || this.state?.visible === true) {
+      if (widgetState == WidgetState.Opened || this.state?.visible === true || this.state?.visible === undefined) {
         if (this.first) {
+          this.captureLayerViews();
           this.loading = true
-          this.featureLayer.visible = true
-          this.featureLayerPWS.visible = true
+          // this.featureLayer.visible = true
+          // this.featureLayerPWS.visible = true
           // if (this.featureLayer.loaded) {
-          const query = new Query()
-          query.where = '1=1'
-          this.featureLayer.queryFeatureCount(query).then(count => {
+          this.countFeatures().then(count => {
             this.onOpenText.push(
               <div>
                 There are currently <b>{count}</b> facilities in the SDWIS feature service.<br/>
@@ -264,15 +277,15 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           this.mapClickHandler = this.jmv.view.on('click', event => {
             this.mapClick(event)
           })
-          this.jmv.view.map.layers.add(this.featureLayer)
-          this.jmv.view.map.layers.add(this.featureLayerPWS)
+          // this.jmv.view.map.layers.add(this.featureLayer)
+          // this.jmv.view.map.layers.add(this.featureLayerPWS)
           // }
         }
         this.first = false
       } else {
         this.first = true
-        this.featureLayer.visible = false
-        this.featureLayerPWS.visible = false
+        // this.featureLayer.visible = false
+        // this.featureLayerPWS.visible = false
         this.mainText = true
         this.loading = false
         this.rows = []
@@ -281,9 +294,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           this.mapClickHandler.remove()
         }
         // remove graphics on close
-        this.jmv.view.graphics.removeAll()
-        this.jmv.view.map.layers.remove(this.featureLayer)
-        this.jmv.view.map.layers.remove(this.featureLayerPWS)
+        this.highlight?.remove();
+        // this.jmv.view.map.layers.remove(this.featureLayer)
+        // this.jmv.view.map.layers.remove(this.featureLayerPWS)
       }
     }
   }
@@ -300,6 +313,16 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     }
   }
 
+  queryFeatures(geometry) {
+    const featureQuery = new Query()
+    featureQuery.outFields = ['*']
+    featureQuery.geometry = geometry;
+    featureQuery.returnGeometry = true;
+    const queryAll = this.featureLayers.map(l => l.queryFeatures(featureQuery));
+    return Promise.all(queryAll).then(results => {
+      return results.flatMap(r => r.features);
+    })
+  }
 
   mapClick = (e) => {
     this.mainText = false
@@ -315,7 +338,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       nothingThere: false
     })
 
-    this.jmv.view.graphics.removeAll()
+    this.highlight?.remove();
     const pixelWidth = this.jmv.view.extent.width / this.jmv.view.width
     const toleraceInMapCoords = 10 * pixelWidth
     const clickExtent = new Extent({
@@ -326,12 +349,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       spatialReference: this.jmv.view.spatialReference
     })
 
-    const featureQuery = new Query()
-    featureQuery.outFields = ['*']
-    featureQuery.geometry = clickExtent
-    featureQuery.returnGeometry = true
-    this.featureLayer.queryFeatures(featureQuery).then(featureSet => {
-      this.featureSet = featureSet.features
+    this.queryFeatures(clickExtent).then(featureSet => {
+      this.featureSet = featureSet;
       if (this.featureSet.length === 1) {
         this.loadFacility(this.featureSet[0])
       } else if (this.featureSet.length > 1) {
@@ -436,13 +455,35 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   }
 
   loadFacility = (facility) => {
-    const selectedGraphic = new Graphic({geometry: facility.geometry, symbol: this.symbol})
-    this.jmv.view.graphics.add(selectedGraphic)
+    // const selectedGraphic = new Graphic({geometry: facility.geometry, symbol: this.symbol})
+    this.highlightFacility(facility)
     this.loading = false
     this.setState({
       facility,
       loading: false
     })
+  }
+
+  captureLayer = (layerName) => (capturedLayer) => {
+    if (layerName === 'featureLayers') {
+      this[layerName].push(capturedLayer.layer)
+    } else {
+      this[layerName] = capturedLayer.layer;
+    }
+    this.setConfigured();
+  };
+
+  captureLayerViews() {
+    const mapLayers = this.featureLayers.map(l => this.jmv.view.map.allLayers.find(ml => ml.id === l.id));
+    mapLayers.forEach(l => {
+      this.jmv.view.whenLayerView(l).then(layerView => this.featureLayersViews.push(layerView));
+    })
+  }
+
+  highlightFacility(facility) {
+    this.highlight?.remove();
+    const layerView = this.featureLayersViews.find(l => l.layer.id === facility.sourceLayer.id)
+    this.highlight = layerView.highlight(facility);
   }
 
 
@@ -460,7 +501,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
         {this.state?.facility
           ? <Facility facility={this.state.facility}
-                      featureLayer={this.featureLayer}
+                      featureLayer={this.featureLayers[0]}
                       featureLayerPWS={this.featureLayerPWS}
                       featureLayerAdmin={this.featureLayerAdmin}
                       featureLayerTable={this.featureLayerTable}></Facility>
@@ -483,18 +524,17 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
         <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
                               onActiveViewChange={this.onActiveViewChange} />
-
-        <DataSourceComponent useDataSource={this.props.facilitiesDataSource?.[0]}
-                             onDataSourceCreated={l => this.featureLayer = l.layer} />
+        {this.props.facilitiesDataSource.map(ds => <DataSourceComponent useDataSource={ds}
+                             onDataSourceCreated={this.captureLayer('featureLayers')} />)}
 
         <DataSourceComponent useDataSource={this.props.pwsDataSource?.[0]}
-                             onDataSourceCreated={l => this.featureLayerPWS = l.layer} />
+                             onDataSourceCreated={this.captureLayer('featureLayerPWS')} />
 
         <DataSourceComponent useDataSource={this.props.agenciesDataSource?.[0]}
-                             onDataSourceCreated={l => this.featureLayerTable = l.layer} />
+                             onDataSourceCreated={this.captureLayer('featureLayerTable')} />
 
         <DataSourceComponent useDataSource={this.props.contactsDataSource?.[0]}
-                             onDataSourceCreated={l => this.featureLayerAdmin = l.layer} />
+                             onDataSourceCreated={this.captureLayer('featureLayerAdmin')} />
       </div>
     )
   }
