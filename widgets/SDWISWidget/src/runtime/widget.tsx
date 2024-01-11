@@ -87,18 +87,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.LandingText = this.LandingText.bind(this)
     this.rowClick = this.rowClick.bind(this)
     this.onSortColsChange = this.onSortColsChange.bind(this)
-    // esriConfig.request.trustedServers.push(this.proxy_url)
-    // const re = /(https:\/\/geosecure.epa.gov)/
-    // esriConfig.request.interceptors.unshift({
-    //   urls: [re],
-    //   // url: ,
-    //   before: (p) => {
-    //     p.url = p.url.replace(re, 'https://localhost:8000')
-    //     console.log("INTERCEPTED")
-    //     console.log(p);
-    //   }
-    // })
-    urlUtils.addProxyRule({proxyUrl: 'https://localhost:8000/proxy', urlPrefix: 'https://geosecure.epa.gov'});
   }
 
   componentDidMount() {
