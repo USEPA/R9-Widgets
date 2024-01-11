@@ -26,7 +26,7 @@ import PWS from './PWS';
 function getComparator(sortColumn: string) {
   switch (sortColumn) {
     // todo: configure for SDWIS columns
-    case 'FacilityName':
+    case 'facility_name':
       return (a, b) => {
         return a[sortColumn].localeCompare(b[sortColumn])
       }
@@ -87,6 +87,18 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.LandingText = this.LandingText.bind(this)
     this.rowClick = this.rowClick.bind(this)
     this.onSortColsChange = this.onSortColsChange.bind(this)
+    // esriConfig.request.trustedServers.push(this.proxy_url)
+    // const re = /(https:\/\/geosecure.epa.gov)/
+    // esriConfig.request.interceptors.unshift({
+    //   urls: [re],
+    //   // url: ,
+    //   before: (p) => {
+    //     p.url = p.url.replace(re, 'https://localhost:8000')
+    //     console.log("INTERCEPTED")
+    //     console.log(p);
+    //   }
+    // })
+    urlUtils.addProxyRule({proxyUrl: 'https://localhost:8000/proxy', urlPrefix: 'https://geosecure.epa.gov'});
   }
 
   componentDidMount() {
@@ -361,7 +373,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           data.push(attrs)
         })
 
-        this.columns = [{key: 'facilityname', name: 'Name'}]
+        this.columns = [{key: 'facility_name', name: 'Name'}]
         this.rows = data
         this.sortedRows = data
         this.multipleLocations = true
