@@ -41,7 +41,7 @@ export default function Facility(props) {
         <p style={{textAlign: 'center'}}><a
           href={'https://echo.epa.gov/detailed-facility-report?fid=' + props.facility.attributes.pwsid}
           target="_blank\"><b>ECHO Detailed System Report</b> </a></p>
-        <p style={{textAlign: 'center'}}>&nbsp;</p>
+        {/*<p style={{textAlign: 'center'}}>&nbsp;</p>*/}
 
         <PWSContact pwsid={props.facility.attributes.pwsid}
                     featureLayerAdmin={props.featureLayerAdmin}/>

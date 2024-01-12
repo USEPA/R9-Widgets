@@ -228,9 +228,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
                 include but are not limited to wells, well heads, treatment plants, sampling stations,
                 valves, transmission mains, pumps, pressure control, etc. Facilities are identified with
                 Facility ID and Facility Name. The PWS ID indicates the public water system the selected
-                facility falls under.<br/>
-                <img id="Legend" src={`${this.props.context.folderUrl}dist/runtime/assets/Symbology.png`}
-                     style={{width: '75%', height: '75%'}}/><br/>
+                facility falls under.<br/><br/>
                 <b>Public Water Systems (PWS) - </b> The public water system information is linked from
                 the facility selected in the map. The PWS ID and PWS Name provide the unique
                 identification for the public water system associated with the facility record.<br/>
@@ -261,7 +259,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
                   <td style={{textAlign: 'left', width: '287px'}}><b>Regulatory Agency - </b> This
                     section provides information for the regulatory organization associated with and
                     responsible for the selected facility's public water system. This information
-                    comes from the Primacy Agency table." + "<br/></td>
+                    comes from the Primacy Agency table.<br/></td>
                   </tbody>
                 </table>
               </div>
@@ -399,13 +397,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
   Grid = () => {
     return (
-      <div>
-        <div>
+        <div style={{height: "100%", display: "flex", flexDirection: "column"}}>
           <div><h3>Multiple Facilities at that Location</h3><br/><h5>Select one to
             continue</h5></div>
           <DataGrid style={{
-            height: `${(this.sortedRows.length * 35) + 37}px`,
-            maxHeight: '700px',
+            height: '100%',
             backgroundColor: 'white'
           }}
                     className={'rdg-light'}
@@ -417,7 +413,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           }} onSortColumnsChange={this.onSortColsChange}
                     sortColumns={this.sortColumns}/>
         </div>
-      </div>
     )
   }
 
