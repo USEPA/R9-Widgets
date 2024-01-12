@@ -45,7 +45,7 @@ export default function Facility(props) {
 
         <PWSContact pwsid={props.facility.attributes.pwsid}
                     featureLayerAdmin={props.featureLayerAdmin}/>
-        <p>&nbsp;</p>
+        {/*<p>&nbsp;</p>*/}
 
         <RegulatorText featureLayerTable={props.featureLayerTable}
                        PAcode={props.facility.attributes.primary_agency_code}/>
