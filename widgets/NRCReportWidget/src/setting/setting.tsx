@@ -2,7 +2,7 @@ import {React, FormattedMessage, Immutable, UseDataSource} from "jimu-core";
 import {BaseWidgetSetting, AllWidgetSettingProps} from "jimu-for-builder";
 import {IMConfig} from "../config";
 import defaultI18nMessages from "./translations/default";
-import {JimuMapViewSelector} from 'jimu-ui/advanced/setting-components';
+import {MapWidgetSelector } from 'jimu-ui/advanced/setting-components';
 import {AllDataSourceTypes, DataSourceSelector} from 'jimu-ui/advanced/data-source-selector';
 import {Input} from 'jimu-ui';
 
@@ -35,7 +35,7 @@ export default class Setting extends BaseWidgetSetting<AllWidgetSettingProps<IMC
   render() {
     return (
       <div className="widget-setting-demo">
-        <JimuMapViewSelector onSelect={this.onMapSelected} useMapWidgetIds={this.props.useMapWidgetIds}/>
+        <MapWidgetSelector  onSelect={this.onMapSelected} useMapWidgetIds={this.props.useMapWidgetIds}/>
         <Input placeholder='Report Proxy URL' value={this.props.reportProxy}
                onChange={e => this.updateConfigProperty(e.target.value)}/>
         <DataSourceSelector
