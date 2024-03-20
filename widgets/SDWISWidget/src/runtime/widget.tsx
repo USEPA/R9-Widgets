@@ -87,8 +87,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.LandingText = this.LandingText.bind(this)
     this.rowClick = this.rowClick.bind(this)
     this.onSortColsChange = this.onSortColsChange.bind(this)
-        urlUtils.addProxyRule({proxyUrl: 'https://localhost:8000/proxy', urlPrefix: 'https://geosecure.epa.gov'});
-
+    if (['https://localhost:3001', 'https://10.11.29.24:3001'].includes(window.location.origin)) {
+      urlUtils.addProxyRule({proxyUrl: 'https://localhost:8000/proxy', urlPrefix: 'https://geosecure.epa.gov'});
+    }
   }
 
   componentDidMount() {
@@ -143,7 +144,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     // })
 
 
-
     this.symbol = new SimpleMarkerSymbol()
 
     listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
@@ -170,6 +170,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       // })
     }
   }
+
   updateVisibility = (visible) => this.setState({visible})
 
   onActiveViewChange = (jmv: JimuMapView) => {
@@ -189,7 +190,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       return results.reduce((count, acc) => acc += count, 0);
     })
   }
-  componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView }>, snapshot?: any) {
+
+  componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{
+    jimuMapView: JimuMapView
+  }>, snapshot?: any) {
     let widgetState: WidgetState
     widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state
     // do anything on open/close of widget here
@@ -399,22 +403,22 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
   Grid = () => {
     return (
-        <div style={{height: "100%", display: "flex", flexDirection: "column"}}>
-          <div><h3>Multiple Facilities at that Location</h3><br/><h5>Select one to
-            continue</h5></div>
-          <DataGrid style={{
-            height: '100%',
-            backgroundColor: 'white'
-          }}
-                    className={'rdg-light'}
-                    columns={this.columns} rows={this.sortedRows}
-                    onRowClick={this.rowClick}
-                    rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
-            sortable: true,
-            resizable: true
-          }} onSortColumnsChange={this.onSortColsChange}
-                    sortColumns={this.sortColumns}/>
-        </div>
+      <div style={{height: "100%", display: "flex", flexDirection: "column"}}>
+        <div><h3>Multiple Facilities at that Location</h3><br/><h5>Select one to
+          continue</h5></div>
+        <DataGrid style={{
+          height: '100%',
+          backgroundColor: 'white'
+        }}
+                  className={'rdg-light'}
+                  columns={this.columns} rows={this.sortedRows}
+                  onRowClick={this.rowClick}
+                  rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
+          sortable: true,
+          resizable: true
+        }} onSortColumnsChange={this.onSortColsChange}
+                  sortColumns={this.sortColumns}/>
+      </div>
     )
   }
 
@@ -515,23 +519,23 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           : null
         }
 
-        {this.multipleLocations ? <this.Grid /> : null}
+        {this.multipleLocations ? <this.Grid/> : null}
 
         {this.mainText ? this.LandingText() : null}
 
         <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
-                              onActiveViewChange={this.onActiveViewChange} />
+                              onActiveViewChange={this.onActiveViewChange}/>
         {this.props.facilitiesDataSource.map(ds => <DataSourceComponent useDataSource={ds}
-                             onDataSourceCreated={this.captureLayer('featureLayers')} />)}
+                                                                        onDataSourceCreated={this.captureLayer('featureLayers')}/>)}
 
         <DataSourceComponent useDataSource={this.props.pwsDataSource?.[0]}
-                             onDataSourceCreated={this.captureLayer('featureLayerPWS')} />
+                             onDataSourceCreated={this.captureLayer('featureLayerPWS')}/>
 
         <DataSourceComponent useDataSource={this.props.agenciesDataSource?.[0]}
-                             onDataSourceCreated={this.captureLayer('featureLayerTable')} />
+                             onDataSourceCreated={this.captureLayer('featureLayerTable')}/>
 
         <DataSourceComponent useDataSource={this.props.contactsDataSource?.[0]}
-                             onDataSourceCreated={this.captureLayer('featureLayerAdmin')} />
+                             onDataSourceCreated={this.captureLayer('featureLayerAdmin')}/>
       </div>
     )
   }
