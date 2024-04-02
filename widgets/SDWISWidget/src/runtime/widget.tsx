@@ -85,7 +85,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.LandingText = this.LandingText.bind(this)
     this.rowClick = this.rowClick.bind(this)
     this.onSortColsChange = this.onSortColsChange.bind(this);
-    if (/:3000/g.test(window.location.origin)) {
+    if (/:3001/g.test(window.location.origin)) {
       urlUtils.addProxyRule({proxyUrl: 'https://localhost:8000/proxy', urlPrefix: 'https://geosecure.epa.gov'});
     }
 
