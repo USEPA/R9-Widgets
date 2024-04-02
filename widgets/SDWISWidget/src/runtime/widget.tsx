@@ -120,7 +120,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     //   url: `${this.sdwis_service_base_url}/FeatureServer/7`,
     //   outFields: ['*']
     // })
-
+    this.setProxy();
 
     this.symbol = new SimpleMarkerSymbol()
 
@@ -151,7 +151,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
   setConfigured() {
     if ([...this.featureLayers, this.featureLayerPWS, this.featureLayerAdmin, this.featureLayerTable].every(l => l)) {
-      this.setProxy();
+
       this.configured = true;
 
       this.loading = true;
