@@ -12,8 +12,10 @@ jobs:
 
       - name: copy to EB client
         run: |
-          Remove-Item -Recurse -Force D:\R9Web\ArcGISExperienceBuilder\client\R9-Widgets
-          Copy-Item -Path ${{ github.workspace }}\* -Destination D:\R9Web\ArcGISExperienceBuilder\client\R9-Widgets -Recurse
+          $destination = "D:\R9Web\ArcGISExperienceBuilder\client\R9-Widgets"
+          Remove-Item -Recurse -Force $destination
+          New-Item -Path ${{ inputs.destination }} -ItemType directory
+          Copy-Item -Path ${{ github.workspace }}\* -Destination $destination  -Recurse
 
       - name: install deps and build
         run: |
