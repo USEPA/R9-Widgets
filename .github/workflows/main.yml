@@ -6,15 +6,16 @@ on:
 
 jobs:
   build:
+    environment: NEW_ER_CLOUD
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
 
       - name: copy to EB client
         run: |
-          $destination = "D:\R9Web\ArcGISExperienceBuilder\client\R9-Widgets"
+          $destination = "${{ vars.EB_LOCATION }}\client\R9-Widgets"
           Remove-Item -Recurse -Force $destination
-          New-Item -Path ${{ inputs.destination }} -ItemType directory
+          New-Item -Path $destination -ItemType directory
           Copy-Item -Path ${{ github.workspace }}\* -Destination $destination  -Recurse
 
       - name: install deps and build
@@ -22,5 +23,5 @@ jobs:
           npm ci
           npm run build:dev
           npm run build:prod
-        working-directory: D:\R9Web\ArcGISExperienceBuilder\client
+        working-directory: ${{ vars.WIDGET_LOCATION }}\client
         
