@@ -6,8 +6,6 @@ name: npm CI
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   set_destination:
@@ -19,11 +17,9 @@ jobs:
       - name: Set Destination
         id: set_destination
         run: |
-          echo "destination=\\\${{ vars.WEB_HOST }}\R9Web\ExperienceBuilder\client\" >> $GITHUB_OUTPUT
-
+          echo "destination=\\\${{ vars.WEB_HOST }}\R9Web\ExperienceBuilder\client\R9-Widgets" >> $GITHUB_WORKSPACE
   
   build:
-
     runs-on: self-hosted
 
     strategy:
@@ -32,13 +28,16 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }} and output directory ${{ GITHUB.OUTPUT }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm run build:dev --if-present
-    - run: npm run build:prod --if-present
-    # - run: npm test
+      - uses: actions/checkout@v4
+        with:
+          ref: 'main'
+          
+      - name: Use Node.js ${{ matrix.node-version }} and output directory ${{ GITHUB.WORSPACE }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build:dev
+      - run: npm run build:prod
+      # - run: npm test
