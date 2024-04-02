@@ -25,5 +25,5 @@ jobs:
           npm ci
           npm run build:dev
           npm run build:prod
-        working-directory: ${{ vars.WIDGET_LOCATION }}\client
+        working-directory: ${{ vars.EB_LOCATION }}\client
         
