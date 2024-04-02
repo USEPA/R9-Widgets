@@ -14,7 +14,9 @@ jobs:
       - name: copy to EB client
         run: |
           $destination = "${{ vars.EB_LOCATION }}\client\R9-Widgets"
-          Remove-Item -Recurse -Force $destination
+          if (Test-Path $destination) {
+            Remove-Item -Recurse -Force $destination
+          }
           New-Item -Path $destination -ItemType directory
           Copy-Item -Path ${{ github.workspace }}\* -Destination $destination  -Recurse
 
