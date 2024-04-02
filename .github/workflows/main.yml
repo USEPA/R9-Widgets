@@ -20,7 +20,12 @@ jobs:
           New-Item -Path $destination -ItemType directory
           Copy-Item -Path ${{ github.workspace }}\* -Destination $destination  -Recurse
 
-      - name: install deps and build
+      - name: install widget specific deps
+        run: |
+          npm ci
+        working-directory: ${{ vars.EB_LOCATION }}\client\R9-Widgets
+
+      - name: install core deps and build
         run: |
           npm ci
           npm run build:dev
