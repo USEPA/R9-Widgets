@@ -29,7 +29,7 @@ export default class Setting extends BaseWidgetSetting<AllWidgetSettingProps<IMC
     return (
       <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
         <MapWidgetSelector onSelect={this.onMapSelected} useMapWidgetIds={this.props.useMapWidgetIds}/>
-        <Input placeholder='Internal Proxy URL' value={this.props.reportProxy}
+        <Input placeholder='Internal Proxy URL' value={this.props.proxy_url}
                onChange={e => this.updateConfigProperty('proxy_url', e.target.value)}/>
         <DataSourceSelector types={this.supportedTypes}
                             mustUseDataSource
