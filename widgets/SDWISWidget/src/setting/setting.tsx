@@ -4,55 +4,59 @@ import {IMConfig} from "../config";
 import defaultI18nMessages from "./translations/default";
 import {MapWidgetSelector} from 'jimu-ui/advanced/setting-components';
 import {AllDataSourceTypes, DataSourceSelector} from 'jimu-ui/advanced/data-source-selector';
+import {Input} from 'jimu-ui';
 
 export default class Setting extends BaseWidgetSetting<AllWidgetSettingProps<IMConfig>, any> {
-    supportedTypes = Immutable([AllDataSourceTypes.FeatureLayer]);
+  props: AllWidgetSettingProps<IMConfig>;
+  supportedTypes = Immutable([AllDataSourceTypes.FeatureLayer]);
 
-    onMapSelected = (useMapWidgetIds: string[]) => {
-        this.props.onSettingChange({
-            id: this.props.id,
-            useMapWidgetIds: useMapWidgetIds
-        });
-    };
+  onMapSelected = (useMapWidgetIds: string[]) => {
+    this.props.onSettingChange({
+      id: this.props.id,
+      useMapWidgetIds: useMapWidgetIds
+    });
+  };
 
-    updateConfigProperty = (property, value) => {
-        let settings = {
-          id: this.props.id
-        }
-        settings[property] = value;
-        this.props.onSettingChange(settings);
+  updateConfigProperty = (property, value) => {
+    let settings = {
+      id: this.props.id
     }
+    settings[property] = value;
+    this.props.onSettingChange(settings);
+  }
 
-    render() {
-        return (
-            <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
-                <MapWidgetSelector onSelect={this.onMapSelected} useMapWidgetIds={this.props.useMapWidgetIds}/>
-                <DataSourceSelector types={this.supportedTypes}
-                                    mustUseDataSource
-                                    isMultiple={true}
-                                    useDataSources={this.props.facilitiesDataSource}
-                                    onChange={v => this.updateConfigProperty('facilitiesDataSource', v)}
-                                    widgetId={this.props.id}
-                                    buttonLabel='Select Facilities Layer' />
-                <DataSourceSelector types={this.supportedTypes}
-                                    mustUseDataSource
-                                    useDataSources={this.props.pwsDataSource}
-                                    onChange={v => this.updateConfigProperty('pwsDataSource', v)}
-                                    widgetId={this.props.id}
-                                    buttonLabel='Select PWS Layer' />
-                <DataSourceSelector types={this.supportedTypes}
-                                    mustUseDataSource
-                                    useDataSources={this.props.agenciesDataSource}
-                                    onChange={v => this.updateConfigProperty('agenciesDataSource', v)}
-                                    widgetId={this.props.id}
-                                    buttonLabel='Select Primary Agencies Table' />
-                <DataSourceSelector types={this.supportedTypes}
-                                    mustUseDataSource
-                                    useDataSources={this.props.contactsDataSource}
-                                    onChange={v => this.updateConfigProperty('contactsDataSource', v)}
-                                    widgetId={this.props.id}
-                                    buttonLabel='Select Admin Contacts Table' />
-            </div>
-        );
-    }
+  render() {
+    return (
+      <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+        <MapWidgetSelector onSelect={this.onMapSelected} useMapWidgetIds={this.props.useMapWidgetIds}/>
+        <Input placeholder='Internal Proxy URL' value={this.props.reportProxy}
+               onChange={e => this.updateConfigProperty('proxy_url', e.target.value)}/>
+        <DataSourceSelector types={this.supportedTypes}
+                            mustUseDataSource
+                            isMultiple={true}
+                            useDataSources={this.props.facilitiesDataSource}
+                            onChange={v => this.updateConfigProperty('facilitiesDataSource', v)}
+                            widgetId={this.props.id}
+                            buttonLabel='Select Facilities Layer'/>
+        <DataSourceSelector types={this.supportedTypes}
+                            mustUseDataSource
+                            useDataSources={this.props.pwsDataSource}
+                            onChange={v => this.updateConfigProperty('pwsDataSource', v)}
+                            widgetId={this.props.id}
+                            buttonLabel='Select PWS Layer'/>
+        <DataSourceSelector types={this.supportedTypes}
+                            mustUseDataSource
+                            useDataSources={this.props.agenciesDataSource}
+                            onChange={v => this.updateConfigProperty('agenciesDataSource', v)}
+                            widgetId={this.props.id}
+                            buttonLabel='Select Primary Agencies Table'/>
+        <DataSourceSelector types={this.supportedTypes}
+                            mustUseDataSource
+                            useDataSources={this.props.contactsDataSource}
+                            onChange={v => this.updateConfigProperty('contactsDataSource', v)}
+                            widgetId={this.props.id}
+                            buttonLabel='Select Admin Contacts Table'/>
+      </div>
+    );
+  }
 }

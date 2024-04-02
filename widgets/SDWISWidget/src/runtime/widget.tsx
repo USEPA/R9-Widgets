@@ -77,19 +77,18 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   token: string = '';
   mapClickHandler;
   configured: boolean = false;
-  // proxy_url = 'https://gis.r09.epa.gov/api/portal_proxy/';
-  // sdwis_service_base_url = 'https://geosecure.epa.gov/arcgis/rest/services/Hosted/SDWIS_new_structure';
   highlight: any;
 
-  constructor(props) {
+  constructor(public props: any) {
     super(props)
     // bind this to class methods
     this.LandingText = this.LandingText.bind(this)
     this.rowClick = this.rowClick.bind(this)
-    this.onSortColsChange = this.onSortColsChange.bind(this)
-    if (['https://localhost:3001', 'https://10.11.29.24:3001'].includes(window.location.origin)) {
+    this.onSortColsChange = this.onSortColsChange.bind(this);
+    if (/:3000/g.test(window.location.origin)) {
       urlUtils.addProxyRule({proxyUrl: 'https://localhost:8000/proxy', urlPrefix: 'https://geosecure.epa.gov'});
     }
+
   }
 
   componentDidMount() {
@@ -99,27 +98,6 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     } else if (this.props.token !== undefined && this.props.token !== '') {
       this.token = this.props.token
     }
-
-    // todo: check if this is needed, adjust URLs
-    // ---- commented proxy config after moving over to geosecure service
-    // esriConfig.request.trustedServers.push(this.proxy_url)
-
-    // esriConfig.request.interceptors.unshift({
-    //   // urls: ['https://gis.r09.epa.gov/api/portal_proxy/', 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS'],
-    //   urls: [this.proxy_url, this.sdwis_service_base_url],
-    //   before: (params) => {
-    //     // console.log(params)
-    //     //     params.requestOptions.headers = {'Authorization': this.token};
-    //   },
-    //   headers: {Authorization: `Token ${this.token}`}
-    // })
-
-    // // setup proxy rules for internal
-    // urlUtils.addProxyRule({
-    //   proxyUrl: this.proxy_url,
-    //   urlPrefix: this.sdwis_service_base_url
-    // })
-
     // ---- layers controlled by settings now
     // facilities
     // this.featureLayer = new FeatureLayer({
@@ -149,9 +127,33 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
   }
 
+  setProxy() {
+    if (this.props.proxy_url && !esriConfig.request.trustedServers.includes(this.props.proxy_url)) {
+      esriConfig.request.trustedServers.push(this.props.proxy_url)
+
+      esriConfig.request.interceptors.unshift({
+        urls: [this.props.proxy_url, 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted'],
+        // urls: [this.props.proxy_url, this.sdwis_service_base_url],
+        // before: (params) => {
+        //   // console.log(params)
+        //   //     params.requestOptions.headers = {'Authorization': this.token};
+        // },
+        headers: {Authorization: `Token ${this.token}`}
+      })
+
+      // setup proxy rules for internal
+      urlUtils.addProxyRule({
+        proxyUrl: this.props.proxy_url,
+        urlPrefix: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS_V2'
+      })
+    }
+  }
+
   setConfigured() {
     if ([...this.featureLayers, this.featureLayerPWS, this.featureLayerAdmin, this.featureLayerTable].every(l => l)) {
+      this.setProxy();
       this.configured = true;
+
       this.loading = true;
 
       // this.featureLayer.on('layerview-create-error', (e) => {
@@ -525,8 +527,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
         <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
                               onActiveViewChange={this.onActiveViewChange}/>
-        {this.props.facilitiesDataSource.map(ds => <DataSourceComponent useDataSource={ds}
-                                                                        onDataSourceCreated={this.captureLayer('featureLayers')}/>)}
+        {this.props.facilitiesDataSource ? this.props.facilitiesDataSource.map(ds => <DataSourceComponent
+          useDataSource={ds}
+          onDataSourceCreated={this.captureLayer('featureLayers')}/>) : null}
 
         <DataSourceComponent useDataSource={this.props.pwsDataSource?.[0]}
                              onDataSourceCreated={this.captureLayer('featureLayerPWS')}/>
