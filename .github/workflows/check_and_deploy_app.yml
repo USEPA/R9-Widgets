@@ -4,9 +4,10 @@ on:
   workflow_dispatch:
 
 name: check and deploy app
-environment: NEW_ER_CLOUD
 
 jobs:
+  environment: NEW_ER_CLOUD
+
   check:
     runs-on: self-hosted
     outputs:
