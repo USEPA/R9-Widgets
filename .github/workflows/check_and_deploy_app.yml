@@ -31,7 +31,7 @@ jobs:
     env:
       BACKUP: \\${{vars.WEB_HOST}}\R9apps\staging\COP_backup
       LATEST: \\${{vars.WEB_HOST}}\R9apps\staging\COP_LATEST
-      PROD: \\${{vars.WEB_HOST}}\R9apps\staging\COP_backup
+      PROD: \\${{vars.WEB_HOST}}\R9apps\staging\cop
     steps:
       - name: remove backup and latest folders if exists
         run: |
@@ -41,11 +41,11 @@ jobs:
           if (Test-Path $env:LATEST) {
             Remove-Item -Recurse -Force $env:LATEST
           }
-      - name: export app to zip and unpack into latest folder
-        run: |
           if (Test-Path ${{ github.workspace }}\exp_builder_widgets_export.zip) {
             Remove-Item -Force ${{ github.workspace }}\exp_builder_widgets_export.zip
           }
+      - name: export app to zip and unpack into latest folder
+        run: |
           node ${{ vars.EB_LOCATION }}\server\src\runZipApp.js 12 ${{ github.workspace }}\exp_builder_widgets_export.zip
           Expand-Archive -LiteralPath ${{ github.workspace }}\exp_builder_widgets_export.zip -DestinationPath $env:LATEST
       - name: move prod to backup and latest to prod
