@@ -48,18 +48,19 @@ jobs:
         run: |
           node ${{ vars.EB_LOCATION }}\server\src\runZipApp.js 12 ${{ github.workspace }}\exp_builder_widgets_export.zip
           Expand-Archive -LiteralPath ${{ github.workspace }}\exp_builder_widgets_export.zip -DestinationPath $env:LATEST
+      - name: update client id
+        run: |
+          $cdnSubFolder = Get-ChildItem -Path $env:LATEST\cdn -Name
+          Copy-Item -Path $env:LATEST\cdn\*\config.json -Destination ${{ github.workspace }}
+          $config = (Get-Content ${{ github.workspace }}\\config.json -Encoding utf8 | Out-String | ConvertFrom-JsonNewtonSoft)
+          $config.attributes.clientId = "${{vars.COP_CLIENT_ID}}"
+          $config | ConvertTo-JsonNewtonsoft | Out-File -Encoding utf8 "${{ github.workspace }}\config.json"
+          Copy-Item -Path ${{ github.workspace }}\config.json -Destination $env:LATEST\cdn\$cdnSubFolder
       - name: move prod to backup and latest to prod
         run: |
           Rename-Item $env:PROD $env:BACKUP
           Rename-Item $env:LATEST $env:PROD
-      - name: update client id
-        run: |
-          $cdnSubFolder = Get-ChildItem -Path $env:PROD\cdn -Name
-          Copy-Item -Path $env:PROD\cdn\*\config.json -Destination ${{ github.workspace }}
-          $config = (Get-Content ${{ github.workspace }}\\config.json -Encoding utf8 | Out-String | ConvertFrom-JsonNewtonSoft)
-          $config.attributes.clientId = "${{vars.COP_CLIENT_ID}}"
-          $config | ConvertTo-JsonNewtonsoft | Out-File -Encoding utf8 "${{ github.workspace }}\config.json"
-          Copy-Item -Path ${{ github.workspace }}\config.json -Destination $env:PROD\cdn\$cdnSubFolder
+
     
   confirm_production_deploy:
     runs-on: self-hosted
