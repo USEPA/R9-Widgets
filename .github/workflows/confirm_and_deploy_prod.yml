@@ -1,8 +1,6 @@
 on:
   workflow_call:
 
-name: confirm and deploy prod
-
 jobs:
   deploy_production:
     concurrency:
