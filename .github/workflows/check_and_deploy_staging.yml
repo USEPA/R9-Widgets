@@ -60,7 +60,7 @@ jobs:
           Rename-Item $env:PROD $env:BACKUP
           Rename-Item $env:LATEST $env:PROD
 
-  confirm_production_deploy:
+  deploy_production:
     concurrency:
       group: confirm_deploy_eb_app
       cancel-in-progress: true
@@ -90,6 +90,4 @@ jobs:
         run: |
             Rename-Item $env:PROD $env:BACKUP
             Rename-Item $env:LATEST $enc:PROD
-
-  deploy:
-    uses: ./.github/workflows/configure_and_deploy.yml
+  
