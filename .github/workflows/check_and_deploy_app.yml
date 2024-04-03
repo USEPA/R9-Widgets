@@ -32,9 +32,9 @@ jobs:
       - name: too many
         run: |
           echo "remove backup and latest folders if exists"
-          $backup = "\\${{vars.WEB_HOST}}\R9Apps\staging\COP_backup"
-          $latest = "\\${{vars.WEB_HOST}}\R9Apps\staging\COP_latest"
-          $prod = "\\${{vars.WEB_HOST}}\R9Apps\staging\COP"
+          $backup = "\\${{vars.WEB_HOST}}\R9web\staging\COP_backup"
+          $latest = "\\${{vars.WEB_HOST}}\R9web\staging\COP_latest"
+          $prod = "\\${{vars.WEB_HOST}}\R9web\staging\COP"
           if (Test-Path $backup) {
             Remove-Item -Recurse -Force $backup
           }
@@ -44,7 +44,7 @@ jobs:
           
           echo "export app to zip and unpack into latest folder"
           node ${{ vars.EB_LOCATION }}\server\src\runZipApp.js 12 ${{ github.workspace }}\exp_builder_widgets_export.zip
-          Expand-Archive -LiteralPath ${{ github.workspace }}\exp_builder_widgets_export.zip -DestinationPath \\${{vars.WEB_HOST}}\R9Apps\staging\COP_latest
+          Expand-Archive -LiteralPath ${{ github.workspace }}\exp_builder_widgets_export.zip -DestinationPath $latest
           
           Rename-Item $prod $backup
           Rename-Item $latest $prod
