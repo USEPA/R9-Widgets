@@ -6,9 +6,9 @@ on:
 name: check and deploy app
 
 jobs:
-  environment: NEW_ER_CLOUD
 
   check:
+    environment: NEW_ER_CLOUD
     runs-on: self-hosted
     outputs:
       continue: ${{ steps.check.outputs.continue }}
@@ -27,6 +27,7 @@ jobs:
       group: deploy_eb_app
       cancel-in-progress: true
     runs-on: self-hosted
+    environment: NEW_ER_CLOUD
     steps:
       - name: too many
         run: |
