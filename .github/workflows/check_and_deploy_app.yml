@@ -61,14 +61,15 @@ jobs:
           $config | ConvertTo-JsonNewtonsoft | Out-File -Encoding utf8 "${{ github.workspace }}\config.json"
           Copy-Item -Path ${{ github.workspace }}\config.json -Destination $env:PROD\cdn\$cdnSubFolder
     
-#  confirm_production_deploy:
-#    runs-on: self-hosted
-#    needs: deploy_staging
+  confirm_production_deploy:
+    runs-on: self-hosted
+    needs: deploy_staging
+    environment: EB_PROD
 #    inputs:
 #      confirm:
 #        required: true
 #        type: boolean
-#    steps:
-#      - name: confirm production deploy
-#        run: |
-#          echo "Confirmed ${{inputs.confirm}}"
+    steps:
+      - name: confirm production deploy
+        run: |
+          echo "Confirmed ${{inputs.confirm}}"
