@@ -64,4 +64,5 @@ jobs:
     runs-on: self-hosted
     needs: deploy_staging
     steps:
+      - uses: @actions/checkout@v4
       - uses: ./.github/workflows/confirm_and_deploy_prod.yml
