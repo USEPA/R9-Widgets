@@ -4,16 +4,13 @@ on:
 name: confirm and deploy prod
 
 jobs:
-  confirm_production_deploy:
+  deploy_production:
     concurrency:
       group: confirm_deploy_eb_app
       cancel-in-progress: true
     runs-on: self-hosted
     needs: deploy_staging
     environment: EB_PROD
-
-  deploy:
-    needs: confirm_production_deploy
     env:
       BACKUP: \\${{vars.WEB_HOST}}\R9apps\apps\COP_backup
       LATEST: \\${{vars.WEB_HOST}}\R9apps\apps\COP_LATEST
