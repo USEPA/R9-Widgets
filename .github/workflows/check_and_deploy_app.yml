@@ -32,9 +32,9 @@ jobs:
       - name: too many
         run: |
           echo "remove backup and latest folders if exists"
-          $backup = \\${{vars.WEB_HOST}}\R9Apps\staging\COP_backup
-          $latest = \\${{vars.WEB_HOST}}\R9Apps\staging\COP_latest
-          $prod = \\${{vars.WEB_HOST}}\R9Apps\staging\COP
+          $backup = "\\${{vars.WEB_HOST}}\R9Apps\staging\COP_backup"
+          $latest = "\\${{vars.WEB_HOST}}\R9Apps\staging\COP_latest"
+          $prod = "\\${{vars.WEB_HOST}}\R9Apps\staging\COP"
           if (Test-Path $backup) {
             Remove-Item -Recurse -Force $backup
           }
