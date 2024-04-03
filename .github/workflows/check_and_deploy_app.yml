@@ -56,9 +56,19 @@ jobs:
         run: |
           $cdnSubFolder = Get-ChildItem -Path $env:PROD\cdn -Name
           Copy-Item -Path $env:PROD\cdn\*\config.json -Destination ${{ github.workspace }}
-          $config = Get-Content ${{ github.workspace }}\\config.json -Raw | ConvertFrom-Json
+          $config = (Get-Content ${{ github.workspace }}\\config.json -Encoding utf8 | Out-String | ConvertFrom-JsonNewtonSoft)
           $config.attributes.clientId = "${{vars.COP_CLIENT_ID}}"
-          $config | ConvertTo-Json -Depth 10 | Out-File "${{ github.workspace }}\config.json"
+          $config | ConvertTo-JsonNewtonsoft | Out-File -Encoding utf8 "${{ github.workspace }}\config.json"
           Copy-Item -Path ${{ github.workspace }}\config.json -Destination $env:PROD\cdn\$cdnSubFolder
     
-    
+  confirm_production_deploy:
+    runs-on: self-hosted
+    needs: deploy_staging
+    inputs:
+      confirm:
+        required: true
+        type: boolean
+    steps:
+      - name: confirm production deploy
+        run: |
+          echo "Confirmed ${{inputs.confirm}}"
