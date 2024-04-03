@@ -21,8 +21,10 @@ jobs:
           $continue = $info.typeKeywords -contains "status: Draft" -and [float]$now * 1000 - $info.modified -lt 600000
           echo "continue=$continue" >> $env:GITHUB_ENV
         working-directory: ${{vars.EB_LOCATION}}/server/public/apps/12
+
   deploy_staging:
-#    if: ${{ needs.check.outputs.continue == 'true' }}
+    needs: check
+    if: ${{ needs.check.outputs.continue == 'true' }}
     concurrency:
       group: deploy_eb_app
       cancel-in-progress: true
@@ -52,7 +54,7 @@ jobs:
         run: |
           $cdnSubFolder = Get-ChildItem -Path $env:LATEST\cdn -Name
           Copy-Item -Path $env:LATEST\cdn\*\config.json -Destination ${{ github.workspace }}
-          $config = (Get-Content ${{ github.workspace }}\\config.json -Encoding utf8 | Out-String | ConvertFrom-JsonNewtonSoft)
+          $config = (Get-Content ${{ github.workspace }}\config.json -Encoding utf8 | Out-String | ConvertFrom-JsonNewtonSoft)
           $config.attributes.clientId = "${{vars.COP_CLIENT_ID}}"
           $config | ConvertTo-JsonNewtonsoft | Out-File -Encoding utf8 "${{ github.workspace }}\config.json"
           Copy-Item -Path ${{ github.workspace }}\config.json -Destination $env:LATEST\cdn\$cdnSubFolder
@@ -61,16 +63,42 @@ jobs:
           Rename-Item $env:PROD $env:BACKUP
           Rename-Item $env:LATEST $env:PROD
 
-    
+  notify:
+    needs: deploy_staging
+    runs-on: self-hosted
+    environment: NEW_ER_CLOUD
+    name: Send GitHub Action trigger data to Slack workflow
+    id: slack
+    uses: slackapi/slack-github-action@v1.25.0
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    with:
+      slack-message: "R9COP EB PRODUCTION deployment is PENDING:\nReview: https://${{vars.PUBLIC_HOST}}/apps/staging/cop/"
+
   confirm_production_deploy:
     runs-on: self-hosted
     needs: deploy_staging
     environment: EB_PROD
-#    inputs:
-#      confirm:
-#        required: true
-#        type: boolean
+    env:
+      BACKUP: \\${{vars.WEB_HOST}}\R9apps\apps\COP_backup
+      LATEST: \\${{vars.WEB_HOST}}\R9apps\apps\COP_LATEST
+      PROD: \\${{vars.WEB_HOST}}\R9apps\apps\cop
     steps:
-      - name: confirm production deploy
+      - name: remove backup and latest folders if exists
         run: |
-          echo "Confirmed ${{inputs.confirm}}"
+          if (Test-Path $env:BACKUP) {
+            Remove-Item -Recurse -Force $env:BACKUP
+          }
+          if (Test-Path $env:LATEST) {
+            Remove-Item -Recurse -Force $env:LATEST
+          }
+          if (Test-Path ${{ github.workspace }}\exp_builder_widgets_export.zip) {
+            Remove-Item -Force ${{ github.workspace }}\exp_builder_widgets_export.zip
+          }
+      - name: move staging to prod latest
+        run: |
+            Copy-Item -Path \\${{vars.WEB_HOST}}\R9Apps\staging\COP -Destination $env:LATEST -Recurse -Force
+      - name: backup prod and deploy latest to prod
+        run: |
+            Rename-Item $env:PROD $env:BACKUP
+            Rename-Item $env:LATEST $enc:PROD
