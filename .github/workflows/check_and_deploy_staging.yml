@@ -24,7 +24,7 @@ jobs:
 
   deploy_staging:
     needs: check
-    if: ${{ needs.check.outputs.continue == 'true' }}
+#    if: ${{ needs.check.outputs.continue == 'true' }}
     runs-on: self-hosted
     environment: NEW_ER_CLOUD
     env:
