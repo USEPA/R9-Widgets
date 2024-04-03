@@ -24,7 +24,7 @@ jobs:
 
   deploy_staging:
     needs: check
-    if: ${{ needs.check.outputs.continue == 'true' }}
+#    if: ${{ needs.check.outputs.continue == 'true' }}
     concurrency:
       group: deploy_eb_app
       cancel-in-progress: true
