@@ -57,7 +57,7 @@ jobs:
           $cdnSubFolder = Get-ChildItem -Path $env:PROD\cdn -Name
           Copy-Item -Path $env:PROD\cdn\*\config.json -Destination ${{ github.workspace }}
           $config = Get-Content ${{ github.workspace }}\\config.json -Raw | ConvertFrom-Json
-          $config.attributes.clientId = ${{vars.COP_CLIENT_ID}}
+          $config.attributes.clientId = "${{vars.COP_CLIENT_ID}}"
           $config | ConvertTo-Json | Out-File "${{ github.workspace }}\config.json"
           Copy-Item -Path ${{ github.workspace }}\config.json -Destination $env:PROD\cdn\$cdnSubFolder
     
