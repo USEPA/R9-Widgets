@@ -20,11 +20,12 @@ jobs:
           $now = Get-Date -UFormat %s
           $continue = $info.typeKeywords -contains "status: Draft" -and [float]$now * 1000 - $info.modified -lt 600000
           echo "continue=$continue" >> $env:GITHUB_ENV
+          echo $continue
         working-directory: ${{vars.EB_LOCATION}}/server/public/apps/12
 
   deploy_staging:
     needs: check
-#    if: ${{ needs.check.outputs.continue == 'true' }}
+    if: ${{ needs.check.outputs.continue == 'true' }}
     runs-on: self-hosted
     environment: NEW_ER_CLOUD
     env:
