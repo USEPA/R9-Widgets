@@ -1,10 +1,11 @@
 name: confirm and deploy prod
 
 on:
-  workflow_run:
-    workflows: ["check and deploy app"]
-    types:
-      - completed
+  deployment:
+    types: [created]
+    branches: [ main ]
+    environment:
+      - NEW_ER_CLOUD
 
 jobs:
   deploy_production:
