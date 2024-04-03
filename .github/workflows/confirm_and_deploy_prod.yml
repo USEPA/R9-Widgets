@@ -1,3 +1,5 @@
+name: confirm and deploy prod
+
 on:
   workflow_call:
 
@@ -7,7 +9,6 @@ jobs:
       group: confirm_deploy_eb_app
       cancel-in-progress: true
     runs-on: self-hosted
-    needs: deploy_staging
     environment: EB_PROD
     env:
       BACKUP: \\${{vars.WEB_HOST}}\R9apps\apps\COP_backup
