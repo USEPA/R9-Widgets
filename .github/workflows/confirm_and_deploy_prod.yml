@@ -2,10 +2,7 @@ name: confirm and deploy prod
 
 on:
   deployment:
-    types: [created]
-    branches: [ main ]
-    environment:
-      - NEW_ER_CLOUD
+    environment: NEW_ER_CLOUD
 
 jobs:
   deploy_production:
