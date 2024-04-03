@@ -69,11 +69,12 @@ jobs:
     environment: NEW_ER_CLOUD
     name: Send GitHub Action trigger data to Slack workflow
     id: slack
-    uses: slackapi/slack-github-action@v1.25.0
-    env:
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-    with:
-      slack-message: "R9COP EB PRODUCTION deployment is PENDING:\nReview: https://${{vars.PUBLIC_HOST}}/apps/staging/cop/"
+    steps:
+    - uses: slackapi/slack-github-action@v1.25.0
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      with:
+        slack-message: "R9COP EB PRODUCTION deployment is PENDING:\nReview: https://${{vars.PUBLIC_HOST}}/apps/staging/cop/"
 
   confirm_production_deploy:
     runs-on: self-hosted
