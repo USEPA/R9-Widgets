@@ -28,33 +28,34 @@ jobs:
       cancel-in-progress: true
     runs-on: self-hosted
     environment: NEW_ER_CLOUD
+    env:
+      BACKUP: \\${{vars.WEB_HOST}}\R9apps\staging\COP_backup
+      LATEST: \\${{vars.WEB_HOST}}\R9apps\staging\COP_LATEST
+      PROD: \\${{vars.WEB_HOST}}\R9apps\staging\COP_backup
     steps:
-      - name: too many
+      - name: remove backup and latest folders if exists
         run: |
-          echo "remove backup and latest folders if exists"
-          $backup = "\\${{vars.WEB_HOST}}\R9web\staging\COP_backup"
-          $latest = "\\${{vars.WEB_HOST}}\R9web\staging\COP_latest"
-          $prod = "\\${{vars.WEB_HOST}}\R9web\staging\COP"
-          if (Test-Path $backup) {
-            Remove-Item -Recurse -Force $backup
+          if (Test-Path $env:BACKUP) {
+            Remove-Item -Recurse -Force $env:BACKUP
           }
-          if (Test-Path $latest) {
-            Remove-Item -Recurse -Force $latest
+          if (Test-Path $env:LATEST) {
+            Remove-Item -Recurse -Force $env:LATEST
           }
-          
-          echo "export app to zip and unpack into latest folder"
+      - name: export app to zip and unpack into latest folder
+        run: |
           node ${{ vars.EB_LOCATION }}\server\src\runZipApp.js 12 ${{ github.workspace }}\exp_builder_widgets_export.zip
-          Expand-Archive -LiteralPath ${{ github.workspace }}\exp_builder_widgets_export.zip -DestinationPath $latest
-          
-          Rename-Item $prod $backup
-          Rename-Item $latest $prod
-          
-          echo "update client id"
-          $cdnSubFolder = Get-ChildItem -Path $prod\cdn -Name
-          Copy-Item -Path $prod\cdn\*\config.json -Destination ${{ github.workspace }}
+          Expand-Archive -LiteralPath ${{ github.workspace }}\exp_builder_widgets_export.zip -DestinationPath $env:LATEST
+      - name: move prod to backup and latest to prod
+        run: |
+          Rename-Item $env:PROD $env:BACKUP
+          Rename-Item $env:LATEST $env:PROD
+      - name: update client id
+        run: |
+          $cdnSubFolder = Get-ChildItem -Path $env:PROD\cdn -Name
+          Copy-Item -Path $env:PROD\cdn\*\config.json -Destination ${{ github.workspace }}
           $config = Get-Content ${{ github.workspace }}\\config.json -Raw | ConvertFrom-Json
           $config.attributes.clientId = ${{vars.COP_CLIENT_ID}}
           $config | ConvertTo-Json | Out-File "${{ github.workspace }}\config.json"
-          Copy-Item -Path ${{ github.workspace }}\config.json -Destination $prod\cdn\$cdnSubFolder
+          Copy-Item -Path ${{ github.workspace }}\config.json -Destination $env:PROD\cdn\$cdnSubFolder
     
     
