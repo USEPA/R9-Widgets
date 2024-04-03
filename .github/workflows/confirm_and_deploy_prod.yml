@@ -1,7 +1,9 @@
 name: confirm and deploy prod
 
 on:
-  workflow_call:
+  check_and_deploy_staging:
+    types: [completed]
+    branches: [ main ]
 
 jobs:
   deploy_production:

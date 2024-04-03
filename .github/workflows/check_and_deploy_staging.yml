@@ -61,6 +61,3 @@ jobs:
           Rename-Item $env:PROD $env:BACKUP
           Rename-Item $env:LATEST $env:PROD
 
-  confirm_production_deploy:
-    uses: ./.github/workflows/confirm_and_deploy_prod.yml
-    needs: deploy_staging
