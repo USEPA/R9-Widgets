@@ -25,24 +25,25 @@ jobs:
       group: deploy_eb_app
       cancel-in-progress: true
     runs-on: self-hosted
-    run: |
-      // remove backup and latest folders if exists
-      Remove-Item -Recurse -Force \\${{vars.WEB_HOST}}\R9Apps\staging\COP_backup
-      Remove-Item -Recurse -Force \\${{vars.WEB_HOST}}\R9Apps\staging\COP_latest
-      
-      // export app to zip and unpack into latest folder
-      node ${{ vars.EB_LOCATION }}\server\src\runZipApp.js 12 ${{ github.workspace }}\exp_builder_widgets_export.zip
-      Expand-Archive -LiteralPath ${{ github.workspace }}\exp_builder_widgets_export.zip -DestinationPath \\${{vars.WEB_HOST}}\R9Apps\staging\COP_latest
-      
-      Rename-Item \\${{vars.WEB_HOST}}\R9Apps\staging\COP \\${{vars.WEB_HOST}}\R9Apps\staging\COP_backup
-      Rename-Item \\${{vars.WEB_HOST}}\\R9Apps\staging\COP_latest \\${{vars.WEB_HOST}}\R9Apps\staging\COP
-      
-      // update client id
-      $cdnSubFolder = Get-ChildItem -Path \\${{vars.WEB_HOST}}\R9Apps\staging\COP\cdn -Name
-      Copy-Item -Path \\${{vars.WEB_HOST}}\R9Apps\staging\COP\cdn\*\config.json -Destination ${{ github.workspace }}
-      $config = Get-Content ${{ github.workspace }}\\config.json -Raw | ConvertFrom-Json
-      $config.attributes.clientId = ${{vars.COP_CLIENT_ID}}
-      $config | ConvertTo-Json | Out-File "${{ github.workspace }}\\config.json"
-      Copy-Item -Path ${{ github.workspace }}\config.json -Destination \\${{vars.WEB_HOST}}\R9Apps\staging\COP\cdn\$cdnSubFolder"
-
-
+    steps:
+      run: |
+        // remove backup and latest folders if exists
+        Remove-Item -Recurse -Force \\${{vars.WEB_HOST}}\R9Apps\staging\COP_backup
+        Remove-Item -Recurse -Force \\${{vars.WEB_HOST}}\R9Apps\staging\COP_latest
+        
+        // export app to zip and unpack into latest folder
+        node ${{ vars.EB_LOCATION }}\server\src\runZipApp.js 12 ${{ github.workspace }}\exp_builder_widgets_export.zip
+        Expand-Archive -LiteralPath ${{ github.workspace }}\exp_builder_widgets_export.zip -DestinationPath \\${{vars.WEB_HOST}}\R9Apps\staging\COP_latest
+        
+        Rename-Item \\${{vars.WEB_HOST}}\R9Apps\staging\COP \\${{vars.WEB_HOST}}\R9Apps\staging\COP_backup
+        Rename-Item \\${{vars.WEB_HOST}}\\R9Apps\staging\COP_latest \\${{vars.WEB_HOST}}\R9Apps\staging\COP
+        
+        // update client id
+        $cdnSubFolder = Get-ChildItem -Path \\${{vars.WEB_HOST}}\R9Apps\staging\COP\cdn -Name
+        Copy-Item -Path \\${{vars.WEB_HOST}}\R9Apps\staging\COP\cdn\*\config.json -Destination ${{ github.workspace }}
+        $config = Get-Content ${{ github.workspace }}\\config.json -Raw | ConvertFrom-Json
+        $config.attributes.clientId = ${{vars.COP_CLIENT_ID}}
+        $config | ConvertTo-Json | Out-File "${{ github.workspace }}\\config.json"
+        Copy-Item -Path ${{ github.workspace }}\config.json -Destination \\${{vars.WEB_HOST}}\R9Apps\staging\COP\cdn\$cdnSubFolder"
+  
+  
