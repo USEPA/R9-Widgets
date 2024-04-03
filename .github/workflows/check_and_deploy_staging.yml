@@ -90,3 +90,6 @@ jobs:
         run: |
             Rename-Item $env:PROD $env:BACKUP
             Rename-Item $env:LATEST $enc:PROD
+
+  deploy:
+    uses: ./.github/workflows/configure_and_deploy.yml

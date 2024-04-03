@@ -1,0 +1,39 @@
+on:
+  workflow_call:
+
+name: confirm and deploy prod
+
+jobs:
+  confirm_production_deploy:
+    concurrency:
+      group: confirm_deploy_eb_app
+      cancel-in-progress: true
+    runs-on: self-hosted
+    needs: deploy_staging
+    environment: EB_PROD
+
+  deploy:
+    needs: confirm_production_deploy
+    env:
+      BACKUP: \\${{vars.WEB_HOST}}\R9apps\apps\COP_backup
+      LATEST: \\${{vars.WEB_HOST}}\R9apps\apps\COP_LATEST
+      PROD: \\${{vars.WEB_HOST}}\R9apps\apps\cop
+    steps:
+      - name: remove backup and latest folders if exists
+        run: |
+          if (Test-Path $env:BACKUP) {
+            Remove-Item -Recurse -Force $env:BACKUP
+          }
+          if (Test-Path $env:LATEST) {
+            Remove-Item -Recurse -Force $env:LATEST
+          }
+          if (Test-Path ${{ github.workspace }}\exp_builder_widgets_export.zip) {
+            Remove-Item -Force ${{ github.workspace }}\exp_builder_widgets_export.zip
+          }
+      - name: move staging to prod latest
+        run: |
+            Copy-Item -Path \\${{vars.WEB_HOST}}\R9Apps\staging\COP -Destination $env:LATEST -Recurse -Force
+      - name: backup prod and deploy latest to prod
+        run: |
+            Rename-Item $env:PROD $env:BACKUP
+            Rename-Item $env:LATEST $enc:PROD
