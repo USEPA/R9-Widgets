@@ -33,6 +33,10 @@ jobs:
       LATEST: \\${{vars.WEB_HOST}}\R9apps\staging\COP_LATEST
       PROD: \\${{vars.WEB_HOST}}\R9apps\staging\COP_backup
     steps:
+      - name: reset workspace
+        run: |
+          Remove-Item -Recurse -Force ${{ github.workspace }}
+          New-Item -Path ${{ github.workspace }} -ItemType directory
       - name: remove backup and latest folders if exists
         run: |
           if (Test-Path $env:BACKUP) {
