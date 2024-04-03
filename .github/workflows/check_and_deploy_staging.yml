@@ -4,7 +4,6 @@ on:
   workflow_dispatch:
 
 name: check and deploy app
-id: check_and_deploy_staging
 jobs:
 
   check:

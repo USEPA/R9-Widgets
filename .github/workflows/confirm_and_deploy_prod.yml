@@ -1,9 +1,10 @@
 name: confirm and deploy prod
 
 on:
-  check_and_deploy_staging:
-    types: [completed]
-    branches: [ main ]
+  workflow_run:
+    workflows: ["check and deploy app"]
+    types:
+      - completed
 
 jobs:
   deploy_production:
