@@ -61,5 +61,7 @@ jobs:
           Rename-Item $env:LATEST $env:PROD
 
   confirm_production_deploy:
-    uses: ./.github/workflows/confirm_and_deploy_prod.yml
+    runs-on: self-hosted
     needs: deploy_staging
+    steps:
+      - uses: ./.github/workflows/confirm_and_deploy_prod.yml
