@@ -3,6 +3,7 @@ name: confirm and deploy prod
 on:
   deployment:
     environment: NEW_ER_CLOUD
+    statuses: [ "success" ]
 
 jobs:
   deploy_production:
