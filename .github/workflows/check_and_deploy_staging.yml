@@ -19,7 +19,7 @@ jobs:
           $continue = $info.typeKeywords -contains "status: Draft" -and [float]$now * 1000 - $info.modified -lt 600000
           echo "continue=$continue" >> $env:GITHUB_ENV
           echo $continue
-        working-directory: ${{vars.EB_LOCATION}}/server/public/apps/12
+        working-directory: ${{env.EB_LOCATION}}/server/public/apps/12
 
   deploy_staging:
     needs: check
