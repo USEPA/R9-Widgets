@@ -7,7 +7,6 @@ name: check and deploy app
 jobs:
 
   check:
-    environment: NEW_ER_CLOUD
     runs-on: self-hosted
     outputs:
       continue: ${{ steps.check.outputs.continue }}
