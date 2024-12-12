@@ -2,7 +2,6 @@
 import './assets/style.css';
 import {AllWidgetProps, BaseWidget, getAppStore, jsx, WidgetState} from "jimu-core";
 import {IMConfig} from "../config";
-import esriRequest from "esri/request";
 import {
   Button,
   Dropdown,

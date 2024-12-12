@@ -14,8 +14,8 @@ import FeatureLayer from "esri/layers/FeatureLayer";
 import moment from "Moment";
 import {Button, Loading} from "jimu-ui"
 import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
-import FeatureEffect from "esri/views/layers/support/FeatureEffect";
-import FeatureFilter from "esri/views/layers/support/FeatureFilter";
+import FeatureEffect from "esri/layers/support/FeatureEffect";
+import FeatureFilter from "esri/layers/support/FeatureFilter";
 import {getViewIDs, listenForViewVisibilityChanges, visibilityChanged} from '../../../shared';
 
 function getComparator(sortColumn: string) {
@@ -47,7 +47,7 @@ interface State {
   visible: boolean
 }
 
-export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, State> {
+export default class TierIIWidget extends BaseWidget<AllWidgetProps<IMConfig>, State> {
   jmv: JimuMapView;
   first: boolean = true;
   loading: boolean = true;
@@ -55,7 +55,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   graphicsLayer: GraphicsLayer;
   symbol: SimpleMarkerSymbol = new SimpleMarkerSymbol({color: 'yellow', style: 'diamond'});
   // todo: move to settings
-  baseurl: string = "https://utility.arcgis.com/usrsvcs/servers/ea77cd05c98e44a98fdaddc83948015d/rest/services/EPA_EPCRA/TierIIFacilities_new_dev/MapServer"
+  baseurl: string = "https://utility.arcgis.com/usrsvcs/servers/c6207e4022ab4c9e89654ce08f56d25c/rest/services/EPA_EPCRA/TierIIV4/MapServer"
   attributes: any;
   facilities: any;
   nothingThere: boolean = false;
@@ -188,7 +188,11 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   //   })
   // }
 
-  componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{ jimuMapView: JimuMapView; contactInfo: any[]; chemicalInfo: any[] }>, snapshot?: any) {
+  componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{
+    jimuMapView: JimuMapView;
+    contactInfo: any[];
+    chemicalInfo: any[]
+  }>, snapshot?: any) {
     if (this.jmv && this.allTierIIfl.length > 0) {
       let widgetState: WidgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state;
       // do anything on open/close of widget here
@@ -235,7 +239,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         this.jmv.view.popup = this.currentPopup
         if (this.mapClickHandler) {
           this.mapClickHandler.remove()
-        }      }
+        }
+      }
     }
   }
 
@@ -524,53 +529,56 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     let promises = [];
     this.queryLayer = undefined;
     this.allTierIIfl.filter(fl => !('sublayers' in fl)).forEach(fl => {
+      console.debug('querying', fl.title)
       let promise = fl.queryFeatures(featureQuery).then((featureSet) => {
+        console.debug('queried', featureSet.features.length, ' from ', fl.title)
         this.featureSet.push(...featureSet.features);
-        if (this.featureSet.length === 1) {
-          // this.featureSet.push(...featureSet.features);
-          // this.queryLayer = fl;
-          this.loadFeature(this.featureSet[0]);
-          noneFound.push(false);
-        } else if (this.featureSet.length > 1) {
 
-          // this.queryLayer = fl;
-          this.multipleLocations = true;
-          let data = [];
-
-          this.featureSet.forEach(feature => {
-            let attrs = feature.attributes;
-            data.push(attrs);
-          });
-
-          this.rows.push(...data)
-          this.sortedRows.push(...data)
-
-          this.loading = false;
-          noneFound.push(false);
-        } else {
-          noneFound.push(true);
-        }
-        if (noneFound.length === this.allTierIIfl.length) {
-          let wasfound = noneFound.filter(found => {
-            return found === false;
-          });
-
-          if (wasfound.length === 0) {
-            this.nothingThere = true;
-            this.loading = false;
-            this.setState({
-              loading: this.loading,
-              nothingThere: this.nothingThere,
-            });
-          }
-        }
       });
       promises.push(promise)
     });
 
     Promise.all(promises).then(() => {
+      // if (this.featureSet.length === 1) {
+      //   this.loadFeature(this.featureSet[0])
+      // }
       if (this.featureSet.length === 1) {
-        this.loadFeature(this.featureSet[0])
+        // this.featureSet.push(...featureSet.features);
+        // this.queryLayer = fl;
+        this.loadFeature(this.featureSet[0]);
+        noneFound.push(false);
+      } else if (this.featureSet.length > 1) {
+
+        // this.queryLayer = fl;
+        this.multipleLocations = true;
+        let data = [];
+
+        this.featureSet.forEach(feature => {
+          let attrs = feature.attributes;
+          data.push(attrs);
+        });
+
+        this.rows.push(...data)
+        this.sortedRows.push(...data)
+
+        this.loading = false;
+        noneFound.push(false);
+      } else {
+        noneFound.push(true);
+      }
+      if (noneFound.length === this.allTierIIfl.length) {
+        let wasfound = noneFound.filter(found => {
+          return found === false;
+        });
+
+        if (wasfound.length === 0) {
+          this.nothingThere = true;
+          this.loading = false;
+          this.setState({
+            loading: this.loading,
+            nothingThere: this.nothingThere,
+          });
+        }
       }
 
       this.setState({
@@ -925,12 +933,19 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   }
 
   tierIILayerCreated = (e) => {
+    // this runs multiple times but in rapid succession. Instead of trying track all of these just keep setting loading to true and then false at the bottom
+    this.setState({
+      loading: true
+    })
     if (this.allTierIIfl.length === 0) {
       // capture parent
-      this.allTierIIfl.push(e.parentDataSource.layer)
+      // this.allTierIIfl.push(e.parentDataSource.layer)
     }
     this.allTierIIfl.push(e.layer)
     this.initLayer(e.layer)
+    this.setState({
+      loading: false
+    })
   }
 
   render() {
