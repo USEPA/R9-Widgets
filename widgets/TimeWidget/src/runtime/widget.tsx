@@ -248,7 +248,7 @@ export default function ({useMapWidgetIds, windDataSources, smokeDataSource, id}
     }
 
     return <div className="widget-use-map-view"
-                style={{width: '100%', height: '100%', overflow: 'scroll', backgroundColor: 'white'}}>
+                style={{width: '100%', height: '100%', backgroundColor: 'white'}}>
       <JimuMapViewComponent
         useMapWidgetId={useMapWidgetIds?.[0]}
         onActiveViewChange={onActiveViewChange}
