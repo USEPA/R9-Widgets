@@ -27,7 +27,7 @@ export default function Setting(
   props: AllWidgetSettingProps<{}>
 ): React.ReactElement {
 
-  const supportedTypes = Immutable([AllDataSourceTypes.GroupLayer]);
+  const supportedTypes = Immutable([AllDataSourceTypes.ImageryLayer]);
 
   const updateConfigProperty = (property, value) => {
     let settings = {
@@ -43,12 +43,12 @@ export default function Setting(
     });
   }
 
-  const onDataSourceChange = (useDataSources: UseDataSource[]) => {
-    props.onSettingChange({
-      id: props.id,
-      windDataSources: useDataSources,
-    });
-  }
+  // const onDataSourceChange = (useDataSources: UseDataSource[]) => {
+  //   props.onSettingChange({
+  //     id: props.id,
+  //     windDataSources: useDataSources,
+  //   });
+  // }
 
   // cannot use data source select b/c it doesn't support image services?!?
   return <div className="sample-js-api-widget-setting p-2">
@@ -56,10 +56,11 @@ export default function Setting(
     <DataSourceSelector
       types={supportedTypes}
       mustUseDataSource={true}
-      useDataSources={props.windDataSource}
-      onChange={v => updateConfigProperty('windDataSource', v)}
+      useDataSources={props.windDataSources}
+      onChange={v => updateConfigProperty('windDataSources', v)}
       widgetId={props.id}
-      buttonLabel="Select Wind Group"
+      buttonLabel="Select Wind Layers"
+      isMultiple={true}
     />
     <DataSourceSelector
       types={supportedTypes}

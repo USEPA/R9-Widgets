@@ -2,7 +2,7 @@ import {React, FormattedMessage, Immutable, UseDataSource} from "jimu-core";
 import {BaseWidgetSetting, AllWidgetSettingProps} from "jimu-for-builder";
 import {IMConfig} from "../config";
 import defaultI18nMessages from "./translations/default";
-import {JimuMapViewSelector} from 'jimu-ui/advanced/setting-components';
+import {MapWidgetSelector, MapWidgetSelector} from 'jimu-ui/advanced/setting-components';
 import {AllDataSourceTypes, DataSourceSelector} from 'jimu-ui/advanced/data-source-selector';
 
 export default class Setting extends BaseWidgetSetting<AllWidgetSettingProps<IMConfig>, any> {
@@ -26,7 +26,7 @@ export default class Setting extends BaseWidgetSetting<AllWidgetSettingProps<IMC
     return (
       <div className="widget-setting-demo">
         <h5 style={{padding: '5px 0 0 5px'}}>Select Map</h5>
-        <JimuMapViewSelector onSelect={this.onMapSelected} useMapWidgetIds={this.props.useMapWidgetIds}/>
+        <MapWidgetSelector onSelect={this.onMapSelected} useMapWidgetIds={this.props.useMapWidgetIds}/>
         <h5 style={{padding: '5px 0 0 5px'}}>Select Data Sources</h5>
         <DataSourceSelector
           types={this.supportedTypes}
