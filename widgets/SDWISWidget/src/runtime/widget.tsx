@@ -85,9 +85,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.LandingText = this.LandingText.bind(this)
     this.rowClick = this.rowClick.bind(this)
     this.onSortColsChange = this.onSortColsChange.bind(this);
-    if (/:3001/g.test(window.location.origin)) {
-      urlUtils.addProxyRule({proxyUrl: 'https://localhost:8000/proxy', urlPrefix: 'https://geosecure.epa.gov'});
-    }
+    // if (/:3001/g.test(window.location.origin)) {
+    //   urlUtils.addProxyRule({proxyUrl: 'https://localhost:8000/proxy', urlPrefix: 'https://geosecure.epa.gov'});
+    // }
 
   }
 
@@ -120,34 +120,34 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     //   url: `${this.sdwis_service_base_url}/FeatureServer/7`,
     //   outFields: ['*']
     // })
-    this.setProxy();
+    // this.setProxy();
 
     this.symbol = new SimpleMarkerSymbol()
 
     listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
   }
 
-  setProxy() {
-    if (this.props.proxy_url && !esriConfig.request.trustedServers.includes(this.props.proxy_url)) {
-      esriConfig.request.trustedServers.push(this.props.proxy_url)
-
-      esriConfig.request.interceptors.unshift({
-        urls: [this.props.proxy_url, 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted'],
-        // urls: [this.props.proxy_url, this.sdwis_service_base_url],
-        // before: (params) => {
-        //   // console.log(params)
-        //   //     params.requestOptions.headers = {'Authorization': this.token};
-        // },
-        headers: {Authorization: `Token ${this.token}`}
-      })
-
-      // setup proxy rules for internal
-      urlUtils.addProxyRule({
-        proxyUrl: this.props.proxy_url,
-        urlPrefix: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS_V2'
-      })
-    }
-  }
+  // setProxy() {
+  //   if (this.props.proxy_url && !esriConfig.request.trustedServers.includes(this.props.proxy_url)) {
+  //     esriConfig.request.trustedServers.push(this.props.proxy_url)
+  //
+  //     esriConfig.request.interceptors.unshift({
+  //       urls: [this.props.proxy_url, 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted'],
+  //       // urls: [this.props.proxy_url, this.sdwis_service_base_url],
+  //       // before: (params) => {
+  //       //   // console.log(params)
+  //       //   //     params.requestOptions.headers = {'Authorization': this.token};
+  //       // },
+  //       headers: {Authorization: `Token ${this.token}`}
+  //     })
+  //
+  //     // setup proxy rules for internal
+  //     urlUtils.addProxyRule({
+  //       proxyUrl: this.props.proxy_url,
+  //       urlPrefix: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS_V2'
+  //     })
+  //   }
+  // }
 
   setConfigured() {
     if ([...this.featureLayers, this.featureLayerPWS, this.featureLayerAdmin, this.featureLayerTable].every(l => l)) {
