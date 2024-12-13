@@ -43,17 +43,11 @@ jobs:
             Remove-Item -Force ${{ github.workspace }}\exp_builder_widgets_export.zip
           }
       - name: export app to zip and unpack into latest folder
+        working-directory: ${{vars.EB_LOCATION}}
         run: |
-          node ${{ vars.EB_LOCATION }}\server\src\runZipApp.js 12 ${{ github.workspace }}\exp_builder_widgets_export.zip
+          node -e "require('./server/src/middlewares/dev/apps/app-download.js').zipApp('12', '${{ github.workspace }}\exp_builder_widgets_export.zip', '${{vars.COP_CLIENT_ID}}');"
           Expand-Archive -LiteralPath ${{ github.workspace }}\exp_builder_widgets_export.zip -DestinationPath $env:LATEST
-      - name: update client id
-        run: |
-          $cdnSubFolder = Get-ChildItem -Path $env:LATEST\cdn -Name
-          Copy-Item -Path $env:LATEST\cdn\*\config.json -Destination ${{ github.workspace }}
-          $config = (Get-Content ${{ github.workspace }}\config.json -Encoding utf8 | Out-String | ConvertFrom-JsonNewtonSoft)
-          $config.attributes.clientId = "${{vars.COP_CLIENT_ID}}"
-          $config | ConvertTo-JsonNewtonsoft | Out-File -Encoding utf8 "${{ github.workspace }}\config.json"
-          Copy-Item -Path ${{ github.workspace }}\config.json -Destination $env:LATEST\cdn\$cdnSubFolder
+
       - name: move prod to backup and latest to prod
         run: |
           Rename-Item $env:PROD $env:BACKUP
