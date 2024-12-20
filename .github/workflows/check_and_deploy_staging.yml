@@ -16,7 +16,7 @@ jobs:
         run: |
           $info = Get-Content .\info.json -Raw | ConvertFrom-Json
           $now = Get-Date -UFormat %s
-          $continue = $info.typeKeywords -contains "status: Draft" -and [float]$now * 1000 - $info.modified -lt 600000
+          $continue = $info.typeKeywords -contains "status: Published" -and [float]$now * 1000 - $info.modified -lt 600000
           echo "continue=$continue" >> $env:GITHUB_ENV
           echo $continue
         working-directory: ${{vars.EB_LOCATION}}\server\public\apps\${{vars.BUILD_ID}}
