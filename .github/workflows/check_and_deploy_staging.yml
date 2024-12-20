@@ -45,7 +45,7 @@ jobs:
       - name: export app to zip and unpack into latest folder
         working-directory: ${{vars.EB_LOCATION}}
         run: |
-          node -e "require('./server/src/middlewares/dev/apps/app-download.js').zipApp('12', '${{ github.workspace }}\exp_builder_widgets_export.zip', '${{vars.COP_CLIENT_ID}}');"
+          node -e "require('./server/src/middlewares/dev/apps/app-download.js').zipApp('${{ vars.build_id }}', '${{ github.workspace }}\exp_builder_widgets_export.zip', '${{vars.COP_CLIENT_ID}}');"
           Expand-Archive -LiteralPath ${{ github.workspace }}\exp_builder_widgets_export.zip -DestinationPath $env:LATEST
 
       - name: move prod to backup and latest to prod
