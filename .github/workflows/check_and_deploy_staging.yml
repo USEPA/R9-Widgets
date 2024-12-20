@@ -17,13 +17,13 @@ jobs:
           $info = Get-Content .\info.json -Raw | ConvertFrom-Json
           $now = Get-Date -UFormat %s
           $continue = $info.typeKeywords -contains "status: Published" -and [float]$now * 1000 - $info.modified -lt 600000
-          echo "continue=$continue" >> $env:GITHUB_ENV
+          echo "continue=$continue" >> $env:GITHUB_OUTPUT
           echo $continue
         working-directory: ${{vars.EB_LOCATION}}\server\public\apps\${{vars.BUILD_ID}}
 
   deploy_staging:
     needs: check
-    if: ${{ needs.check.result == 'True' }}
+    if: ${{ needs.check.outputs.continue == 'True' }}
     runs-on: self-hosted
     environment: NEW_ER_CLOUD
     env:
