@@ -19,7 +19,7 @@ jobs:
           $continue = $info.typeKeywords -contains "status: Draft" -and [float]$now * 1000 - $info.modified -lt 600000
           echo "continue=$continue" >> $env:GITHUB_ENV
           echo $continue
-        working-directory: ${{vars.EB_LOCATION}}\server\public\apps\${{vars.build_id}}
+        working-directory: ${{vars.EB_LOCATION}}\server\public\apps\${{vars.BUILD_ID}}
 
   deploy_staging:
     needs: check
@@ -45,7 +45,7 @@ jobs:
       - name: export app to zip and unpack into latest folder
         working-directory: ${{vars.EB_LOCATION}}
         run: |
-          node -e "require('./server/src/middlewares/dev/apps/app-download.js').zipApp('${{ vars.build_id }}', '${{ github.workspace }}\exp_builder_widgets_export.zip', '${{vars.COP_CLIENT_ID}}');"
+          node -e "require('./server/src/middlewares/dev/apps/app-download.js').zipApp('${{ vars.BUILD_ID }}', '${{ github.workspace }}\exp_builder_widgets_export.zip', '${{vars.COP_CLIENT_ID}}');"
           Expand-Archive -LiteralPath ${{ github.workspace }}\exp_builder_widgets_export.zip -DestinationPath $env:LATEST
 
       - name: move prod to backup and latest to prod
