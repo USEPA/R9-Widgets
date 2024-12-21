@@ -15,7 +15,7 @@ jobs:
         id: check
         run: |
           $info = Get-Content .\info.json -Raw | ConvertFrom-Json
-          $lastDeploy = Get-Date -Date (Get-Item \\${{vars.WEB_HOST}}\R9apps\staging\cop).LastWriteTime -UFormat "%s"s
+          $lastDeploy = Get-Date -Date (Get-Item \\${{vars.WEB_HOST}}\R9apps\staging\cop).LastWriteTime -UFormat "%s"
           $continue = $info.typeKeywords -contains "status: Published" -and $lastDeploy - $info.modified /1000 -lt 0
           echo "continue=$continue" >> $env:GITHUB_OUTPUT
           echo $continue
