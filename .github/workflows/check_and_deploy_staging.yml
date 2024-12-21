@@ -14,7 +14,6 @@ jobs:
       - name: check if changes to json file
         id: check
         run: |
-          whoami
           $info = Get-Content .\info.json -Raw | ConvertFrom-Json
           $lastDeploy = Get-Date -Date (Get-Item \\${{vars.WEB_HOST}}\R9apps\staging\cop).LastWriteTime -UFormat "%s"
           $continue = $info.typeKeywords -contains "status: Published" -and $lastDeploy - $info.modified /1000 -lt 0
@@ -46,7 +45,8 @@ jobs:
       - name: export app to zip and unpack into latest folder
         working-directory: ${{vars.EB_LOCATION}}
         run: |
-          node -e "require('./server/src/middlewares/dev/apps/app-download.js').zipApp('${{ vars.BUILD_ID }}', '${{ github.workspace }}\exp_builder_widgets_export.zip', '${{vars.COP_CLIENT_ID}}');"
+          $zipPath = '${{ github.workspace }}\exp_builder_widgets_export.zip'.Replace('\', '/')
+          node -e "require('./server/src/middlewares/dev/apps/app-download.js').zipApp('${{ vars.BUILD_ID }}', '$zipPath', '${{vars.COP_CLIENT_ID}}');"
           Expand-Archive -LiteralPath ${{ github.workspace }}\exp_builder_widgets_export.zip -DestinationPath $env:LATEST
 
       - name: move prod to backup and latest to prod
