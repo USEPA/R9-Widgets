@@ -2,7 +2,7 @@ name: confirm and deploy prod
 
 on:
   deployment_status:
-    environment: NEW_ER_CLOUD
+    environments: [ "NEW_ER_CLOUD" ]
     types: [ "success" ]
 
 jobs:
