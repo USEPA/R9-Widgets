@@ -3,8 +3,7 @@ on:
     - cron: '*/10 * * * *'
   workflow_dispatch:
   deployment_status:
-    environments: ["EB"]
-    types: [ "success" ]
+    environment: EB
 
 name: check and deploy app
 jobs:
@@ -26,7 +25,7 @@ jobs:
         working-directory: ${{vars.EB_LOCATION}}\server\public\apps\${{vars.BUILD_ID}}
 
   deploy_staging:
-    if: ${{ needs.check.outputs.continue == 'True' || github.event_name == 'deployment_status' }}
+    if: ${{ needs.check.outputs.continue == 'True' || github.event.deployment_status.state == 'success' }}
     runs-on: self-hosted
     environment: NEW_ER_CLOUD
     env:
