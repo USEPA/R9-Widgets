@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   deployment_status:
     environment: EB
-    types: ["success"]
+    state: success
 
 name: check and deploy app
 jobs:
