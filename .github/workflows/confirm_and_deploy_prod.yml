@@ -11,7 +11,7 @@ jobs:
       cancel-in-progress: true
     runs-on: self-hosted
     environment: EB_PROD
-    if: github.event.deployment_status.state == 'success'
+    if: github.event.deployment_status.state == 'success' && github.event.deployment_status.environment == 'NEW_ER_CLOUD'
     env:
       BACKUP: \\${{vars.WEB_HOST}}\R9apps\apps\COP_backup
       LATEST: \\${{vars.WEB_HOST}}\R9apps\apps\COP_LATEST
