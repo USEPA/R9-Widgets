@@ -26,7 +26,6 @@ jobs:
         working-directory: ${{vars.EB_LOCATION}}\server\public\apps\${{vars.BUILD_ID}}
 
   deploy_staging:
-    needs: check
     if: ${{ needs.check.outputs.continue == 'True' || github.event_name == 'deployment_status' }}
     runs-on: self-hosted
     environment: NEW_ER_CLOUD
