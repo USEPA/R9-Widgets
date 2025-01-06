@@ -2,8 +2,7 @@ name: confirm and deploy prod
 
 on:
   deployment_status:
-    environments: [ "NEW_ER_CLOUD" ]
-    types: [ "success" ]
+    environment: NEW_ER_CLOUD
 
 jobs:
   deploy_production:
@@ -12,6 +11,7 @@ jobs:
       cancel-in-progress: true
     runs-on: self-hosted
     environment: EB_PROD
+    if: github.event.deployment_status.state == 'success'
     env:
       BACKUP: \\${{vars.WEB_HOST}}\R9apps\apps\COP_backup
       LATEST: \\${{vars.WEB_HOST}}\R9apps\apps\COP_LATEST
