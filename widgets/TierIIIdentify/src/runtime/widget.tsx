@@ -248,6 +248,15 @@ export default class TierIIWidget extends BaseWidget<AllWidgetProps<IMConfig>, S
     this.allTierIIfl.forEach(l => {
       const mapLayer = this.jmv.view.map.allLayers.find(ml => ml.url === l.url)
       if (mapLayer) {
+        if (!(mapLayer.id in this.openVisState)) {
+          this.openVisState[mapLayer.id] = mapLayer.visible
+        }
+        if (visible === true) {
+          mapLayer.visible = visible
+        } else {
+          mapLayer.visible = this.openVisState[mapLayer.id]
+        }
+
         if (mapLayer?.sublayers) {
           mapLayer.sublayers.forEach(sl => {
             if (!(l.id in this.openVisState)) {
@@ -263,12 +272,6 @@ export default class TierIIWidget extends BaseWidget<AllWidgetProps<IMConfig>, S
           if (!(l.id in this.openVisState)) {
             this.openVisState[l.id] = mapLayer.visible
           }
-        }
-
-        if (visible === true) {
-          mapLayer.visible = visible
-        } else {
-          mapLayer.visible = this.openVisState[mapLayer.id]
         }
       }
     })
