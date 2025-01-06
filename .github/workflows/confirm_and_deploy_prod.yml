@@ -34,4 +34,4 @@ jobs:
       - name: backup prod and deploy latest to prod
         run: |
             Rename-Item $env:PROD $env:BACKUP
-            Rename-Item $env:LATEST $enc:PROD
+            Rename-Item $env:LATEST $env:PROD
