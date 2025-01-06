@@ -2,11 +2,14 @@ on:
   schedule:
     - cron: '*/10 * * * *'
   workflow_dispatch:
-
+  deployment:
+    environment: NEW_ER_CLOUD
+    statuses: [ "success" ]
 name: check and deploy app
 jobs:
 
   check:
+    if: github.event_name != 'deployment'
     runs-on: self-hosted
     outputs:
       continue: ${{ steps.check.outputs.continue }}
@@ -23,7 +26,7 @@ jobs:
 
   deploy_staging:
     needs: check
-    if: ${{ needs.check.outputs.continue == 'True' }}
+    if: ${{ needs.check.outputs.continue == 'True' || github.event_name == 'deployment' }}
     runs-on: self-hosted
     environment: NEW_ER_CLOUD
     env:
