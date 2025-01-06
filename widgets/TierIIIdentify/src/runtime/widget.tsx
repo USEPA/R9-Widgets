@@ -267,7 +267,6 @@ export default class TierIIWidget extends BaseWidget<AllWidgetProps<IMConfig>, S
             } else {
               sl.visible = this.openVisState[sl.id]
             }
-
           })
           if (!(l.id in this.openVisState)) {
             this.openVisState[l.id] = mapLayer.visible

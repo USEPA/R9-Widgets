@@ -78,6 +78,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   mapClickHandler;
   configured: boolean = false;
   highlight: any;
+  openVisibilityState: {[key: string | number]: boolean} = {}
+  currentPopup: any;
 
   constructor(public props: any) {
     super(props)
@@ -92,62 +94,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
   }
 
   componentDidMount() {
-    const sessions = SessionManager.getInstance().getSessions()
-    if (sessions.length > 0) {
-      this.token = sessions[0].token
-    } else if (this.props.token !== undefined && this.props.token !== '') {
-      this.token = this.props.token
-    }
-    // ---- layers controlled by settings now
-    // facilities
-    // this.featureLayer = new FeatureLayer({
-    //   url: `${this.sdwis_service_base_url}/FeatureServer/5`,
-    //   outFields: ['*']
-    // })
-    // public water systems
-    // this.featureLayerPWS = new FeatureLayer({
-    //   url: `${this.sdwis_service_base_url}/FeatureServer/3`,
-    //   outFields: ['*']
-    // })
-
-    // // pws primary agencies - TABLE
-    // this.featureLayerTable = new FeatureLayer({
-    //   url: `${this.sdwis_service_base_url}/FeatureServer/9`,
-    //   outFields: ['*']
-    // })
-    // // Admin contacts - TABLE
-    // this.featureLayerAdmin = new FeatureLayer({
-    //   url: `${this.sdwis_service_base_url}/FeatureServer/7`,
-    //   outFields: ['*']
-    // })
-    // this.setProxy();
-
     this.symbol = new SimpleMarkerSymbol()
 
     listenForViewVisibilityChanges(this.props.id, this.updateVisibility)
   }
-
-  // setProxy() {
-  //   if (this.props.proxy_url && !esriConfig.request.trustedServers.includes(this.props.proxy_url)) {
-  //     esriConfig.request.trustedServers.push(this.props.proxy_url)
-  //
-  //     esriConfig.request.interceptors.unshift({
-  //       urls: [this.props.proxy_url, 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted'],
-  //       // urls: [this.props.proxy_url, this.sdwis_service_base_url],
-  //       // before: (params) => {
-  //       //   // console.log(params)
-  //       //   //     params.requestOptions.headers = {'Authorization': this.token};
-  //       // },
-  //       headers: {Authorization: `Token ${this.token}`}
-  //     })
-  //
-  //     // setup proxy rules for internal
-  //     urlUtils.addProxyRule({
-  //       proxyUrl: this.props.proxy_url,
-  //       urlPrefix: 'https://gis.r09.epa.gov/arcgis/rest/services/Hosted/SDWIS_V2'
-  //     })
-  //   }
-  // }
 
   setConfigured() {
     if ([...this.featureLayers, this.featureLayerPWS, this.featureLayerAdmin, this.featureLayerTable].every(l => l)) {
@@ -193,6 +143,25 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     })
   }
 
+  _setLayerVisibility(layer, visible) {
+    const map_layer = this.jmv.view.map.allLayers.find(l => l.id === layer.id);
+    if (!(map_layer.id in this.openVisibilityState)) {
+      this.openVisibilityState[map_layer.id] = map_layer.visible
+    }
+    if (visible) {
+      map_layer.visible = visible
+    } else if (map_layer.id in this.openVisibilityState) {
+      map_layer.visible = this.openVisibilityState[map_layer.id]
+    } else {
+      map_layer.visible = visible
+    }
+  }
+  setLayersVisibility(visible) {
+    this._setLayerVisibility(this.featureLayerPWS, visible)
+    this.featureLayers.forEach(l => {
+      this._setLayerVisibility(l, visible);
+    });
+  }
   componentDidUpdate(prevProps: Readonly<AllWidgetProps<IMConfig>>, prevState: Readonly<{
     jimuMapView: JimuMapView
   }>, snapshot?: any) {
@@ -200,9 +169,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     widgetState = getAppStore().getState().widgetsRuntimeInfo[this.props.id].state
     // do anything on open/close of widget here
     if (this.jmv && this.configured) {
-      if (widgetState == WidgetState.Opened || this.state?.visible === true || this.state?.visible === undefined) {
+      if (widgetState == WidgetState.Opened || this.state?.visible === true) {
         if (this.first) {
-          this.captureLayerViews();
+          this.captureLayerViews().then(() => this.setLayersVisibility(true));
           this.loading = true
           // this.featureLayer.visible = true
           // this.featureLayerPWS.visible = true
@@ -283,10 +252,13 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           this.mapClickHandler = this.jmv.view.on('click', event => {
             this.mapClick(event)
           })
+          this.currentPopup = this.jmv.view.popup;
+          this.jmv.view.popup = null;
           // this.jmv.view.map.layers.add(this.featureLayer)
           // this.jmv.view.map.layers.add(this.featureLayerPWS)
           // }
         }
+        this.setLayersVisibility(true)
         this.first = false
       } else {
         this.first = true
@@ -301,6 +273,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         }
         // remove graphics on close
         this.highlight?.remove();
+        this.jmv.view.popup = this.currentPopup;
+        this.setLayersVisibility(false);
         // this.jmv.view.map.layers.remove(this.featureLayer)
         // this.jmv.view.map.layers.remove(this.featureLayerPWS)
       }
@@ -476,11 +450,12 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     this.setConfigured();
   };
 
-  captureLayerViews() {
+  async captureLayerViews() {
     const mapLayers = this.featureLayers.map(l => this.jmv.view.map.allLayers.find(ml => ml.id === l.id));
-    mapLayers.forEach(l => {
-      this.jmv.view.whenLayerView(l).then(layerView => this.featureLayersViews.push(layerView));
-    })
+    await Promise.all(mapLayers.map(l => {
+      return this.jmv.view.whenLayerView(l).then(layerView => this.featureLayersViews.push(layerView));
+    }));
+    await this.jmv.view.whenLayerView(this.featureLayerPWS).then(layerView => this.featureLayersViews.push(layerView));
   }
 
   highlightFacility(facility) {
