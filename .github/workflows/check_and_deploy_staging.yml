@@ -9,7 +9,6 @@ name: check and deploy app
 jobs:
 
   check:
-    if: github.event_name != 'deployment_status'
     runs-on: self-hosted
     outputs:
       continue: ${{ steps.check.outputs.continue }}
@@ -25,7 +24,7 @@ jobs:
         working-directory: ${{vars.EB_LOCATION}}\server\public\apps\${{vars.BUILD_ID}}
 
   deploy_staging:
-    if: ${{ jobs.check.outputs.continue == 'True' || (github.event.deployment_status.environment == 'EB' && github.event.deployment_status.state == 'success') }}
+    if: ${{ needs.check.outputs.continue == 'True' || (github.event.deployment_status.environment == 'EB' && github.event.deployment_status.state == 'success') }}
     runs-on: self-hosted
     environment: NEW_ER_CLOUD
     env:
