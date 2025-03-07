@@ -105,6 +105,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       this.configured = true;
 
       this.loading = true;
+      this.setState({
+        load: this.loading
+      });
 
       // this.featureLayer.on('layerview-create-error', (e) => {
       //   this.loading = false
