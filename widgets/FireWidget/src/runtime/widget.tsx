@@ -546,7 +546,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
              style={{display: 'flex', justifyContent: 'space-between', marginBottom: 10}}>
           <div style={{display: 'flex'}}>
             <div className={'containedLegend'}
-                 style={{backgroundColor: 'blue', height: 15, width: 15, marginRight: 5}}>
+                 style={{backgroundColor: 'rgb(7, 111, 229)', height: 15, width: 15, marginRight: 5}}>
 
             </div>
             <div>Percent Contained</div>
@@ -762,7 +762,7 @@ class Fire extends Component<any, any, any> {
         tooltip='Percent Contained'
         // showProgress={true}
         className='fireProgress' style={{maxWidth: '100%'}}
-        color={'primary'} value={Math.round(this.PercentContained)}>
+        color={'rgb(7, 111, 229)'} value={Math.round(this.PercentContained)}>
       </Progress>
       {/*<div id='acresSubtext' style={{*/}
       {/*  width: this.BarWidth,*/}
