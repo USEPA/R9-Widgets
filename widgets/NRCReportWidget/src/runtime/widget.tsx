@@ -1,9 +1,10 @@
 /** @jsx jsx */
+import 'react-data-grid/lib/styles.css';
 import './assets/style.css';
 import {React, AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState, SessionManager} from "jimu-core";
 import {IMConfig} from "../config";
 import {JimuMapView, JimuMapViewComponent} from "jimu-arcgis";
-import DataGrid, {SelectColumn} from "react-data-grid";
+import {DataGrid, SelectColumn} from "react-data-grid";
 import Extent from "esri/geometry/Extent";
 import FeatureLayer from "esri/layers/FeatureLayer";
 import Query from "esri/rest/support/Query";
@@ -278,11 +279,9 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
   }
 
 
-  rowClick = (row) => {
-    let location = this.featureSet.filter((feature) => {
-      return feature.attributes.OBJECTID === this.sortedRows[row].OBJECTID;
-    });
-    this.loadLog(location[0]);
+  rowClick = (e) => {
+    const location = {attributes: e.row}
+    this.loadLog(location);
   }
 
   NothingFound = () => {
@@ -310,7 +309,7 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
               className={'rdg-light'}
               columns={this.columns}
               rows={this.sortedRows}
-              onRowClick={this.rowClick}
+              onCellClick={this.rowClick}
               rowKeyGetter={(r) => r} defaultColumnOptions={{
               sortable: true,
               resizable: true

@@ -1,5 +1,6 @@
 /** @jsx jsx */
 import './assets/style.css'
+import 'react-data-grid/lib/styles.css';
 import {
   React,
   AllWidgetProps,
@@ -14,7 +15,7 @@ import {
 import {IMConfig} from '../config'
 import {JimuMapView, JimuMapViewComponent} from 'jimu-arcgis'
 import MapImageLayer from 'esri/layers/MapImageLayer'
-import DataGrid, {SelectColumn} from 'react-data-grid'
+import {DataGrid, SelectColumn} from 'react-data-grid'
 import Query from 'esri/rest/support/Query'
 import GraphicsLayer from 'esri/layers/GraphicsLayer'
 import Extent from 'esri/geometry/Extent'
@@ -587,15 +588,16 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     return row
   }
 
-  rowClick = (row) => {
-    const facility = this.featureSet.filter((feature) => {
-      return feature.attributes.OBJECTID === this.rows[row].OBJECTID
-    })
+  rowClick = (e) => {
+    const facility = {attributes: e.row};
+    // const facility = this.featureSet.filter((feature) => {
+    //   return feature.attributes.OBJECTID === this.rows[row].OBJECTID
+    // })
     if (this.rmpGridClick) {
       this.multipleRMPs = false
-      this.loadFeature(facility[0])
+      this.loadFeature(facility)
     } else {
-      this.loadRMPs(facility[0])
+      this.loadRMPs(facility)
     }
   }
 
@@ -613,7 +615,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
               : null}
           <h5>Select one to continue</h5>
           <DataGrid style={{height: `${(this.rows.length * 35) + 37}px`, maxHeight: '700px', backgroundColor: 'white'}}
-                    columns={this.columns} rows={this.sortedRows} onRowClick={this.rowClick} className={'rdg-light'}
+                    columns={this.columns} rows={this.sortedRows} onCellClick={this.rowClick} className={'rdg-light'}
                     rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
             sortable: true,
             resizable: true

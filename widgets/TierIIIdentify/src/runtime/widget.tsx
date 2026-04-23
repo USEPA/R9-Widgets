@@ -1,10 +1,11 @@
 /** @jsx jsx */
+import 'react-data-grid/lib/styles.css';
 import './assets/style.css';
 import {React, AllWidgetProps, BaseWidget, css, getAppStore, jsx, WidgetState, DataSourceComponent} from "jimu-core";
 import {IMConfig} from "../config";
 import {JimuMapView, JimuMapViewComponent} from "jimu-arcgis";
 import MapImageLayer from "esri/layers/MapImageLayer";
-import DataGrid from "react-data-grid";
+import {DataGrid} from "react-data-grid";
 import Query from "esri/rest/support/Query";
 import GraphicsLayer from "esri/layers/GraphicsLayer";
 import Extent from "esri/geometry/Extent";
@@ -596,23 +597,24 @@ export default class TierIIWidget extends BaseWidget<AllWidgetProps<IMConfig>, S
     return row;
   }
 
-  rowClick = (row) => {
-    let location = this.featureSet.filter((feature) => {
-      return feature.attributes.OBJECTID === this.sortedRows[row].OBJECTID;
-    });
+  rowClick = (e) => {
+    const location = {attributes: e.row};
+    // let location = this.featureSet.filter((feature) => {
+    //   return feature.attributes.OBJECTID === this.sortedRows[row].OBJECTID;
+    // });
     // zoom to and add graphic functionality for locations that need fixing
     if (this.badPoints) {
       let symbol = new SimpleMarkerSymbol({style: 'x', size: '20px', color: 'yellow'})
 
-      let badPoint = new Graphic({geometry: location[0].geometry, symbol});
+      let badPoint = new Graphic({geometry: location.geometry, symbol});
       this.jmv.view.graphics.add(badPoint);
 
       this.jmv.view.goTo({
-        center: [location[0].geometry.longitude, location[0].geometry.latitude]
+        center: [location.geometry.longitude, location.geometry.latitude]
       });
     }
 
-    this.loadFeature(location[0]);
+    this.loadFeature(location);
   }
 
   NothingFound = () => {
@@ -633,7 +635,7 @@ export default class TierIIWidget extends BaseWidget<AllWidgetProps<IMConfig>, S
           <div>
             <div><h3>Multiple Facilities at that Location</h3><br/><h5>Select one to continue</h5></div>
             <DataGrid style={{height: `${(this.sortedRows.length * 35) + 37}px`, maxHeight: "700px",}}
-                      columns={this.columns} rows={this.sortedRows} onRowClick={this.rowClick} className={'rdg-light'}
+                      columns={this.columns} rows={this.sortedRows} onCellClick={this.rowClick} className={'rdg-light'}
                       rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
               sortable: true,
               resizable: true
