@@ -6,7 +6,7 @@ import {
 } from 'jimu-core'
 import {IMConfig} from '../config'
 import {JimuMapView, JimuMapViewComponent} from 'jimu-arcgis'
-import DataGrid, {SelectColumn} from 'react-data-grid'
+import {DataGrid, SelectColumn} from 'react-data-grid'
 import GraphicsLayer from 'esri/layers/GraphicsLayer'
 import Extent from 'esri/geometry/Extent'
 import Query from 'esri/rest/support/Query'
@@ -372,12 +372,10 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     return row
   }
 
-  rowClick(row) {
-    const location = this.featureSet.filter((feature) => {
-      return feature.attributes.OBJECTID === this.sortedRows[row].OBJECTID
-    })
+  rowClick() {
+    const location = {attributes: e.row}
     this.multipleLocations = false;
-    this.loadFacility(location[0])
+    this.loadFacility(location)
   }
 
   Grid = () => {
@@ -391,7 +389,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
         }}
                   className={'rdg-light'}
                   columns={this.columns} rows={this.sortedRows}
-                  onRowClick={this.rowClick}
+                  onCellClick={this.rowClick}
                   rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
           sortable: true,
           resizable: true

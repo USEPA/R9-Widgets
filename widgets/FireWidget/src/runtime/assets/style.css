@@ -10,28 +10,38 @@
     cursor: pointer;
 }
 
-.progress-bar-track {
-    height: 26px !important;
-    background-color: red !important;
-    /*border-radius: 13px 13px !important;*/
-    /*border-radius: 6px !important;*/
-}
-
-div.jimu-progress.progress.progress-primary.progress-linear.fireProgress > div.progress-bar-track > div {
+.jimu-linear-progress-track {
     border-radius: 6px !important;
-    /*border-bottom-left-radius: 13px 13px !important;*/
+    overflow: hidden;
 }
 
-.progress-bar-text {
+.jimu-linear-progress-track {
+    background-color: red !important;
+}
+
+/*.progress-bar-track {*/
+/*    !*height: 26px !important;*!*/
+/*    background-color: red !important;*/
+/*    !*border-radius: 13px 13px !important;*!*/
+/*    border-radius: 6px !important;*/
+/*}*/
+
+/*div.jimu-progress.progress.progress-primary.progress-linear.fireProgress > div.progress-bar-track > div {*/
+/*    border-radius: 6px !important;*/
+/*    !*border-bottom-left-radius: 13px 13px !important;*!*/
+/*}*/
+
+.jimu-linear-progress-text {
     display: unset !important;
     min-width: unset !important;
     text-align: unset !important;
     padding-left: unset !important;
     position: relative;
     right: 50%;
-    color: white;
+    color: white !important;
     font-weight: bold;
     font-size: small;
+    width: 0;
 }
 
 .report-button {

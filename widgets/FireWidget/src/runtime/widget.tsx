@@ -761,6 +761,7 @@ class Fire extends Component<any, any, any> {
       <Progress
         tooltip='Percent Contained'
         // showProgress={true}
+        thickness={26}
         className='fireProgress' style={{maxWidth: '100%'}}
         color={'rgb(7, 111, 229)'} value={Math.round(this.PercentContained)}>
       </Progress>
