@@ -614,7 +614,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
               </h4><br/></h3>
               : null}
           <h5>Select one to continue</h5>
-          <DataGrid style={{height: `${(this.rows.length * 35) + 37}px`, maxHeight: '700px', backgroundColor: 'white'}}
+          <DataGrid style={{height: `${(this.rows.length * 35) + 37}px`, maxHeight: '700px'}}
                     columns={this.columns} rows={this.sortedRows} onCellClick={this.rowClick} className={'rdg-light'}
                     rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
             sortable: true,
@@ -1094,7 +1094,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       </div>
     }
     return (
-      <div className="widget-addLayers jimu-widget p-2" style={{overflow: 'auto', backgroundColor: 'white'}}>
+      <div className="widget-addLayers jimu-widget p-2" style={{overflow: 'auto'}}>
         {this.mainText ? <LandingText refreshDate={this.refreshDate}/> : null}
 
         <div>

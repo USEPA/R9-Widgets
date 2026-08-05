@@ -118,7 +118,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, {
     return (
       <div className="widget-addLayers jimu-widget p-2" style={{overflow: "auto", height: "97%"}}>
         <this.NothingFound/>
-        {this.loading ? <h2 style={{background: 'white'}}>Loading...</h2> :
+        {this.loading ? <h2>Loading...</h2> :
           <div>
           </div>
         }
