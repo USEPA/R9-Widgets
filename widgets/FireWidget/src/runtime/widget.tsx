@@ -524,7 +524,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
   render() {
     if (!this.state?.jimuMapView) {
-      return <div className="jimu-widget" style={{backgroundColor: "white"}}>
+      return <div className="jimu-widget">
         <Loading type="SECONDARY"/>
         <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
                               onActiveViewChange={this.onActiveViewChange}/>
