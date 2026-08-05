@@ -531,7 +531,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
       </div>
     }
     return (
-      <div className="jimu-widget p-2" style={{overflowY: "scroll", backgroundColor: "white"}}>
+      <div className="jimu-widget p-2" style={{overflowY: "scroll"}}>
         <JimuMapViewComponent useMapWidgetId={this.props.useMapWidgetIds?.[0]}
                               onActiveViewChange={this.onActiveViewChange}/>
         <div style={{marginBottom: 10}}>These wildfires are greater than 10 acres and within 10 miles of
