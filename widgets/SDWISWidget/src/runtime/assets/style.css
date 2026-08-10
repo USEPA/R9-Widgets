@@ -1,0 +1,7 @@
+div[role=row]:hover {
+    cursor: pointer;
+}
+
+Button:hover {
+    cursor: pointer;
+}
