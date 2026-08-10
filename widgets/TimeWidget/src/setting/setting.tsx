@@ -53,6 +53,9 @@ export default function Setting(
   // cannot use data source select b/c it doesn't support image services?!?
   return <div className="sample-js-api-widget-setting p-2">
     <MapWidgetSelector onSelect={onMapSelected} useMapWidgetIds={props.useMapWidgetIds}/>
+    <br/>
+    <TextArea placeholder='Widget Description' value={props.description} onChange={e => updateConfigProperty('description', e.target.value)}/>
+    <br/>
     <DataSourceSelector
       types={supportedTypes}
       mustUseDataSource={true}

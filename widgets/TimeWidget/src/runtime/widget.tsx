@@ -66,7 +66,7 @@ function initTimeSlider(view, fullTimeExtent) {
   return newTimeSlider;
 }
 
-export default function ({useMapWidgetIds, windDataSources, smokeDataSource, id}: AllWidgetProps<{}>) {
+export default function ({useMapWidgetIds, windDataSources, smokeDataSource, id, description}: AllWidgetProps<{}>) {
     const [jimuMapView, setJimuMapView] = useState<JimuMapView>(null)
     const [timeLayers, setTimeLayers] = useState([])
     const [timeSlider, setTimeSlider] = useState()
@@ -264,10 +264,9 @@ export default function ({useMapWidgetIds, windDataSources, smokeDataSource, id}
       {/*<h3 style={{padding: '10px'}}>Wind/Smoke Widget</h3>*/}
       {/*<div style={{padding: '10px'}}>*/}
       {/*  <h4 style={{fontSize: '1em'}}>NOAA Wind Data</h4>*/}
-      {/*  <p>*/}
-      {/*    The data visualized are freely available and provided by NOAA's <a href='https://nomads.ncep.noaa.gov/'*/}
-      {/*                                                                       target='_blank'>NOMADS</a> initiative.*/}
-      {/*  </p>*/}
+    <p style={{padding: '10px'}}>
+        {description}
+    </p>
       {/*</div>*/}
       {windLayers
         ? <div>
