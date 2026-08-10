@@ -152,9 +152,10 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
 
   captureToken() {
     let sessions = SessionManager.getInstance().getSessions();
-    if (sessions.length > 0) {
-      this.token = sessions[0].token;
-    } else if (this.props.token !== undefined && this.props.token !== "") {
+    const agolSession = sessions.find(session => session.token && session.portal?.startsWith('https://www.arcgis.com/sharing/rest'));
+    if (agolSession) {
+      this.token = agolSession.token;
+    } else if (this.props.token !== undefined && this.props.token !== "") { // legacy? ... can we remove?
       this.token = this.props.token;
     }
   }
