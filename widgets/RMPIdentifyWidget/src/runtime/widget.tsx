@@ -615,7 +615,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
               : null}
           <h5>Select one to continue</h5>
           <DataGrid style={{height: `${(this.rows.length * 35) + 37}px`, maxHeight: '700px'}}
-                    columns={this.columns} rows={this.sortedRows} onCellClick={this.rowClick} className={'rdg-light'}
+                    columns={this.columns} rows={this.sortedRows} onCellClick={this.rowClick}
                     rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
             sortable: true,
             resizable: true

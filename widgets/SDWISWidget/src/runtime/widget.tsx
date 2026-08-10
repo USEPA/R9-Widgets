@@ -1,5 +1,6 @@
 /** @jsx jsx */
 import './assets/style.css'
+import 'react-data-grid/lib/styles.css'
 import {
   React, AllWidgetProps, BaseWidget, css, getAppStore, jsx,
   WidgetState, SessionManager, DataSourceComponent
@@ -341,6 +342,7 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
 
         this.featureSet.forEach((feature) => {
           const attrs = feature.attributes
+          attrs.graphic = feature
           data.push(attrs)
         })
 
@@ -372,8 +374,8 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
     return row
   }
 
-  rowClick() {
-    const location = {attributes: e.row}
+  rowClick(args) {
+    const location = args.row.graphic
     this.multipleLocations = false;
     this.loadFacility(location)
   }
@@ -385,9 +387,9 @@ export default class TestWidget extends BaseWidget<AllWidgetProps<IMConfig>, Sta
           continue</h5></div>
         <DataGrid style={{
           height: '100%',
-          backgroundColor: 'white'
+          // backgroundColor: 'white'
         }}
-                  className={'rdg-light'}
+
                   columns={this.columns} rows={this.sortedRows}
                   onCellClick={this.rowClick}
                   rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{

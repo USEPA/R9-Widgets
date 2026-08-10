@@ -305,9 +305,7 @@ export default class NRCWidget extends BaseWidget<AllWidgetProps<IMConfig>, Stat
             <div><h3>Multiple Facilities at that Location</h3><br/><h5>Select one to continue</h5></div>
             <DataGrid style={{
               height: `${(this.sortedRows.length * 35) + 37}px`,
-              maxHeight: "700px",
-              backgroundColor: "white'"}}
-              className={'rdg-light'}
+              maxHeight: "700px"}}
               columns={this.columns}
               rows={this.sortedRows}
               onCellClick={this.rowClick}

@@ -635,7 +635,7 @@ export default class TierIIWidget extends BaseWidget<AllWidgetProps<IMConfig>, S
           <div>
             <div><h3>Multiple Facilities at that Location</h3><br/><h5>Select one to continue</h5></div>
             <DataGrid style={{height: `${(this.sortedRows.length * 35) + 37}px`, maxHeight: "700px",}}
-                      columns={this.columns} rows={this.sortedRows} onCellClick={this.rowClick} className={'rdg-light'}
+                      columns={this.columns} rows={this.sortedRows} onCellClick={this.rowClick}
                       rowKeyGetter={this.rowKeyGetter} defaultColumnOptions={{
               sortable: true,
               resizable: true
